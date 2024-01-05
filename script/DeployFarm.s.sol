@@ -21,6 +21,7 @@ contract DeployFarm is Script {
         uint privateKey = vm.envUint("DEPLOY_PK");
         address account = vm.addr(privateKey);
         address treasury = vm.envAddress("TREASURY_ADDRESS_L2");
+        address timelock = vm.envAddress("TIMELOCK_L2");
 
         console.log("Account", account);
 
@@ -31,7 +32,7 @@ contract DeployFarm is Script {
         for (uint i = 0; i < tokens.length; i++) {
             IGoatFarm farm = IGoatFarm(factory.createFarm(tokens[i], goa, duration));
             farm.setNotifier(treasury, true);
-            farm.transferOwnership(treasury);
+            farm.transferOwnership(timelock);
         }
 
         vm.stopBroadcast();
