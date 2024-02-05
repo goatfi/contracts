@@ -15,7 +15,7 @@ contract DeployAppMulticall is Script {
 
         vm.startBroadcast(privateKey);
 
-        address appMulticall = address(new GoatAppMulticall());
+        address appMulticall = address(new GoatAppMulticall(address(0), address(0)));
 
         vm.stopBroadcast();
 

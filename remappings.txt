@@ -1,6 +1,10 @@
 forge-std/=lib/forge-std/src/
+src/=src/
+interfaces/=src/interfaces
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 @openzeppelin-4/contracts=lib/openzeppelin-contracts-4/contracts/
 @layerzero/=lib/solidity-examples/contracts/
 @xerc20=lib/xERC20/
+@uniswap/v3-periphery=lib/v3-periphery/
+@uniswap/v3-core=lib/v3-core/
