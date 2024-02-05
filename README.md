@@ -1,111 +1,38 @@
-## [REDACTED] contracts
+# Goat Protocol
 
-**This respository uses Foundry as development enviroment.**
+[![Tests](https://github.com/goatfi/contracts/actions/workflows/test.yml/badge.svg)](https://github.com/goatfi/contracts/actions/workflows/test.yml)
 
-Foundry consists of:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+The Goat Protocol is a decentralized yield optimizer. It allows users, DAOs and other protocols earn the  yield on their digital assets by auto compounding the rewards into more of what they've deposited.
 
 ## Documentation
 
-https://book.getfoundry.sh/
+**This respository uses Foundry as development enviroment.**
 
-## Usage
-
-### Install Foundry
-
-https://book.getfoundry.sh/getting-started/installation
+To compile the source code, run [`forge build`](https://book.getfoundry.sh/reference/forge/forge-build). The repository already has a remappings.txt file, so it should pick up the dependencies.
 
 ```shell
-$ curl -L https://foundry.paradigm.xyz | bash
+forge build
 ```
 
-### Build the project
-
-https://book.getfoundry.sh/reference/forge/build-commands
+To run the unit and invariant tests, run [`forge test`](https://book.getfoundry.sh/forge/tests).
 
 ```shell
-$ forge build
+forge test
 ```
 
-### Test
+To learn bore about the Goat Protocol visit [`docs.goat.fi`](https://docs.goat.fi/).
 
-https://book.getfoundry.sh/reference/forge/forge-test
+## Repository Structure
 
-```shell
-$ forge test
-```
+[`/src`](./src/) contains the source code of the core contract of the Goat Protocol.
 
-### Coverage
+[`/src/interfaces/infra`](./src/interfaces/infra) contains the interfaces of the Goat Protocol.
 
-https://book.getfoundry.sh/reference/forge/forge-coverage?highlight=coverage#forge-coverage
+[`/script`](./script) contains deployment and configuration scripts.
 
-```shell
-$ forge coverage
-```
+[`/test`](./test) contains unit and invariant tests.
 
-Create a lcov.info file
+## Licences
 
-```shell
-$ forge coverage --report lcov
-```
-
-### Format
-
-Run to format the files following the parameters in foundry.toml
-
-```shell
-$ forge fmt
-```
-
-### Deploy
-
-https://book.getfoundry.sh/reference/forge/deploy-commands
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Gas Reporting
-
-Produce a gas report of the files specified on `foundry.toml`.
-
-```shell
-$ forge test --gas-report
-```
-
-### Slither
-
-https://github.com/crytic/slither/wiki/Usage
-
-To install:
-```shell
-$ pip3 install slither-analyzer
-```
-To run slither on the repository:
-```shell
-$ slither .
-```
-
-To hide warnings; It will create a `slither.db.json` file. It is ignored by Git.
-
-```shell
-$ slither . --triage-mode
-```
-
-### VS Code Extensions used
-
-- [Solidity](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) by Nomic Foundation. Solidity support and utils for VS Code.
-- [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml) by tamasfe. For .toml formatting.
-- [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters) by ryanluker. For displaying test coverage on files.
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+The primary license for the Goat Protocol is the MIT License (`MIT`), see [`LICENSE`](./LICENSE).

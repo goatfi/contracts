@@ -31,6 +31,11 @@ interface IGoatBoost {
     function isPreStake() external view returns (bool);
 }
 
+interface IRewardPool {
+    function balanceOf(address) external view returns (uint256);
+    function earned(address user, address reward) external view returns (uint256);
+}
+
 struct BoostInfo {
     uint256 totalSupply;
     uint256 rewardRate;
@@ -64,6 +69,14 @@ struct AllowanceInfo {
 }
 
 contract GoatAppMulticall {
+
+    address public native;
+    address public rewardPool;
+
+    constructor(address _native, address _rewardPool) {
+        native = _native;
+        rewardPool = _rewardPool;
+    }
 
     function getVaultInfo(address[] calldata vaults) external view returns (VaultInfo[] memory) {
         VaultInfo[] memory results = new VaultInfo[](vaults.length);
@@ -136,6 +149,14 @@ contract GoatAppMulticall {
     function getBoostOrGovBalance(address[] calldata boosts, address owner) external view returns (BoostBalanceInfo[] memory) {
         BoostBalanceInfo[] memory results = new BoostBalanceInfo[](boosts.length);
         for (uint i = 0; i < boosts.length; i++) {
+            if(boosts[i] == rewardPool){
+                IRewardPool pool = IRewardPool(boosts[i]);
+                results[i] = BoostBalanceInfo(
+                pool.balanceOf(owner),
+                pool.earned(owner, native)
+                );
+                continue;
+            }
             IGoatBoost boost = IGoatBoost(boosts[i]);
             results[i] = BoostBalanceInfo(
                 boost.balanceOf(owner),
@@ -149,10 +170,10 @@ contract GoatAppMulticall {
     function getGovVaultBalance(address[] calldata govVaults, address owner) external view returns (GovVaultBalanceInfo[] memory) {
         GovVaultBalanceInfo[] memory results = new GovVaultBalanceInfo[](govVaults.length);
         for (uint i = 0; i < govVaults.length; i++) {
-            IGoatBoost govVault = IGoatBoost(govVaults[i]);
+            IRewardPool govVault = IRewardPool(govVaults[i]);
             results[i] = GovVaultBalanceInfo(
                 govVault.balanceOf(owner),
-                govVault.earned(owner)
+                govVault.earned(owner, native)
             );
         }
 

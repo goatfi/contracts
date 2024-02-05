@@ -7,7 +7,7 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
 evm_version = "paris"
-gas_reports = ["GoatFarm", "LayerZeroBridgeAdapter"]
+gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter"]
 
 # Remappings in remappings.txt
 

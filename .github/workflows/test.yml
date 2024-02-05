@@ -1,4 +1,4 @@
-name: test
+name: Goat Protocol Tests
 
 on:
   pull_request:
@@ -6,33 +6,26 @@ on:
     branches:
       - main
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
   check:
     strategy:
       fail-fast: true
 
+    env:
+      ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - uses: PaulRBerg/foundry-multibuild@v1
         with:
-          version: nightly
+          min: "0.8.20"
+          max: "0.8.20"
+          skip-test: "false"
 
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+      - name: "Run Goat Protocol Tests"
+        run: 'forge test'
