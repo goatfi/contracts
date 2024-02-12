@@ -88,6 +88,8 @@ contract GoatFeeBatch is Ownable {
     error WithdrawingRewardToken();
     /// @notice Failed To Send ether
     error FailedToSendEther();
+    /// @notice Address can't be address(0)
+    error InvalidZeroAddress();
 
     /// @notice Contract constructor
     /// @param _native WETH address
@@ -166,6 +168,7 @@ contract GoatFeeBatch is Ownable {
     /// @notice Set the treasury
     /// @param _treasury New treasury address
     function setTreasury(address _treasury) external onlyOwner {
+        if (_treasury == address(0)) revert InvalidZeroAddress();
         treasury = _treasury;
         emit SetTreasury(_treasury);
     }
