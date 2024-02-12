@@ -357,9 +357,9 @@ contract GoatRewardPool is ERC20, Ownable {
             address reward = rewards[i];
             uint256 rewardEarned = _earned(msg.sender, reward);
             if (rewardEarned > 0) {
-                _getRewardInfo(reward).earned[msg.sender] = 0;
-                _rewardTransfer(reward, msg.sender, rewardEarned);
-                emit RewardPaid(msg.sender, reward, rewardEarned);
+                uint256 transferred = _rewardTransfer(reward, msg.sender, rewardEarned);
+                _getRewardInfo(reward).earned[msg.sender] -= transferred;
+                emit RewardPaid(msg.sender, reward, transferred);
             }
             unchecked { ++i; }
         }
@@ -421,9 +421,10 @@ contract GoatRewardPool is ERC20, Ownable {
     /// @param _reward Address of the reward
     /// @param _recipient Address of the recipient of the reward
     /// @param _amount Amount of the reward to be sent to the recipient
-    function _rewardTransfer(address _reward, address _recipient, uint256 _amount) private {
+    function _rewardTransfer(address _reward, address _recipient, uint256 _amount) private returns(uint256){
         uint256 rewardBal = IERC20(_reward).balanceOf(address(this));
         if (_amount > rewardBal) _amount = rewardBal;
         if (_amount > 0) IERC20(_reward).safeTransfer(_recipient, _amount);
+        return _amount;
     }
 }
