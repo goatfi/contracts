@@ -211,6 +211,10 @@ contract GoatFeeBatch is Ownable {
     /// @param _token Address of the token
     /// @param _recipient Address to send the token to
     function rescueTokens(address _token, address _recipient) external onlyOwner {
+        if(_token == address(0)){
+            (bool success, ) = _recipient.call{value : address(this).balance}("");
+            if(!success) revert FailedToSendEther();
+        }
         if(_token == address(native)) revert WithdrawingRewardToken();
 
         uint256 amount = IERC20(_token).balanceOf(address(this));
