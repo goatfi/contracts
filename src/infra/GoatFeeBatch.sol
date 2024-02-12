@@ -159,6 +159,7 @@ contract GoatFeeBatch is Ownable {
     /// @param _rewardPool New reward pool address
     function setRewardPool(address _rewardPool) external onlyOwner {
         rewardPool = _rewardPool;
+        native.forceApprove(rewardPool, type(uint).max);
         emit SetRewardPool(_rewardPool);
     }
 
