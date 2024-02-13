@@ -37,7 +37,7 @@ contract GoatFeeBatch is Ownable {
     uint256 public duration;
 
     /// @notice Minimum operating gas level on the harvester
-    uint256 public harvesterMax;
+    uint256 public minHarvesterGas;
 
     /// @notice Whether to send gas to the harvester
     bool public sendHarvesterGas;
@@ -69,8 +69,8 @@ contract GoatFeeBatch is Ownable {
     event SetSendHarvesterGas(bool send);
     /// @notice Harvester set
     /// @param harvester New harvester address
-    /// @param harvesterMax Minimum operating gas level for the harvester
-    event SetHarvester(address harvester, uint256 harvesterMax);
+    /// @param minHarvesterGas Minimum operating gas level for the harvester
+    event SetHarvester(address harvester, uint256 minHarvesterGas);
     /// @notice Treasury fee set
     /// @param fee New fee split for the treasury
     event SetTreasuryFee(uint256 fee);
@@ -128,8 +128,8 @@ contract GoatFeeBatch is Ownable {
         uint256 nativeBal = wrappedNative.balanceOf(address(this));
 
         uint256 harvesterBal = harvester.balance + wrappedNative.balanceOf(harvester);
-        if (harvesterBal < harvesterMax) {
-            uint256 gas = harvesterMax - harvesterBal;
+        if (harvesterBal < minHarvesterGas) {
+            uint256 gas = minHarvesterGas - harvesterBal;
             if (gas > nativeBal) {
                 gas = nativeBal;
             }
@@ -187,7 +187,7 @@ contract GoatFeeBatch is Ownable {
     /// @param _harvesterMax New minimum operating gas level of the harvester
     function setHarvesterConfig(address _harvester, uint256 _harvesterMax) external onlyOwner {
         harvester = _harvester;
-        harvesterMax = _harvesterMax;
+        minHarvesterGas = _harvesterMax;
         emit SetHarvester(_harvester, _harvesterMax);
     }
 
