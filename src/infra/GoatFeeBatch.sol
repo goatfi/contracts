@@ -90,6 +90,8 @@ contract GoatFeeBatch is Ownable {
     error FailedToSendEther();
     /// @notice Address can't be address(0)
     error InvalidZeroAddress();
+    /// @notice Treasury Fee is invalid
+    error InvalidTreasuryFee(uint256 treasuryFee);
 
     /// @notice Contract constructor
     /// @param _native WETH address
@@ -192,7 +194,7 @@ contract GoatFeeBatch is Ownable {
     /// @notice Set the treasury fee
     /// @param _treasuryFee New treasury fee split
     function setTreasuryFee(uint256 _treasuryFee) external onlyOwner {
-        if (_treasuryFee > MAX_TREASURY_FEE) _treasuryFee = MAX_TREASURY_FEE;
+        if (_treasuryFee > MAX_TREASURY_FEE) revert InvalidTreasuryFee(_treasuryFee);
         treasuryFee = _treasuryFee;
         emit SetTreasuryFee(_treasuryFee);
     }
