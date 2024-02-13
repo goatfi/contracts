@@ -108,7 +108,7 @@ contract GoatFeeBatch is Ownable {
         treasury = _treasury;
         rewardPool = _rewardPool;
         treasuryFee = _treasuryFee;
-        wrappedNative.forceApprove(rewardPool, type(uint).max);
+        wrappedNative.forceApprove(rewardPool, type(uint256).max);
         duration = 7 days;
     }
 
