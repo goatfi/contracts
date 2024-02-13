@@ -67,8 +67,8 @@ contract FeeBatchSettersTest is RevenueShareTestBase {
     }
 
     function test_SetHarvesterConfig() public {
-        uint256 harvesterMax = 0.01 ether;
-        feeBatch.setHarvesterConfig(HARVESTER, harvesterMax);
+        uint256 minHarvesterGas = 0.01 ether;
+        feeBatch.setHarvesterConfig(HARVESTER, minHarvesterGas);
 
         vm.startPrank(BLACKHAT);
         vm.expectRevert();
@@ -76,7 +76,7 @@ contract FeeBatchSettersTest is RevenueShareTestBase {
         vm.stopPrank();
 
         assertEq(feeBatch.harvester(), HARVESTER);
-        assertEq(feeBatch.harvesterMax(), harvesterMax);
+        assertEq(feeBatch.minHarvesterGas(), minHarvesterGas);
     }
 
     function test_SetDuration() public {
