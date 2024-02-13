@@ -28,7 +28,7 @@ contract GoatFeeBatch is Ownable {
     uint256 public treasuryFee;
 
     /// @notice Denominator constant
-    uint256 constant public DIVISOR = 1000;
+    uint256 constant public FEE_DENOMINATOR = 1000;
 
     /// @notice Max Treasury Fee. The Treasury will never get more than the stakers.
     uint256 constant public MAX_TREASURY_FEE = 499;
@@ -141,7 +141,7 @@ contract GoatFeeBatch is Ownable {
 
     /// @dev Swap to required treasury tokens and send the treasury fees onto the treasury
     function _distributeTreasuryFee() private {
-        uint256 treasuryFeeAmount = native.balanceOf(address(this)) * treasuryFee / DIVISOR;
+        uint256 treasuryFeeAmount = native.balanceOf(address(this)) * treasuryFee / FEE_DENOMINATOR;
 
         native.safeTransfer(treasury, treasuryFeeAmount);
         emit DistributeTreasuryFee(address(native), treasuryFeeAmount);
