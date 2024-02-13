@@ -5,6 +5,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @notice Multi-reward staking contract for GOA
 /// @dev Multiple rewards can be added to this contract by the owner. A receipt token is issued for 
@@ -380,11 +381,10 @@ contract GoatRewardPool is ERC20, Ownable {
         if (totalSupply() == 0) {
             rewardPerToken = rewardData.rewardPerTokenStored;
         } else {
-            rewardPerToken = rewardData.rewardPerTokenStored + (
-                (_lastTimeRewardApplicable(rewardData.periodFinish) - rewardData.lastUpdateTime) 
-                * rewardData.rate
-                * 1e18 
-                / totalSupply()
+            rewardPerToken = rewardData.rewardPerTokenStored + Math.mulDiv(
+                (_lastTimeRewardApplicable(rewardData.periodFinish) - rewardData.lastUpdateTime),
+                rewardData.rate * 1e30,
+                totalSupply()
             );
         }
     }
@@ -395,10 +395,10 @@ contract GoatRewardPool is ERC20, Ownable {
     /// @return earnedAmount Amount of reward earned by the user
     function _earned(address _user, address _reward) private view returns (uint256 earnedAmount) {
         RewardInfo storage rewardData = _getRewardInfo(_reward);
-        earnedAmount = rewardData.earned[_user] + (
-            balanceOf(_user) * 
-            (_rewardPerToken(_reward) - rewardData.userRewardPerTokenPaid[_user]) 
-            / 1e18
+        earnedAmount = rewardData.earned[_user] + Math.mulDiv(
+            balanceOf(_user), 
+            (_rewardPerToken(_reward) - rewardData.userRewardPerTokenPaid[_user]),
+            1e30
         );
     }
 
