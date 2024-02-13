@@ -13,7 +13,7 @@ contract GoatFeeBatch is Ownable {
     using SafeERC20 for IERC20;
 
     /// @notice Native token (WETH)
-    IERC20 public immutable native;
+    IERC20 public immutable wrappedNative;
 
     /// @notice Treasury address
     address public treasury;
@@ -24,7 +24,7 @@ contract GoatFeeBatch is Ownable {
     /// @notice Vault harvester
     address public harvester;
 
-    /// @notice Treasury fee of the total native received on the contract (1 = 0.1%)
+    /// @notice Treasury fee of the total wrappedNative received on the contract (1 = 0.1%)
     uint256 public treasuryFee;
 
     /// @notice Denominator constant
@@ -102,36 +102,36 @@ contract GoatFeeBatch is Ownable {
         address _treasury,
         uint256 _treasuryFee 
     ) Ownable(msg.sender) {
-        native = IERC20(_native);
+        wrappedNative = IERC20(_native);
         treasury = _treasury;
         rewardPool = _rewardPool;
         treasuryFee = _treasuryFee;
-        native.forceApprove(rewardPool, type(uint).max);
+        wrappedNative.forceApprove(rewardPool, type(uint).max);
         duration = 7 days;
     }
 
     /// @notice Distribute the fees to the harvester, treasury and reward pool
     function harvest() external {
-        uint256 totalFees = native.balanceOf(address(this));
+        uint256 totalFees = wrappedNative.balanceOf(address(this));
 
         if (sendHarvesterGas) _sendHarvesterGas();
         _distributeTreasuryFee();
         _notifyRewardPool();
 
-        emit Harvest(totalFees - native.balanceOf(address(this)), block.timestamp);
+        emit Harvest(totalFees - wrappedNative.balanceOf(address(this)), block.timestamp);
     }
 
-    /// @dev Unwrap the required amount of native and send to the harvester
+    /// @dev Unwrap the required amount of wrappedNative and send to the harvester
     function _sendHarvesterGas() private {
-        uint256 nativeBal = native.balanceOf(address(this));
+        uint256 nativeBal = wrappedNative.balanceOf(address(this));
 
-        uint256 harvesterBal = harvester.balance + native.balanceOf(harvester);
+        uint256 harvesterBal = harvester.balance + wrappedNative.balanceOf(harvester);
         if (harvesterBal < harvesterMax) {
             uint256 gas = harvesterMax - harvesterBal;
             if (gas > nativeBal) {
                 gas = nativeBal;
             }
-            IWrappedNative(address(native)).withdraw(gas);
+            IWrappedNative(address(wrappedNative)).withdraw(gas);
             (bool sent, ) = harvester.call{value: gas}("");
             if(!sent) revert FailedToSendEther();
 
@@ -141,18 +141,18 @@ contract GoatFeeBatch is Ownable {
 
     /// @dev Swap to required treasury tokens and send the treasury fees onto the treasury
     function _distributeTreasuryFee() private {
-        uint256 treasuryFeeAmount = native.balanceOf(address(this)) * treasuryFee / FEE_DENOMINATOR;
+        uint256 treasuryFeeAmount = wrappedNative.balanceOf(address(this)) * treasuryFee / FEE_DENOMINATOR;
 
-        native.safeTransfer(treasury, treasuryFeeAmount);
-        emit DistributeTreasuryFee(address(native), treasuryFeeAmount);
+        wrappedNative.safeTransfer(treasury, treasuryFeeAmount);
+        emit DistributeTreasuryFee(address(wrappedNative), treasuryFeeAmount);
     }
 
     /// @dev Swap to required reward tokens and notify the reward pool
     function _notifyRewardPool() private {
-        uint256 rewardPoolAmount = native.balanceOf(address(this));
+        uint256 rewardPoolAmount = wrappedNative.balanceOf(address(this));
 
-        IGoatRewardPool(rewardPool).notifyRewardAmount(address(native), rewardPoolAmount, duration);
-        emit NotifyRewardPool(address(native), rewardPoolAmount, duration);
+        IGoatRewardPool(rewardPool).notifyRewardAmount(address(wrappedNative), rewardPoolAmount, duration);
+        emit NotifyRewardPool(address(wrappedNative), rewardPoolAmount, duration);
     }
 
     /* ----------------------------------- VARIABLE SETTERS ----------------------------------- */
@@ -161,7 +161,7 @@ contract GoatFeeBatch is Ownable {
     /// @param _rewardPool New reward pool address
     function setRewardPool(address _rewardPool) external onlyOwner {
         rewardPool = _rewardPool;
-        native.forceApprove(rewardPool, type(uint).max);
+        wrappedNative.forceApprove(rewardPool, type(uint).max);
         emit SetRewardPool(_rewardPool);
     }
 
@@ -215,13 +215,13 @@ contract GoatFeeBatch is Ownable {
             (bool success, ) = _recipient.call{value : address(this).balance}("");
             if(!success) revert FailedToSendEther();
         }
-        if(_token == address(native)) revert WithdrawingRewardToken();
+        if(_token == address(wrappedNative)) revert WithdrawingRewardToken();
 
         uint256 amount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(_recipient, amount);
         emit RescueTokens(_token, _recipient);
     }
 
-    /// @notice Support unwrapped native
+    /// @notice Support unwrapped wrappedNative
     receive() external payable {}
 }
