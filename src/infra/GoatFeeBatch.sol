@@ -13,7 +13,7 @@ contract GoatFeeBatch is Ownable {
     using SafeERC20 for IERC20;
 
     /// @notice Native token (WETH)
-    IERC20 public immutable native;
+    IERC20 public immutable wrappedNative;
 
     /// @notice Treasury address
     address public treasury;
@@ -24,11 +24,11 @@ contract GoatFeeBatch is Ownable {
     /// @notice Vault harvester
     address public harvester;
 
-    /// @notice Treasury fee of the total native received on the contract (1 = 0.1%)
+    /// @notice Treasury fee of the total wrappedNative received on the contract (1 = 0.1%)
     uint256 public treasuryFee;
 
     /// @notice Denominator constant
-    uint256 constant public DIVISOR = 1000;
+    uint256 constant public FEE_DENOMINATOR = 1000;
 
     /// @notice Max Treasury Fee. The Treasury will never get more than the stakers.
     uint256 constant public MAX_TREASURY_FEE = 499;
@@ -37,7 +37,7 @@ contract GoatFeeBatch is Ownable {
     uint256 public duration;
 
     /// @notice Minimum operating gas level on the harvester
-    uint256 public harvesterMax;
+    uint256 public minHarvesterGas;
 
     /// @notice Whether to send gas to the harvester
     bool public sendHarvesterGas;
@@ -69,8 +69,8 @@ contract GoatFeeBatch is Ownable {
     event SetSendHarvesterGas(bool send);
     /// @notice Harvester set
     /// @param harvester New harvester address
-    /// @param harvesterMax Minimum operating gas level for the harvester
-    event SetHarvester(address harvester, uint256 harvesterMax);
+    /// @param minHarvesterGas Minimum operating gas level for the harvester
+    event SetHarvester(address harvester, uint256 minHarvesterGas);
     /// @notice Treasury fee set
     /// @param fee New fee split for the treasury
     event SetTreasuryFee(uint256 fee);
@@ -88,6 +88,10 @@ contract GoatFeeBatch is Ownable {
     error WithdrawingRewardToken();
     /// @notice Failed To Send ether
     error FailedToSendEther();
+    /// @notice Address can't be address(0)
+    error InvalidZeroAddress();
+    /// @notice Treasury Fee is invalid
+    error InvalidTreasuryFee(uint256 treasuryFee);
 
     /// @notice Contract constructor
     /// @param _native WETH address
@@ -100,36 +104,36 @@ contract GoatFeeBatch is Ownable {
         address _treasury,
         uint256 _treasuryFee 
     ) Ownable(msg.sender) {
-        native = IERC20(_native);
+        wrappedNative = IERC20(_native);
         treasury = _treasury;
         rewardPool = _rewardPool;
         treasuryFee = _treasuryFee;
-        native.forceApprove(rewardPool, type(uint).max);
+        wrappedNative.forceApprove(rewardPool, type(uint256).max);
         duration = 7 days;
     }
 
     /// @notice Distribute the fees to the harvester, treasury and reward pool
     function harvest() external {
-        uint256 totalFees = native.balanceOf(address(this));
+        uint256 totalFees = wrappedNative.balanceOf(address(this));
 
         if (sendHarvesterGas) _sendHarvesterGas();
         _distributeTreasuryFee();
         _notifyRewardPool();
 
-        emit Harvest(totalFees - native.balanceOf(address(this)), block.timestamp);
+        emit Harvest(totalFees, block.timestamp);
     }
 
-    /// @dev Unwrap the required amount of native and send to the harvester
+    /// @dev Unwrap the required amount of wrappedNative and send to the harvester
     function _sendHarvesterGas() private {
-        uint256 nativeBal = native.balanceOf(address(this));
+        uint256 nativeBal = wrappedNative.balanceOf(address(this));
 
-        uint256 harvesterBal = harvester.balance + native.balanceOf(harvester);
-        if (harvesterBal < harvesterMax) {
-            uint256 gas = harvesterMax - harvesterBal;
+        uint256 harvesterBal = harvester.balance + wrappedNative.balanceOf(harvester);
+        if (harvesterBal < minHarvesterGas) {
+            uint256 gas = minHarvesterGas - harvesterBal;
             if (gas > nativeBal) {
                 gas = nativeBal;
             }
-            IWrappedNative(address(native)).withdraw(gas);
+            IWrappedNative(address(wrappedNative)).withdraw(gas);
             (bool sent, ) = harvester.call{value: gas}("");
             if(!sent) revert FailedToSendEther();
 
@@ -139,18 +143,18 @@ contract GoatFeeBatch is Ownable {
 
     /// @dev Swap to required treasury tokens and send the treasury fees onto the treasury
     function _distributeTreasuryFee() private {
-        uint256 treasuryFeeAmount = native.balanceOf(address(this)) * treasuryFee / DIVISOR;
+        uint256 treasuryFeeAmount = wrappedNative.balanceOf(address(this)) * treasuryFee / FEE_DENOMINATOR;
 
-        native.safeTransfer(treasury, treasuryFeeAmount);
-        emit DistributeTreasuryFee(address(native), treasuryFeeAmount);
+        wrappedNative.safeTransfer(treasury, treasuryFeeAmount);
+        emit DistributeTreasuryFee(address(wrappedNative), treasuryFeeAmount);
     }
 
     /// @dev Swap to required reward tokens and notify the reward pool
     function _notifyRewardPool() private {
-        uint256 rewardPoolAmount = native.balanceOf(address(this));
+        uint256 rewardPoolAmount = wrappedNative.balanceOf(address(this));
 
-        IGoatRewardPool(rewardPool).notifyRewardAmount(address(native), rewardPoolAmount, duration);
-        emit NotifyRewardPool(address(native), rewardPoolAmount, duration);
+        IGoatRewardPool(rewardPool).notifyRewardAmount(address(wrappedNative), rewardPoolAmount, duration);
+        emit NotifyRewardPool(address(wrappedNative), rewardPoolAmount, duration);
     }
 
     /* ----------------------------------- VARIABLE SETTERS ----------------------------------- */
@@ -159,12 +163,14 @@ contract GoatFeeBatch is Ownable {
     /// @param _rewardPool New reward pool address
     function setRewardPool(address _rewardPool) external onlyOwner {
         rewardPool = _rewardPool;
+        wrappedNative.forceApprove(rewardPool, type(uint).max);
         emit SetRewardPool(_rewardPool);
     }
 
     /// @notice Set the treasury
     /// @param _treasury New treasury address
     function setTreasury(address _treasury) external onlyOwner {
+        if (_treasury == address(0)) revert InvalidZeroAddress();
         treasury = _treasury;
         emit SetTreasury(_treasury);
     }
@@ -181,14 +187,14 @@ contract GoatFeeBatch is Ownable {
     /// @param _harvesterMax New minimum operating gas level of the harvester
     function setHarvesterConfig(address _harvester, uint256 _harvesterMax) external onlyOwner {
         harvester = _harvester;
-        harvesterMax = _harvesterMax;
+        minHarvesterGas = _harvesterMax;
         emit SetHarvester(_harvester, _harvesterMax);
     }
 
     /// @notice Set the treasury fee
     /// @param _treasuryFee New treasury fee split
     function setTreasuryFee(uint256 _treasuryFee) external onlyOwner {
-        if (_treasuryFee > MAX_TREASURY_FEE) _treasuryFee = MAX_TREASURY_FEE;
+        if (_treasuryFee > MAX_TREASURY_FEE) revert InvalidTreasuryFee(_treasuryFee);
         treasuryFee = _treasuryFee;
         emit SetTreasuryFee(_treasuryFee);
     }
@@ -207,13 +213,17 @@ contract GoatFeeBatch is Ownable {
     /// @param _token Address of the token
     /// @param _recipient Address to send the token to
     function rescueTokens(address _token, address _recipient) external onlyOwner {
-        if(_token == address(native)) revert WithdrawingRewardToken();
+        if(_token == address(0)){
+            (bool success, ) = _recipient.call{value : address(this).balance}("");
+            if(!success) revert FailedToSendEther();
+        }
+        if(_token == address(wrappedNative)) revert WithdrawingRewardToken();
 
         uint256 amount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(_recipient, amount);
         emit RescueTokens(_token, _recipient);
     }
 
-    /// @notice Support unwrapped native
+    /// @notice Support unwrapped wrappedNative
     receive() external payable {}
 }
