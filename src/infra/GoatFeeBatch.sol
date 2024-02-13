@@ -120,7 +120,7 @@ contract GoatFeeBatch is Ownable {
         _distributeTreasuryFee();
         _notifyRewardPool();
 
-        emit Harvest(totalFees - wrappedNative.balanceOf(address(this)), block.timestamp);
+        emit Harvest(totalFees, block.timestamp);
     }
 
     /// @dev Unwrap the required amount of wrappedNative and send to the harvester
