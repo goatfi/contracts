@@ -18,8 +18,8 @@ contract GoatRewardPool is ERC20, Ownable {
     /// @param duration Distribution length of time in seconds
     /// @param lastUpdateTime Latest timestamp of an update
     /// @param rate Distribution speed in wei per second
-    /// @param rewardPerTokenStored Stored reward value per staked token in 18 decimals
-    /// @param userRewardPerTokenPaid Stored reward value per staked token in 18 decimals at the 
+    /// @param rewardPerTokenStored Stored reward value per staked token in 30 decimals
+    /// @param userRewardPerTokenPaid Stored reward value per staked token in 30 decimals at the 
     /// last time a user was paid the reward
     /// @param earned Value of reward still owed to the user
     struct RewardInfo {
