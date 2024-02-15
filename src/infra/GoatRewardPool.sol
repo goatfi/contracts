@@ -42,7 +42,7 @@ contract GoatRewardPool is ERC20, Ownable {
     mapping(address => bool) public whitelisted;
 
     /// @dev Limit to the number of rewards an owner can add
-    uint256 private rewardMax;
+    uint256 internal constant rewardMax = 10;
 
     /// @dev Location of a reward in the reward array
     mapping(address => uint256) private _index;
@@ -103,7 +103,6 @@ contract GoatRewardPool is ERC20, Ownable {
 
     constructor(address _stakedToken) ERC20("Staked GOA", "stGOA") Ownable(msg.sender) {
         stakedToken = IERC20(_stakedToken);
-        rewardMax = 10;
     }
 
     /// @notice Stake GOA tokens
