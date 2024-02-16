@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { TrustlessPermit } from "@trust-security/trustlesPermit/TrustlessPermit.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @notice Multi-reward staking contract for GOA
@@ -12,6 +12,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 /// staking and is used for withdrawing the staked GOA.
 contract GoatRewardPool is ERC20, Ownable {
     using SafeERC20 for IERC20;
+    using TrustlessPermit for address;
 
     /// @dev Information for a particular reward
     /// @param periodFinish End timestamp of reward distribution
@@ -128,7 +129,7 @@ contract GoatRewardPool is ERC20, Ownable {
         bytes32 _r,
         bytes32 _s
     ) external update(_user) {
-        IERC20Permit(address(stakedToken)).permit(
+        address(stakedToken).trustlessPermit(
             _user, address(this), _amount, _deadline, _v, _r, _s
         );
         _stake(_user, _amount);
