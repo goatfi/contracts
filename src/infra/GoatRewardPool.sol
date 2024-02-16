@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { TrustlessPermit } from "@trust-security/trustlessPermit/TrustlessPermit.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @notice Multi-reward staking contract for GOA
@@ -12,14 +12,15 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 /// staking and is used for withdrawing the staked GOA.
 contract GoatRewardPool is ERC20, Ownable {
     using SafeERC20 for IERC20;
+    using TrustlessPermit for address;
 
     /// @dev Information for a particular reward
     /// @param periodFinish End timestamp of reward distribution
     /// @param duration Distribution length of time in seconds
     /// @param lastUpdateTime Latest timestamp of an update
     /// @param rate Distribution speed in wei per second
-    /// @param rewardPerTokenStored Stored reward value per staked token in 18 decimals
-    /// @param userRewardPerTokenPaid Stored reward value per staked token in 18 decimals at the 
+    /// @param rewardPerTokenStored Stored reward value per staked token in 30 decimals
+    /// @param userRewardPerTokenPaid Stored reward value per staked token in 30 decimals at the 
     /// last time a user was paid the reward
     /// @param earned Value of reward still owed to the user
     struct RewardInfo {
@@ -42,7 +43,7 @@ contract GoatRewardPool is ERC20, Ownable {
     mapping(address => bool) public whitelisted;
 
     /// @dev Limit to the number of rewards an owner can add
-    uint256 private rewardMax;
+    uint256 internal constant rewardMax = 10;
 
     /// @dev Location of a reward in the reward array
     mapping(address => uint256) private _index;
@@ -103,7 +104,6 @@ contract GoatRewardPool is ERC20, Ownable {
 
     constructor(address _stakedToken) ERC20("Staked GOA", "stGOA") Ownable(msg.sender) {
         stakedToken = IERC20(_stakedToken);
-        rewardMax = 10;
     }
 
     /// @notice Stake GOA tokens
@@ -129,7 +129,7 @@ contract GoatRewardPool is ERC20, Ownable {
         bytes32 _r,
         bytes32 _s
     ) external update(_user) {
-        IERC20Permit(address(stakedToken)).permit(
+        address(stakedToken).trustlessPermit(
             _user, address(this), _amount, _deadline, _v, _r, _s
         );
         _stake(_user, _amount);

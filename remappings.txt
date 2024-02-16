@@ -8,3 +8,4 @@ interfaces/=src/interfaces
 @xerc20=lib/xERC20/
 @uniswap/v3-periphery=lib/v3-periphery/
 @uniswap/v3-core=lib/v3-core/
+@trust-security/trustlessPermit/=lib/trustlessPermit/
