@@ -6,6 +6,9 @@ coverage/
 #Ignored for compilation
 ignoreCompile/
 
+#Ignore Fork deployment tests
+test/Local/
+
 # Ignores development broadcast logs
 /broadcast
 /broadcast/*/31337/

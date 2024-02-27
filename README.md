@@ -1,6 +1,7 @@
 # Goat Protocol
 
 [![Tests](https://github.com/goatfi/contracts/actions/workflows/test.yml/badge.svg)](https://github.com/goatfi/contracts/actions/workflows/test.yml)
+[![Foundry](https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg)](https://getfoundry.sh/)
 
 
 The Goat Protocol is a decentralized yield optimizer. It allows users, DAOs and other protocols earn the  yield on their digital assets by auto compounding the rewards into more of what they've deposited.
