@@ -9,24 +9,28 @@ import { IStrategy } from "interfaces/infra/IStrategy.sol";
 import { StratFeeManagerInitializable } from "src/infra/strategies/common/StratFeeManagerInitializable.sol";
 import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
 import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { GoatUniswapV3Buyback } from "src/infra/GoatUniswapV3Buyback.sol";
 
 // Strategy to deploy
-import { StakedGOAStrategy } from "src/infra/strategies/goat/StakedGOAStrategy.sol";
+import { StrategyCurveConvexL2 } from "src/infra/strategies/curve/StrategyCurveConvexL2.sol";
 
-contract DeployGoatVault is Script {
+contract DeployGoatVaultCurve is Script {
 
-    string name = "Wrapped Staked GOA";
-    string symbol = "wstGOA";
+    string name = "Goat Curve fETH-xETH-WETH";
+    string symbol = "gCurvefETH-xETH-WETH";
     uint256 stratApprovalDelay = 21600;
 
+    uint256 pid = 15;
     address native = AssetsArbitrum.WETH;
-    address want = AssetsArbitrum.GOA;
+    address want = 0xF7Fed8Ae0c5B78c19Aadd68b700696933B0Cefd9;
+    address depositToken = address(0);
     address rewardPool = ProtocolArbitrum.GOAT_REWARD_POOL;
+    address gauge = 0x7AE49935b8BC11023e5b04d86a44055f999fca31;
+
+    address[] rewards = [AssetsArbitrum.CRV, AssetsArbitrum.CRVUSD, AssetsArbitrum.ARB];
     
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
-    address unirouter = 0x62Fc95FBa4b802aC13017aAa65cA62FfcE6DF0eA;
+    address unirouter = ProtocolArbitrum.GOAT_SWAPPER;
     address keeper = ProtocolArbitrum.TREASURY;
     address strategist = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address protocolFeeRecipient = ProtocolArbitrum.GOAT_FEE_BATCH;
@@ -42,12 +46,11 @@ contract DeployGoatVault is Script {
         vm.startBroadcast(deployer_privateKey);
 
         GoatVault vault = vaultFactory.cloneVault();
-        StakedGOAStrategy strategy = new StakedGOAStrategy();
-        GoatUniswapV3Buyback buyback = new GoatUniswapV3Buyback(address(strategy));
+        StrategyCurveConvexL2 strategy = new StrategyCurveConvexL2();
 
         commonAddresses = StratFeeManagerInitializable.CommonAddresses(
             address(vault),
-            address(buyback),
+            unirouter,
             keeper,
             strategist,
             protocolFeeRecipient,
@@ -55,8 +58,7 @@ contract DeployGoatVault is Script {
             );
 
         vault.initialize(IStrategy(address(strategy)), name, symbol, stratApprovalDelay);
-        strategy.initialize(want, native, rewardPool, commonAddresses);
-        strategy.setStratFeeId(1);
+        strategy.initialize(native, want, gauge, pid, depositToken, rewards, commonAddresses);
 
         vm.stopBroadcast();
 

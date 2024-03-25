@@ -26,7 +26,17 @@ interface IGoatSwapper {
         address router;
         bytes data;
         uint256 amountIndex;
-        uint256 minIndex;
-        int8 minAmountSign;
     }
+
+    function setSwapInfo(
+        address _fromToken, 
+        address _toToken, 
+        SwapInfo calldata _swapInfo
+    ) external;
+
+    function setSwapInfos(
+        address[] calldata _fromTokens, 
+        address[] calldata _toTokens, 
+        SwapInfo[] calldata _swapInfos
+    ) external;
 }
