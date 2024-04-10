@@ -8,6 +8,9 @@ optimizer = true
 optimizer_runs = 200
 evm_version = "paris"
 gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter"]
+build_info = false
+extra_output = ["storageLayout"]
+fs_permissions = [{ access = "read", path = "./"}]
 
 # Remappings in remappings.txt
 

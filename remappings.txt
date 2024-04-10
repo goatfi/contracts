@@ -12,3 +12,4 @@ test-utils/=test/Utils
 @addressbook/=lib/goat-address-book/src/sol/
 @trust-security/trustlessPermit/=lib/trustlessPermit/
 @uniswapV3-periphery/=lib/v3-periphery/contracts/
+@prb/math/=lib/prb-math/
