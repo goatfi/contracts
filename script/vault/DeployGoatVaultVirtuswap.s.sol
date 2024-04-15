@@ -24,7 +24,7 @@ contract DeployGoatVaultVirtuswap is Script {
     address depositToken = address(0);
     address rewardPool = ProtocolArbitrum.GOAT_REWARD_POOL;
 
-    address[] rewards = [AssetsArbitrum.CRV, AssetsArbitrum.CRVUSD, AssetsArbitrum.ARB];
+    address[] rewards = [AssetsArbitrum.VRSW];
     
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
@@ -61,7 +61,7 @@ contract DeployGoatVaultVirtuswap is Script {
             symbol, 
             stratApprovalDelay
             );
-            
+
         strategy.initialize(
             native, 
             want, 
