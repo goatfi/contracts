@@ -33,13 +33,11 @@ contract GoatVaultDeploymentSiloTest is Test {
     uint256 stratApprovalDelay = 21600;
 
     address native = AssetsArbitrum.WETH;
-    address want = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8; // usdc.e
-    address collateral = 0xFb6DE7D8Ca3Ec3396bB1Cc53adDEf1F26468055B; // sUSDC-GMD
-    // address siloToken = 0x0341C0C0ec423328621788d4854119B97f44E391;
+    address want = AssetsArbitrum.USDCe;
+    address collateral = 0xFb6DE7D8Ca3Ec3396bB1Cc53adDEf1F26468055B; // sUSDC-WBTC
     address silo = 0x69eC552BE56E6505703f0C861c40039e5702037A;
-    address arbToken = 0x912CE59144191C1204E64559FE8253a0e49E6548;
 
-    address[] rewards = [arbToken];
+    address[] rewards = [AssetsArbitrum.ARB, AssetsArbitrum.SILO];
 
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
@@ -85,7 +83,7 @@ contract GoatVaultDeploymentSiloTest is Test {
 
     function test_CanCompleteTestCycle() public {
         // Get want
-        uint256 amountToDeposit = 100 ether;
+        uint256 amountToDeposit = 1000 * 10e6;
         deal(want, address(this), amountToDeposit);
 
         // Deposit
@@ -97,36 +95,27 @@ contract GoatVaultDeploymentSiloTest is Test {
         // Keeper panics the strategy
         vm.prank(keeper);
         strategy.panic();
-        assertLe(IERC20(want).balanceOf(address(strategy)), amountToDeposit);
+        assertGe(IERC20(want).balanceOf(address(strategy)), amountToDeposit);
 
         // Keeper unpauses the strategy
         vm.prank(keeper);
         strategy.unpause();
         assertEq(IERC20(want).balanceOf(address(strategy)), 0);
 
-        vm.warp(block.timestamp + 10000000);
+        vm.warp(block.timestamp + 1 days);
 
         // Harvest and check that the fees go to the feeBatch and strategist
-        uint256 feeBatchBalance = IERC20(native).balanceOf(
-            protocolFeeRecipient
-        );
+        uint256 feeBatchBalance = IERC20(native).balanceOf(protocolFeeRecipient);
         uint256 strategistBalance = IERC20(native).balanceOf(strategist);
         strategy.harvest();
 
-        console.log(feeBatchBalance);
-
-        assertGt(
-            IERC20(native).balanceOf(protocolFeeRecipient),
-            feeBatchBalance
-        );
-
-        // assertGt(IERC20(native).balanceOf(strategist), strategistBalance);
-
-        // assertGt(IERC20(collateral).balanceOf(address(strategy)), 0);
+        assertGt(IERC20(native).balanceOf(protocolFeeRecipient), feeBatchBalance);
+        assertGt(IERC20(native).balanceOf(strategist), strategistBalance);
+        assertGt(IERC20(collateral).balanceOf(address(strategy)), 0);
 
         // // Check that after a harvest, the user got more of what he desposited
-        // vault.withdrawAll();
-        // assertGt(IERC20(want).balanceOf(address(this)), amountToDeposit);
-        // console.log(IERC20(want).balanceOf(address(this)));
+        vault.withdrawAll();
+        assertGt(IERC20(want).balanceOf(address(this)), amountToDeposit);
+        console.log(IERC20(want).balanceOf(address(this)));
     }
 }

@@ -14,10 +14,8 @@ contract StrategySilo is BaseAllToNativeStrat {
     address public collateral;
     address[] public rewardsClaim;
 
-    ISiloRewards public constant siloRewards =
-        ISiloRewards(0xd592F705bDC8C1B439Bd4D665Ed99C4FaAd5A680);
-    ISiloLens public constant siloLens =
-        ISiloLens(0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536);
+    ISiloRewards public constant siloRewards = ISiloRewards(0x7e5BFBb25b33f335e34fa0d78b878092931F8D20);
+    ISiloLens public constant siloLens = ISiloLens(0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536);
 
     uint256 public constant DURATION = 1 days;
 
@@ -74,9 +72,11 @@ contract StrategySilo is BaseAllToNativeStrat {
 
     function _giveAllowances() internal override {
         IERC20(want).approve(silo, type(uint).max);
+        IERC20(native).approve(unirouter, type(uint).max);
     }
 
     function _removeAllowances() internal override {
         IERC20(want).approve(silo, 0);
+        IERC20(native).approve(unirouter, 0);
     }
 }
