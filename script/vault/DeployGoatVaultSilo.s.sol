@@ -13,9 +13,8 @@ import {GoatUniswapV3Buyback} from "src/infra/GoatUniswapV3Buyback.sol";
 
 // Strategy to deploy
 import {StrategySilo} from "src/infra/strategies/silo/StrategySilo.sol";
-import {IEqbBooster} from "interfaces/equilibria/IEquilibria.sol";
 
-contract DeployGoatVaultEquilibria is Script {
+contract DeployGoatVaultSilo is Script {
     string name = "Goat Silo WBTC, ETH, USDC.e Market";
     string symbol = "gSWBC,ETH,USDC";
     uint256 stratApprovalDelay = 21600;
