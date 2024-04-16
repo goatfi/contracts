@@ -37,7 +37,6 @@ contract StrategyVirtuswap is BaseAllToNativeStrat {
     }
 
     function _withdraw(uint amount) internal override {
-        vstaker.claimRewards(want);
         vstaker.unstakeLp(want, amount);
     }
 
@@ -53,7 +52,7 @@ contract StrategyVirtuswap is BaseAllToNativeStrat {
     }
 
     function _verifyRewardToken(address token) internal pure override {
-        require(token != address(vstaker), "!stakerPool");
+        require(token != address(vstaker), "!stakePool");
     }
 
     function _giveAllowances() internal override {

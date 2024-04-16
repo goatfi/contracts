@@ -20,6 +20,8 @@ contract VirtuswapOneSidedLiquidity {
     /// @notice Amount to add liquidity is insufficient
     /// @param amount Amount to be added as liquidity
     error InsufficientAmount(uint256 amount);
+    /// @notice Zero address
+    error ZeroAddress();
 
     constructor(address _swapper, address _factory, address _router) {
         swapper = _swapper;
@@ -46,7 +48,7 @@ contract VirtuswapOneSidedLiquidity {
     /// to add the maximum amount of liquidity
     /// @param r Reserve of the asset in the pool
     /// @param a Amount of the asset to be added as liquidty
-    function getSwapAmount(uint256 r, uint256 a) public pure returns (uint256) {
+    function getSwapAmount(uint256 r, uint256 a) private pure returns (uint256) {
         return (sqrt(r * (r * 3988009 + a * 3988000)) - r * 1997) / 1994;
     }
 
@@ -56,6 +58,7 @@ contract VirtuswapOneSidedLiquidity {
     /// @param _amountA Amount of TokenA that will be added as liquidity on the LP
     function addLiquidityOneSided(address _tokenA, address _tokenB, uint256 _amountA) external {
         if (msg.sender != swapper) revert InvalidCaller(swapper, msg.sender);
+        if (_tokenA == address(0) || _tokenB == address(0)) revert ZeroAddress();
         if (_amountA <= 1) revert InsufficientAmount(_amountA);
 
         IERC20(_tokenA).safeTransferFrom(msg.sender, address(this), _amountA);
@@ -81,7 +84,7 @@ contract VirtuswapOneSidedLiquidity {
     /// @param _from Token to swap from
     /// @param _to Token to swap to
     /// @param _amount The amount of _from to swap to _to
-    function _swap(address _from, address _to, uint256 _amount) internal {
+    function _swap(address _from, address _to, uint256 _amount) private {
         IERC20(_from).approve(router, _amount);
 
         address[] memory path = new address[](2);
@@ -98,7 +101,7 @@ contract VirtuswapOneSidedLiquidity {
     /// @param _tokenA TokenA of the LP
     /// @param _tokenB TokenB of the LP
     /// @param _recipient Who will receive the LP tokens
-    function _addLiquidity(address _tokenA, address _tokenB, address _recipient) internal {
+    function _addLiquidity(address _tokenA, address _tokenB, address _recipient) private {
         uint256 balA = IERC20(_tokenA).balanceOf(address(this));
         uint256 balB = IERC20(_tokenB).balanceOf(address(this));
         IERC20(_tokenA).approve(router, balA);
