@@ -124,6 +124,8 @@ abstract contract BaseAllToNativeStrat is StratFeeManagerInitializable {
             uint256 amount = IERC20(token).balanceOf(address(this));
             if (amount > minAmounts[token]) {
                 IGoatSwapper(unirouter).swap(token, native, amount);
+            } else {
+                revert("here");
             }
         }
     }
