@@ -113,7 +113,7 @@ contract GoatVaultDeploymentSiloTest is Test {
         assertGt(IERC20(native).balanceOf(strategist), strategistBalance);
         assertGt(IERC20(collateral).balanceOf(address(strategy)), 0);
 
-        // // Check that after a harvest, the user got more of what he desposited
+        // Check that after a harvest, the user got more of what he desposited
         vault.withdrawAll();
         assertGt(IERC20(want).balanceOf(address(this)), amountToDeposit);
         console.log(IERC20(want).balanceOf(address(this)));
