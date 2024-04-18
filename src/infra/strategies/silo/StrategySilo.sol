@@ -2,14 +2,10 @@
 
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { BaseAllToNativeStrat } from "../common/BaseAllToNativeStrat.sol";
+import { BaseAllToNativeStrat, IERC20 } from "../common/BaseAllToNativeStrat.sol";
 import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces/silo/ISilo.sol";
 
 contract StrategySilo is BaseAllToNativeStrat {
-    using SafeERC20 for IERC20;
-
     ISiloRewards public constant siloRewards = ISiloRewards(0x7e5BFBb25b33f335e34fa0d78b878092931F8D20);
     ISiloLens public constant siloLens = ISiloLens(0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536);
 
