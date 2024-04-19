@@ -28,15 +28,18 @@ contract BoostFactory {
     }
 
     /// @notice Deploys a new Boost contract using the Boost implementation
-    /// @param gToken Address of the staked token for the Boost
-    /// @param rewardToken Address of the reward token for the Boost
-    /// @param duration_in_sec Duration of the Boost in seconds
+    /// @param _vault Address of the staked token for the Boost
+    /// @param _rewardToken Address of the reward token for the Boost
+    /// @param _duration Duration of the Boost in seconds
+    /// @param _manager Address of the boost manager
+    /// @param _treasury Address of the treasury
     /// @dev Clones the Boost implementation, initializes it, sets treasury fee to 0, and transfers ownership to the deployer
-    function deployBoost(address gToken, address rewardToken, uint duration_in_sec) external {
+    function deployBoost(address _vault, address _rewardToken, uint _duration, address _manager, address _treasury) external returns (address) {
         IGoatBoost boost = IGoatBoost(IGoatVaultFactory(factory).cloneContract(boostImpl));
-        boost.initialize(gToken, rewardToken, duration_in_sec, msg.sender, address(0));
+        boost.initialize(_vault, _rewardToken, _duration, _manager, _treasury);
         boost.setTreasuryFee(0);
         boost.transferOwnership(deployer);
         emit BoostDeployed(address(boost));
+        return address(boost);
     }
 }
