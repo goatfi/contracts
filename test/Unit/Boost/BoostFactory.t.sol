@@ -8,7 +8,7 @@ import { GoatVaultFactory } from "src/infra/vault/GoatVaultFactory.sol";
 import { GoatBoost } from "src/infra/boost/GoatBoost.sol";
 import { IGoatBoost } from "interfaces/infra/IGoatBoost.sol";
 
-contract GoatBoostFactoryTest is Test {
+contract BoostFactoryTest is Test {
     BoostFactory public boostFactory;
     IGoatBoost public goatBoost;
     address public vaultFactory;

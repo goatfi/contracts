@@ -13,6 +13,8 @@ interface IGoatBoost {
     function manager() external view returns (address);
     function treasury() external view returns (address);
     function treasuryFee() external view returns (uint256);
+    function isPreStake() external view returns (bool);
+    function notifiers(address account) external view returns(bool);
 
     // Functions
     function initialize(
@@ -23,5 +25,17 @@ interface IGoatBoost {
         address _treasury
     ) external;
     function transferOwnership(address owner) external;
-    function setTreasuryFee(uint256 _fee) external;
+    function setTreasury(address treasury) external;
+    function setTreasuryFee(uint256 fee) external;
+    function stake(uint256 amount) external;
+    function withdraw(uint256 amount) external;
+    function exit() external;
+    function totalSupply() external returns (uint256);
+    function balanceOf(address account) external returns (uint256);
+    function setRewardDuration(uint256 duration) external;
+    function openPreStake() external;
+    function closePreStake() external;
+    function setNotifier(address account, bool enable) external;
+    function inCaseTokensGetStuck(address _token) external;
+    function inCaseTokensGetStuck(address _token, address _to, uint _amount) external;
 }
