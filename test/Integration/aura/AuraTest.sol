@@ -100,53 +100,6 @@ contract GoatVaultDeploymentAuraTest is Test {
         _addDepositToWantSwapInfo();
     }
 
-    function _addDepositToWantSwapInfo() internal {
-        bytes32 poolId = IBalancerPool(want).getPoolId();
-
-        IAsset[] memory tokens = new IAsset[](2);
-        tokens[0] = IAsset(depositToken);
-        tokens[1] = IAsset(starToken);
-
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = randomAmt; // random
-        amounts[1] = 0;
-
-        bytes memory userData = abi.encode(1, amounts);
-
-        IBalancerVault.JoinPoolRequest memory request = IBalancerVault
-            .JoinPoolRequest({
-                assets: tokens,
-                maxAmountsIn: amounts,
-                userData: userData,
-                fromInternalBalance: false
-            });
-
-        IGoatSwapper.SwapInfo memory swapInfo = IGoatSwapper.SwapInfo({
-            router: balancerVault,
-            data: abi.encodeWithSignature(
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-                poolId,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                request
-            ),
-            amountIndex: 388 // 32 * 12 + 4
-        });
-        vm.prank(0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1);
-
-        console.logBytes(
-            abi.encodeWithSignature(
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-                poolId,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                request
-            )
-        );
-
-        swapper.setSwapInfo(depositToken, want, swapInfo);
-    }
-
     function _addRewardToNativeSwapInfo(
         bytes32 poolId,
         address token
@@ -183,6 +136,55 @@ contract GoatVaultDeploymentAuraTest is Test {
         vm.prank(0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1);
 
         swapper.setSwapInfo(token, native, swapInfo);
+    }
+
+    function _addDepositToWantSwapInfo() internal {
+        bytes32 poolId = IBalancerPool(want).getPoolId();
+
+        IAsset[] memory tokens = new IAsset[](3);
+        tokens[0] = IAsset(depositToken);
+        tokens[1] = IAsset(starToken);
+        tokens[2] = IAsset(0xEAD7e0163e3b33bF0065C9325fC8fb9B18cc8213);
+
+        uint256[] memory amounts = new uint256[](3);
+        amounts[0] = type(uint256).max; // random
+
+        uint256[] memory amounts1 = new uint256[](2);
+        amounts1[0] = randomAmt; // random
+        bytes memory userData = abi.encode(1, amounts1, 0);
+
+        IBalancerVault.JoinPoolRequest memory request = IBalancerVault
+            .JoinPoolRequest({
+                assets: tokens,
+                maxAmountsIn: amounts,
+                userData: userData,
+                fromInternalBalance: false
+            });
+
+        console.logBytes(
+            abi.encodeWithSignature(
+                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+                poolId,
+                ProtocolArbitrum.GOAT_SWAPPER,
+                ProtocolArbitrum.GOAT_SWAPPER,
+                request
+            )
+        );
+
+        IGoatSwapper.SwapInfo memory swapInfo = IGoatSwapper.SwapInfo({
+            router: balancerVault,
+            data: abi.encodeWithSignature(
+                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+                poolId,
+                ProtocolArbitrum.GOAT_SWAPPER,
+                ProtocolArbitrum.GOAT_SWAPPER,
+                request
+            ),
+            amountIndex: 676 // 32 * 21 + 4
+        });
+        vm.prank(0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1);
+
+        swapper.setSwapInfo(depositToken, want, swapInfo);
     }
 
     // function test_CanCompleteTestCycle() public {
