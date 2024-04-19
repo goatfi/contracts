@@ -2,19 +2,20 @@
 
 pragma solidity ^0.8.20;
 
-import { BaseAllToNativeStrat, IERC20 } from "../common/BaseAllToNativeStrat.sol";
-import { IAuraBooster, IBaseRewardPool } from "interfaces/aura/IAura.sol";
+import {BaseAllToNativeStrat, IERC20} from "../common/BaseAllToNativeStrat.sol";
+import {IAuraBooster, IBaseRewardPool} from "interfaces/aura/IAura.sol";
 
 contract StrategyAura is BaseAllToNativeStrat {
     IAuraBooster public constant booster =
         IAuraBooster(0x98Ef32edd24e2c92525E59afc4475C1242a30184);
-    
+
     address public rewardPool;
     uint256 public pid;
 
     function initialize(
-        address _native,
         uint _pid,
+        address _native,
+        address _depositToken,
         address[] calldata _rewards,
         CommonAddresses calldata _commonAddresses
     ) public initializer {
@@ -25,6 +26,7 @@ contract StrategyAura is BaseAllToNativeStrat {
         rewardPool = pInfo.crvRewards;
 
         __BaseStrategy_init(pInfo.lptoken, _native, _rewards, _commonAddresses);
+        setDepositToken(_depositToken);
         setHarvestOnDeposit(true);
     }
 
