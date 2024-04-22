@@ -9,7 +9,7 @@ import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 
 contract DeployGoatBoost is Script {
 
-    address boostFactory; //TODO: Add boost factory address via addresbook
+    address boostFactory = ProtocolArbitrum.GOAT_BOOST_FACTORY;
 
     address vaultToBoost;
     address rewardToken = AssetsArbitrum.VRSW;

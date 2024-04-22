@@ -7,14 +7,13 @@ import { GoatBoost } from "src/infra/boost/GoatBoost.sol";
 import { BoostFactory } from "src/infra/boost/BoostFactory.sol";
 import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
 
-contract DeployBoostFactoryScript is Script {
+contract DeployBoostFactory is Script {
     address factory = ProtocolArbitrum.GOAT_VAULT_FACTORY;
-    address boostImpl;
 
     function run() public {
         vm.startBroadcast();
 
-        boostImpl = address(new GoatBoost());
+        address boostImpl = address(new GoatBoost());
         BoostFactory boostFactory = new BoostFactory(factory, boostImpl);
         
         console.log("Deployed BoostFactory at:", address(boostFactory));
