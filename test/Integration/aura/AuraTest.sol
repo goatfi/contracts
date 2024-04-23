@@ -163,25 +163,25 @@ contract GoatVaultDeploymentAuraTest is Test {
         swapper.setSwapInfo(depositToken, want, swapInfo);
     }
 
-    // function test_addLiquidityOneSided_LowDecimalToken() public {
-    //     vm.startPrank(usdcWhale);
-    //     IERC20(depositToken).transfer(address(swapper), 100e6);
-    //     vm.stopPrank();
+    function test_addLiquidityOneSided_LowDecimalToken() public {
+        vm.startPrank(usdcWhale);
+        IERC20(depositToken).transfer(address(swapper), 100e6);
+        vm.stopPrank();
 
-    //     vm.startPrank(address(swapper));
-    //     uint256 amountA = IERC20(depositToken).balanceOf(address(swapper));
+        vm.startPrank(address(swapper));
+        uint256 amountA = IERC20(depositToken).balanceOf(address(swapper));
 
-    //     IERC20(depositToken).approve(address(auraBalancerHelper), amountA);
+        IERC20(depositToken).approve(address(auraBalancerHelper), amountA);
 
-    //     bytes32 poolId = IBalancerPool(want).getPoolId();
+        bytes32 poolId = IBalancerPool(want).getPoolId();
 
-    //     auraBalancerHelper.addBalancerLiquidity(poolId, amountA, 2, 0);
+        auraBalancerHelper.addBalancerLiquidity(poolId, amountA, 2, 0);
 
-    //     vm.stopPrank();
+        vm.stopPrank();
 
-    //     assertEq(IERC20(depositToken).balanceOf(address(swapper)), 0);
-    //     assertGt(IERC20(want).balanceOf(address(swapper)), 0);
-    // }
+        assertEq(IERC20(depositToken).balanceOf(address(swapper)), 0);
+        assertGt(IERC20(want).balanceOf(address(swapper)), 0);
+    }
 
     // function test_CanCompleteTestCycle() public {
     //     console.log("here");
