@@ -5,17 +5,17 @@ pragma solidity 0.8.20;
 import "forge-std/Test.sol";
 import {GoatVault} from "src/infra/vault/GoatVault.sol";
 import {IGoatVaultFactory} from "interfaces/infra/IGoatVaultFactory.sol";
-import {IBalancerPool, IBalancerVault, IAsset} from "interfaces/aura/IBalancer.sol";
+import {IBalancerPool, IBalancerVault} from "interfaces/aura/IBalancer.sol";
 import {StratFeeManagerInitializable} from "src/infra/strategies/common/StratFeeManagerInitializable.sol";
 import {IStrategy} from "interfaces/infra/IStrategy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ProtocolArbitrum} from "@addressbook/ProtocolArbitrum.sol";
 import {AssetsArbitrum} from "@addressbook/AssetsArbitrum.sol";
 import {IGoatSwapper} from "interfaces/infra/IGoatSwapper.sol";
 
 // Strategy to deploy
 import {StrategyAura} from "src/infra/strategies/aura/StrategyAura.sol";
+import {AuraBalancerHelper} from "src/infra/strategies/aura/AuraBalancerHelper.sol";
 
 contract GoatVaultDeploymentAuraTest is Test {
     /*//////////////////////////////////////////////////////////////////////////
@@ -25,6 +25,7 @@ contract GoatVaultDeploymentAuraTest is Test {
     GoatVault vault;
     IGoatSwapper swapper;
     StrategyAura strategy;
+    AuraBalancerHelper auraBalancerHelper;
 
     /*//////////////////////////////////////////////////////////////////////////
                                     VARIABLES
@@ -38,6 +39,7 @@ contract GoatVaultDeploymentAuraTest is Test {
     address native = AssetsArbitrum.WETH;
     address depositToken = AssetsArbitrum.USDC;
     address starToken = 0xC19669A405067927865B40Ea045a2baabbbe57f5;
+    address usdcWhale = 0xB38e8c17e38363aF6EbdCb3dAE12e0243582891D;
 
     address balancerVault = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
     bytes32 balethPoolId =
@@ -68,6 +70,10 @@ contract GoatVaultDeploymentAuraTest is Test {
         );
         vault = vaultFactory.cloneVault();
         strategy = new StrategyAura();
+        auraBalancerHelper = new AuraBalancerHelper(
+            ProtocolArbitrum.GOAT_SWAPPER,
+            balancerVault
+        );
 
         commonAddresses = StratFeeManagerInitializable.CommonAddresses(
             address(vault),
@@ -108,8 +114,8 @@ contract GoatVaultDeploymentAuraTest is Test {
             .SingleSwap({
                 poolId: poolId,
                 kind: IBalancerVault.SwapKind.GIVEN_IN,
-                assetIn: IAsset(token),
-                assetOut: IAsset(native),
+                assetIn: IERC20(token),
+                assetOut: IERC20(native),
                 amount: randomAmt,
                 userData: "0x"
             });
@@ -141,51 +147,41 @@ contract GoatVaultDeploymentAuraTest is Test {
     function _addDepositToWantSwapInfo() internal {
         bytes32 poolId = IBalancerPool(want).getPoolId();
 
-        IAsset[] memory tokens = new IAsset[](3);
-        tokens[0] = IAsset(depositToken);
-        tokens[1] = IAsset(starToken);
-        tokens[2] = IAsset(0xEAD7e0163e3b33bF0065C9325fC8fb9B18cc8213);
-
-        uint256[] memory amounts = new uint256[](3);
-        amounts[0] = type(uint256).max; // random
-
-        uint256[] memory amounts1 = new uint256[](2);
-        amounts1[0] = randomAmt; // random
-        bytes memory userData = abi.encode(1, amounts1, 0);
-
-        IBalancerVault.JoinPoolRequest memory request = IBalancerVault
-            .JoinPoolRequest({
-                assets: tokens,
-                maxAmountsIn: amounts,
-                userData: userData,
-                fromInternalBalance: false
-            });
-
-        console.logBytes(
-            abi.encodeWithSignature(
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-                poolId,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                request
-            )
-        );
-
         IGoatSwapper.SwapInfo memory swapInfo = IGoatSwapper.SwapInfo({
-            router: balancerVault,
+            router: address(auraBalancerHelper),
             data: abi.encodeWithSignature(
-                "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
+                "addBalancerLiquidity(bytes32,uint256,uint256,uint256)",
                 poolId,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                ProtocolArbitrum.GOAT_SWAPPER,
-                request
+                randomAmt,
+                2, // tokens count - usdc & star
+                0 // USDC index in tokens
             ),
-            amountIndex: 676 // 32 * 21 + 4
+            amountIndex: 36
         });
         vm.prank(0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1);
 
         swapper.setSwapInfo(depositToken, want, swapInfo);
     }
+
+    // function test_addLiquidityOneSided_LowDecimalToken() public {
+    //     vm.startPrank(usdcWhale);
+    //     IERC20(depositToken).transfer(address(swapper), 100e6);
+    //     vm.stopPrank();
+
+    //     vm.startPrank(address(swapper));
+    //     uint256 amountA = IERC20(depositToken).balanceOf(address(swapper));
+
+    //     IERC20(depositToken).approve(address(auraBalancerHelper), amountA);
+
+    //     bytes32 poolId = IBalancerPool(want).getPoolId();
+
+    //     auraBalancerHelper.addBalancerLiquidity(poolId, amountA, 2, 0);
+
+    //     vm.stopPrank();
+
+    //     assertEq(IERC20(depositToken).balanceOf(address(swapper)), 0);
+    //     assertGt(IERC20(want).balanceOf(address(swapper)), 0);
+    // }
 
     // function test_CanCompleteTestCycle() public {
     //     console.log("here");
@@ -212,7 +208,7 @@ contract GoatVaultDeploymentAuraTest is Test {
         strategy.unpause();
         assertEq(IERC20(want).balanceOf(address(strategy)), 0);
 
-        vm.warp(block.timestamp + 1 days);
+        vm.warp(block.timestamp + 10 days);
 
         // Harvest and check that the fees go to the feeBatch and strategist
         uint256 feeBatchBalance = IERC20(native).balanceOf(
