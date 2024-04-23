@@ -31,7 +31,7 @@ contract StrategyAura is BaseAllToNativeStrat {
     }
 
     function balanceOfPool() public view override returns (uint256) {
-        return IERC20(want).balanceOf(address(this));
+        return IERC20(rewardPool).balanceOf(address(this));
     }
 
     function _deposit(uint amount) internal override {
@@ -40,13 +40,15 @@ contract StrategyAura is BaseAllToNativeStrat {
     }
 
     function _withdraw(uint amount) internal override {
-        bool flag = booster.withdraw(pid, amount);
+        bool flag = IBaseRewardPool(rewardPool).withdrawAndUnwrap(
+            amount,
+            false
+        );
         require(flag, "!withdraw");
     }
 
     function _emergencyWithdraw() internal override {
-        bool flag = booster.withdrawAll(pid);
-        require(flag, "!withdrawAll");
+        IBaseRewardPool(rewardPool).withdrawAllAndUnwrap(false);
     }
 
     function _claim() internal override {

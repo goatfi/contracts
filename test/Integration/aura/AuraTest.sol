@@ -48,7 +48,11 @@ contract GoatVaultDeploymentAuraTest is Test {
         0x64abeae398961c10cbb50ef359f1db41fc3129ff000200000000000000000526;
     uint256 randomAmt = 4198024319081571;
 
-    address[] rewards = [AssetsArbitrum.AURA, AssetsArbitrum.BAL];
+    address[] rewards = [
+        AssetsArbitrum.AURA,
+        AssetsArbitrum.BAL,
+        AssetsArbitrum.ARB
+    ];
 
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
@@ -163,7 +167,7 @@ contract GoatVaultDeploymentAuraTest is Test {
         swapper.setSwapInfo(depositToken, want, swapInfo);
     }
 
-    function test_addLiquidityOneSided_LowDecimalToken() public {
+    function test_addBalancerLiquidity() public {
         vm.startPrank(usdcWhale);
         IERC20(depositToken).transfer(address(swapper), 100e6);
         vm.stopPrank();
@@ -183,13 +187,9 @@ contract GoatVaultDeploymentAuraTest is Test {
         assertGt(IERC20(want).balanceOf(address(swapper)), 0);
     }
 
-    // function test_CanCompleteTestCycle() public {
-    //     console.log("here");
-    // }
-
     function test_CanCompleteTestCycle() public {
         // Get want
-        uint256 amountToDeposit = 1000 * 10e6;
+        uint256 amountToDeposit = 1000 * 10e18;
         deal(want, address(this), amountToDeposit);
 
         // Deposit
