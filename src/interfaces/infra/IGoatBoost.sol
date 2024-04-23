@@ -30,11 +30,14 @@ interface IGoatBoost {
     function stake(uint256 amount) external;
     function withdraw(uint256 amount) external;
     function exit() external;
+    function getReward() external;
     function totalSupply() external returns (uint256);
+    function earned(address account) external returns (uint256);
     function balanceOf(address account) external returns (uint256);
     function setRewardDuration(uint256 duration) external;
     function openPreStake() external;
     function closePreStake() external;
+    function notifyAmount(uint256 amount) external;
     function setNotifier(address account, bool enable) external;
     function inCaseTokensGetStuck(address _token) external;
     function inCaseTokensGetStuck(address _token, address _to, uint _amount) external;
