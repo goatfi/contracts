@@ -5,4 +5,5 @@ import { GoatVault } from "src/infra/vault/GoatVault.sol";
 
 interface IGoatVaultFactory {
     function cloneVault() external returns (GoatVault);
+    function cloneContract(address implementation) external returns (address);
 }
