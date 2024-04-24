@@ -2,12 +2,14 @@
 
 pragma solidity ^0.8.20;
 
-import {BaseAllToNativeStrat, IERC20} from "../common/BaseAllToNativeStrat.sol";
-import {IAuraBooster, IBaseRewardPool} from "interfaces/aura/IAura.sol";
+import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { BaseAllToNativeStrat } from "../common/BaseAllToNativeStrat.sol";
+import { IAuraBooster, IBaseRewardPool } from "interfaces/aura/IAura.sol";
 
 contract StrategyAura is BaseAllToNativeStrat {
-    IAuraBooster public constant booster =
-        IAuraBooster(0x98Ef32edd24e2c92525E59afc4475C1242a30184);
+    using SafeERC20 for IERC20;
+
+    IAuraBooster public constant booster = IAuraBooster(0x98Ef32edd24e2c92525E59afc4475C1242a30184);
 
     address public rewardPool;
     uint256 public pid;
@@ -40,10 +42,7 @@ contract StrategyAura is BaseAllToNativeStrat {
     }
 
     function _withdraw(uint amount) internal override {
-        bool flag = IBaseRewardPool(rewardPool).withdrawAndUnwrap(
-            amount,
-            false
-        );
+        bool flag = IBaseRewardPool(rewardPool).withdrawAndUnwrap(amount, false);
         require(flag, "!withdraw");
     }
 
@@ -57,19 +56,16 @@ contract StrategyAura is BaseAllToNativeStrat {
     }
 
     function _verifyRewardToken(address token) internal view override {
-        require(
-            token != address(booster) && token != rewardPool,
-            "!rewardToken"
-        );
+        require(token != address(booster) && token != rewardPool, "!rewardToken");
     }
 
     function _giveAllowances() internal override {
-        IERC20(want).approve(address(booster), type(uint).max);
-        IERC20(native).approve(unirouter, type(uint).max);
+        IERC20(want).forceApprove(address(booster), type(uint).max);
+        IERC20(native).forceApprove(unirouter, type(uint).max);
     }
 
     function _removeAllowances() internal override {
-        IERC20(want).approve(address(booster), 0);
-        IERC20(native).approve(unirouter, 0);
+        IERC20(want).forceApprove(address(booster), 0);
+        IERC20(native).forceApprove(unirouter, 0);
     }
 }
