@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { BaseAllToNativeStrat } from "../common/BaseAllToNativeStrat.sol";
-import { IAuraBooster, IBaseRewardPool } from "interfaces/aura/IAura.sol";
+import { IAuraBooster, IAuraRewardPool } from "interfaces/aura/IAura.sol";
 
 contract StrategyAura is BaseAllToNativeStrat {
     using SafeERC20 for IERC20;
@@ -13,6 +13,11 @@ contract StrategyAura is BaseAllToNativeStrat {
 
     address public rewardPool;
     uint256 public pid;
+
+    error DepositError();
+    error WithdrawError();
+    error ClaimError();
+    error PoolShutdown();
 
     function initialize(
         uint _pid,
@@ -23,7 +28,7 @@ contract StrategyAura is BaseAllToNativeStrat {
     ) public initializer {
         pid = _pid;
         IAuraBooster.PoolInfo memory pInfo = booster.poolInfo(pid);
-        require(!pInfo.shutdown, "!shutdown");
+        if(pInfo.shutdown) revert PoolShutdown();
 
         rewardPool = pInfo.crvRewards;
 
@@ -33,26 +38,30 @@ contract StrategyAura is BaseAllToNativeStrat {
     }
 
     function balanceOfPool() public view override returns (uint256) {
-        return IERC20(rewardPool).balanceOf(address(this));
+        return IAuraRewardPool(rewardPool).balanceOf(address(this));
     }
 
-    function _deposit(uint amount) internal override {
-        bool flag = booster.deposit(pid, amount, true);
-        require(flag, "!deposit");
+    function _deposit(uint _amount) internal override {
+        bool success = booster.deposit(pid, _amount, true);
+        if(!success) revert DepositError();
     }
 
-    function _withdraw(uint amount) internal override {
-        bool flag = IBaseRewardPool(rewardPool).withdrawAndUnwrap(amount, false);
-        require(flag, "!withdraw");
+    function _withdraw(uint _amount) internal override {
+        bool success = IAuraRewardPool(rewardPool).withdrawAndUnwrap(_amount, false);
+        if(!success) revert WithdrawError();
     }
 
     function _emergencyWithdraw() internal override {
-        IBaseRewardPool(rewardPool).withdrawAllAndUnwrap(false);
+        IAuraRewardPool(rewardPool).withdrawAllAndUnwrap(false);
     }
 
     function _claim() internal override {
-        bool flag = IBaseRewardPool(rewardPool).getReward();
-        require(flag, "!claim");
+        bool success = IAuraRewardPool(rewardPool).getReward();
+        if(!success) revert ClaimError();
+    }
+
+    function rewardsAvailable() public view override returns (uint256) {
+        return IAuraRewardPool(rewardPool).earned(address(this));
     }
 
     function _verifyRewardToken(address token) internal view override {
