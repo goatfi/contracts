@@ -25,19 +25,20 @@ contract StrategyCurveLend is BaseAllToNativeStrat {
     bool public isCurveRewardsClaimable; // if extra rewards in curve gauge should be claimed
 
     function initialize(
-        address _native,
-        address _want,
-        address _gauge,
         uint _pid,
+        address _native,
+        address _gauge,
         address _depositToken,
         address[] calldata _rewards,
         CommonAddresses calldata _commonAddresses
     ) public initializer {
+        address _want;
         if (_pid != NO_PID) {
             pid = _pid;
             (_want, gauge, rewardPool, , ) = booster.poolInfo(_pid);
         } else {
             gauge = _gauge;
+            _want = IRewardsGauge(gauge).lp_token();
             isCrvMintable = true;
         }
 
