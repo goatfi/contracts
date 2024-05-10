@@ -15,8 +15,8 @@ import {GoatUniswapV3Buyback} from "src/infra/GoatUniswapV3Buyback.sol";
 import {StrategySilo} from "src/infra/strategies/silo/StrategySilo.sol";
 
 contract DeployGoatVaultSilo is Script {
-    string name = "Goat Silo WBTC, ETH, USDC.e Market";
-    string symbol = "gSWBC,ETH,USDC";
+    string name = "Goat Silo USDCe-WBTC";
+    string symbol = "gSiloUSDCe-WBTC";
     uint256 stratApprovalDelay = 21600;
 
     address native = AssetsArbitrum.WETH;
@@ -26,7 +26,7 @@ contract DeployGoatVaultSilo is Script {
 
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
-    address[] rewards = [AssetsArbitrum.ARB, AssetsArbitrum.SILO];
+    address[] rewards = [AssetsArbitrum.SILO];
 
     address unirouter = ProtocolArbitrum.GOAT_SWAPPER;
     address keeper = ProtocolArbitrum.TREASURY;
