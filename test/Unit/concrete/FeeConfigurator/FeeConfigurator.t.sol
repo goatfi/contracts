@@ -25,5 +25,7 @@ contract FeeConfigurator_Unit_Concrete_Test is Base_Test {
             account: address(feeConfig),
             newLabel: "GoatFeeConfigurator"
         });
+
+        vm.startPrank({ msgSender: users.keeper });
     }
 }
