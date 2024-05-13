@@ -1,0 +1,14 @@
+keeper.t.sol
+├── when the caller is not the manager
+│  └── it should revert
+└── when the caller is the manager
+   ├── when new keeper is same as current keeper
+   │  ├── it should re-set the keeper
+   │  └── it should emit a {SetKeeper} event
+   └── when new keeper is not same as current keeper
+      ├── when the new keeper is the zero address
+      │  ├── it should set the keeper to the zero address
+      │  └── it should emit a {SetKeeper}
+      └── when the new keeper is not the zero address
+         ├── it should set the new keeper
+         └── it should emit a {SetKeeper} event and set the new keeper
