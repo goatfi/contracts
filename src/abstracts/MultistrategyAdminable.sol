@@ -14,8 +14,8 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable {
     /// @inheritdoc IMultistrategyAdminable
     address public manager;
 
-    /// @notice List of addresses enabled as guardian.
-    mapping(address guardianAddress => bool isActive) guardians;
+    /// @inheritdoc IMultistrategyAdminable
+    mapping(address guardianAddress => bool isActive) public guardians;
 
     /// @notice Sets the Owner and Manager addresses.
     /// @param _owner The address of the initial owner.
