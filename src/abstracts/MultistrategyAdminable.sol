@@ -3,10 +3,11 @@
 pragma solidity >=0.8.20 <= 0.9.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { IMultistrategyAdminable } from "interfaces/infra/IMultistrategyAdminable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable {
+abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pausable {
     /*//////////////////////////////////////////////////////////////////////////
                                        STORAGE
     //////////////////////////////////////////////////////////////////////////*/
@@ -64,5 +65,15 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable {
     function revokeGuardian(address _guardian) external onlyOwner {
         guardians[_guardian] = false;
         emit RevokeGuardian(_guardian);
+    }
+
+    /// @inheritdoc IMultistrategyAdminable
+    function pause() external onlyGuardian {
+        _pause();
+    }
+
+    /// @inheritdoc IMultistrategyAdminable
+    function unpause() external onlyGuardian {
+        _unpause();
     }
 }
