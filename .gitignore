@@ -2,6 +2,7 @@
 cache/
 out/
 coverage/
+documentation/
 
 #Ignored for compilation
 ignoreCompile/

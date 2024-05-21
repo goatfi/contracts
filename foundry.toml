@@ -30,3 +30,6 @@ quote_style = "double"
 [etherscan]
 goerli = { key = "${ETHERSCAN_API_KEY}" }
 arbitrum = { key = "${ARBISCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
+
+[doc]
+out = "documentation"
