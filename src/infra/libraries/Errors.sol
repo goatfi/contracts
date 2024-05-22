@@ -43,4 +43,15 @@ library Errors {
 
     /// @notice Thrown when a deposit would exceed the depositLimit
     error DepositLimit();
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                STRATEGY WRAPPER
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Thrown when the caller is not the Multistrategy.
+    error CallerNotMultistrategy(address caller);
+
+    /// @notice Thrown when the `_depositToken` parameter on the constructor doesn't match 
+    /// the `deposit` token on Multistrategy.
+    error DepositTokenMissmatch(address multDepositToken, address stratDepositToken);
 }
