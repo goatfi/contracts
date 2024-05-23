@@ -4,7 +4,7 @@ pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IStrategyWrapper } from "interfaces/infra/IStrategyWrapper.sol";
-import { IMultistrategy } from "interfaces/infra/IMultistrategy.sol";
+import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract StrategyWrapper is IStrategyWrapper {

@@ -4,7 +4,7 @@ pragma solidity >=0.8.20 <= 0.9.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { IMultistrategyAdminable } from "interfaces/infra/IMultistrategyAdminable.sol";
+import { IMultistrategyAdminable } from "interfaces/infra/multistrategy/IMultistrategyAdminable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pausable {

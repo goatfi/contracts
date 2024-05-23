@@ -44,6 +44,9 @@ library Errors {
     /// @notice Thrown when a deposit would exceed the depositLimit
     error DepositLimit();
 
+    /// @notice Thrown when the owner tries to set a fee above the maximum permited fee.
+    error ExcessiveFee(uint256 fee);
+
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY WRAPPER
     //////////////////////////////////////////////////////////////////////////*/
