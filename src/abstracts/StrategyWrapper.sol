@@ -3,8 +3,8 @@
 pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IStrategyWrapper } from "interfaces/infra/IStrategyWrapper.sol";
-import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
+import { IStrategyWrapper } from "interfaces/infra/multistrategy/IStrategyWrapper.sol";
+import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract StrategyWrapper is IStrategyWrapper {
@@ -20,9 +20,9 @@ abstract contract StrategyWrapper is IStrategyWrapper {
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
     /// @param _depositToken Address of the token used to deposit and withdraw on this strategy.
     constructor(address _multistrategy, address _depositToken) {
-        if(IMultistrategy(_multistrategy).depositToken() != _depositToken) {
+        if(IMultistrategyManageable(_multistrategy).depositToken() != _depositToken) {
             revert Errors.DepositTokenMissmatch({
-                multDepositToken: IMultistrategy(_multistrategy).depositToken(),
+                multDepositToken: IMultistrategyManageable(_multistrategy).depositToken(),
                 stratDepositToken: _depositToken
             });
         }

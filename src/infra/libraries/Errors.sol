@@ -22,21 +22,21 @@ library Errors {
     /// @notice Thrown when `amount` is higher than caller's balance.
     error InsufficientBalance(uint256 callerBalance, uint256 amount);
 
+    /// @notice Thrown when `addr` is `address(0)` or any other unexpected address.
+    error InvalidAddress(address addr);
+
     /*//////////////////////////////////////////////////////////////////////////
                                     MULTISTRATEGY
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Thrown when trying to set the debt ratio above 100% (10_000 BPS)
-    error DebtRatioHigherThanMax(uint256 debtRatio);
-
-    /// @notice Thrown when the recipient of a deposit is `address(0)` or the multistrategy contract.
-    error InvalidDepositRecipient();
-
-    /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES
+    /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
     error StrategiesLengthMissMatch();
 
-    /// @notice Thrown when performing an action on a non-active strategy
-    error StrategyNotActive();
+    /// @notice Thrown when performing an action on a non-active strategy.
+    error StrategyNotActive(address strategy);
+
+    /// @notice Thrown when performing an action on an active strategy.
+    error StrategyAlreadyActive(address strategy);
 
     /// @notice Thrown when there is a duplicate strategy when trying to update the deposit or withdraw order.
     error DuplicateStrategyInArray();
@@ -46,6 +46,22 @@ library Errors {
 
     /// @notice Thrown when the owner tries to set a fee above the maximum permited fee.
     error ExcessiveFee(uint256 fee);
+
+    /// @notice Thrown when the debtRatio of a strategy or a multistrategy is above 100%.
+    error DebtRatioAboveMaximum(uint256 debtRatio);
+
+    /// @notice Thrown when minDebtDelta is above maxDebtDelta or maxDebtDelta is below minDebtDelta.
+    error InvalidDebtDelta();
+
+    /// @notice Thrown when trying to add a new strategy to the multistrategy but it already reached the
+    /// maximum amount of strategies.
+    error MaximumAmountStrategies();
+
+    /// @notice Thrown when trying to retire a strategy that already has a `debtRatio` of 0.
+    error StrategyAlreadyRetired();
+
+    /// @notice Thrown when it couldn't find a strategy
+    error StrategyNotFound();
 
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY WRAPPER
