@@ -29,8 +29,14 @@ library Errors {
                                     MULTISTRATEGY
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Thrown when the caller is not an active strategy.
+    error CallerNotStrategy(address caller);
+
     /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
     error StrategiesLengthMissMatch();
+
+    /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
+    error GainLossMissmatch();
 
     /// @notice Thrown when performing an action on a non-active strategy.
     error StrategyNotActive(address strategy);
@@ -52,6 +58,9 @@ library Errors {
 
     /// @notice Thrown when minDebtDelta is above maxDebtDelta or maxDebtDelta is below minDebtDelta.
     error InvalidDebtDelta();
+
+    /// @notice Thrown when a strategy is reporting a loss higher than its total debt.
+    error InvalidStrategyLoss();
 
     /// @notice Thrown when trying to add a new strategy to the multistrategy but it already reached the
     /// maximum amount of strategies.
