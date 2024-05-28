@@ -22,7 +22,7 @@ library Errors {
     /// @notice Thrown when `amount` is higher than caller's balance.
     error InsufficientBalance(uint256 callerBalance, uint256 amount);
 
-    /// @notice Thrown when `addr` is `address(0)` or any other unexpected address.
+    /// @notice Thrown when `addr` is an unexpected address.
     error InvalidAddress(address addr);
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -32,17 +32,17 @@ library Errors {
     /// @notice Thrown when the caller is not an active strategy.
     error CallerNotStrategy(address caller);
 
-    /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
-    error StrategiesLengthMissMatch();
-
-    /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
-    error GainLossMissmatch();
-
     /// @notice Thrown when performing an action on a non-active strategy.
     error StrategyNotActive(address strategy);
 
     /// @notice Thrown when performing an action on an active strategy.
     error StrategyAlreadyActive(address strategy);
+
+    /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
+    error StrategiesLengthMissMatch();
+
+    /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
+    error GainLossMissmatch();
 
     /// @notice Thrown when there is a duplicate strategy when trying to update the deposit or withdraw order.
     error DuplicateStrategyInArray();
