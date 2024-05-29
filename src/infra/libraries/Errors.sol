@@ -19,8 +19,8 @@ library Errors {
     /// @notice Thrown when `amount` is zero.
     error ZeroAmount(uint256 amount);
 
-    /// @notice Thrown when `amount` is higher than caller's balance.
-    error InsufficientBalance(uint256 callerBalance, uint256 amount);
+    /// @notice Thrown when `currentBalance` is lower than `amount`.
+    error InsufficientBalance(uint256 currentBalance, uint256 amount);
 
     /// @notice Thrown when `addr` is an unexpected address.
     error InvalidAddress(address addr);

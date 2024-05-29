@@ -11,10 +11,15 @@ interface IStrategyWrapper {
     /// @dev it should be the same as the token used by the multistrategy.
     function depositToken() external view returns(address);
 
-    /// @notice Deposits `depositToken` into the strategy.
-    /// @dev Only callable by the multistrategy.
-    /// @param amount Amount of tokens to deposit in the strategy.
-    function deposit(uint256 amount) external;
+    /// @notice Requests a credit to the multistrategy. The multistrategy will send the
+    /// maximum amount of credit available for this strategy.
+    function requestCredit() external;
+
+    /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has
+    ///         made along an amount to be withdrawn and be used for debt repayment.
+    /// @param amountToWithdraw Amount that will be withdrawn from the strategy and will
+    ///         be available for debt repayment.
+    function sendReport(uint256 amountToWithdraw) external;
 
     /// @notice Withdraws `depositToken` from the strategy.
     /// @dev Only callable by the multistrategy.
