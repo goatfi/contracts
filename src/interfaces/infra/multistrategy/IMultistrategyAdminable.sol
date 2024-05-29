@@ -13,15 +13,15 @@ interface IMultistrategyAdminable {
 
     /// @notice Emitted when a new manager is set.
     /// @param manager The address of the new manager.
-    event SetManager(address indexed manager);
+    event ManagerSet(address indexed manager);
 
     /// @notice Emitted when a new guardian has been granted access.
     /// @param guardian The address of the guardian.
-    event EnableGuardian(address indexed guardian);
+    event GuardianEnabled(address indexed guardian);
 
     /// @notice Emitted when a the access of a guardian has been revoked.
     /// @param guardian The address of the guardian.
-    event RevokeGuardian(address indexed guardian);
+    event GuardianRevoked(address indexed guardian);
 
     /*//////////////////////////////////////////////////////////////////////////
                                  CONSTANT FUNCTIONS

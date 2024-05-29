@@ -17,7 +17,7 @@ abstract contract StrategyWrapper is IStrategyWrapper, Ownable {
 
     /// @inheritdoc IStrategyWrapper
     address public depositToken;
-
+    
     /// @dev Reverts if `_depositToken` doesn't match `depositToken` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
     /// @param _depositToken Address of the token used to deposit and withdraw on this strategy.

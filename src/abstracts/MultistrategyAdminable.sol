@@ -52,19 +52,19 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pa
     /// @inheritdoc IMultistrategyAdminable
     function setManager(address _manager) external onlyOwner {
         manager = _manager;
-        emit SetManager(_manager);
+        emit ManagerSet(_manager);
     }
 
     /// @inheritdoc IMultistrategyAdminable
     function enableGuardian(address _guardian) external onlyOwner {
         guardians[_guardian] = true;
-        emit EnableGuardian(_guardian);
+        emit GuardianEnabled(_guardian);
     }
 
     /// @inheritdoc IMultistrategyAdminable
     function revokeGuardian(address _guardian) external onlyOwner {
         guardians[_guardian] = false;
-        emit RevokeGuardian(_guardian);
+        emit GuardianRevoked(_guardian);
     }
 
     /// @inheritdoc IMultistrategyAdminable
