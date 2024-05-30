@@ -31,6 +31,8 @@ abstract contract StrategyWrapper is IStrategyWrapper, Ownable {
 
         multistrategy = _multistrategy;
         depositToken = _depositToken;
+
+        IERC20(depositToken).safeIncreaseAllowance(multistrategy, type(uint256).max);
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
