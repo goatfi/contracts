@@ -1,7 +1,7 @@
 forge-std/=lib/forge-std/src/
 src/=src/
 interfaces/=src/interfaces
-test-utils/=test/Utils
+test-utils/=test/utils
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @openzeppelin-4/contracts=lib/openzeppelin-contracts-4/contracts/

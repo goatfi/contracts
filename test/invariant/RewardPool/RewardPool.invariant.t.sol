@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.20;
 
-import { RevenueShareTestBase } from "../../Unit/RevShare/RevenueShareBase.t.sol";
+import { RevenueShareTestBase } from "../../unit/RevShare/RevenueShareBase.t.sol";
 import { RewardPoolHandler } from "./RewardPoolHandler.sol";
 import { RewardPoolActorManager } from "./RewardPoolActorManager.sol";
 import { TimestampStore } from "test-utils/TimestampStore.sol";
