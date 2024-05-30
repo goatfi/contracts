@@ -2,7 +2,9 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
-interface IMultistrategy {
+import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
+
+interface IMultistrategy is IMultistrategyManageable {
     /// @notice Emitted when an account has made a deposit.
     /// @param amount Amount of depositToken that has been deposited.
     /// @param recipient Address that will receive the receipt tokens.

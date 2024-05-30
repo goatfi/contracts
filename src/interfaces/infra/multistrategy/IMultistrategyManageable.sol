@@ -2,7 +2,9 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
-interface IMultistrategyManageable {
+import { IMultistrategyAdminable } from "interfaces/infra/multistrategy/IMultistrategyAdminable.sol";
+
+interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Emitted when the protocol fee recipient is set.
     /// @param protocolFeeRecipient The address that will receive the protocol fee.
     event ProtocolFeeRecipientSet(address indexed protocolFeeRecipient);
