@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.20;
 
-import { RevenueShareTestBase } from "../../Unit/RevShare/RevenueShareBase.t.sol";
+import { RevenueShareTestBase } from "../../unit/RevShare/RevenueShareBase.t.sol";
 import { FeeBatchHandler } from "./FeeBatchHandler.sol";
 import { FeeBatchActorManager } from "./FeeBatchActorManager.sol";
 import { TimestampStore } from "test-utils/TimestampStore.sol";
