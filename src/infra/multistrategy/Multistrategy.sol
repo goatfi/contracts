@@ -367,7 +367,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
     }
 
-    function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) internal whenNotPaused onlyActiveStrategy(msg.sender) {
+    function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) 
+        internal 
+        whenNotPaused 
+        onlyActiveStrategy(msg.sender) 
+    {
         // Check that the strategy isn't reporting a gain and a loss at the same time.
         if(_gain > 0 && _loss > 0) {
             revert Errors.GainLossMissmatch();
