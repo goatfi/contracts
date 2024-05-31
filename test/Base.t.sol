@@ -61,5 +61,12 @@ abstract contract Base_Test is Test, Events {
             _name: "Goat DAI",
             _symbol: "GDAI"
         });
+
+        vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }
+
+    function swapCaller(address newCaller) internal {
+        vm.stopPrank();
+        vm.startPrank(newCaller);
+    } 
 }

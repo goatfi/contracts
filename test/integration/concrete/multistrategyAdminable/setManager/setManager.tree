@@ -1,0 +1,14 @@
+setManager.t.sol
+├── when the caller is not the owner
+│  └── it should revert
+└── when the caller is the owner
+   ├── when new manager is same as current manager
+   │  ├── it should re-set the manager
+   │  └── it should emit a {ManagerSet} event
+   └── when new manager is not same as current manager
+      ├── when the new manager is the zero address
+      │  ├── it should set the manager to the zero address
+      │  └── it should emit a {ManagerSet}
+      └── when the new manager is not the zero address
+         ├── it should set the new manager to the new manager address
+         └── it should emit a {ManagerSet}
