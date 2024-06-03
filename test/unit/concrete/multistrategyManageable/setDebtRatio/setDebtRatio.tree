@@ -1,7 +1,7 @@
 setDebtRatio.t.sol
-├── when the caller is not the manager
+├── when the caller is not the owner
 │  └── it should revert
-└── when the caller is the manager
+└── when the caller is the owner
    ├── when the debt ratio above MAX BPS
    │  └── it should revert
    ├── when the new debt ratio is same as old debt ratio
