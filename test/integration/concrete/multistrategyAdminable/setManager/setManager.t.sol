@@ -23,7 +23,7 @@ contract SetManager_Integration_Concrete_Test is Multistrategy_Integration_Share
 
     function test_SetManager_SameManager() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit ManagerSet({ manager: users.keeper });
 
         // Set the manager
@@ -37,7 +37,7 @@ contract SetManager_Integration_Concrete_Test is Multistrategy_Integration_Share
 
     function test_SetManager_ZeroAddress() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit ManagerSet({ manager: address(0) });
 
         // Set the manager
@@ -55,7 +55,7 @@ contract SetManager_Integration_Concrete_Test is Multistrategy_Integration_Share
 
     function test_SetManager_NewManager() external whenCallerOwner whenNotZeroAddress {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit ManagerSet({ manager: users.bob });
 
         // Set the manager

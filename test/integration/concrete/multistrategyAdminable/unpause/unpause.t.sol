@@ -37,7 +37,7 @@ contract Unpause_Integration_Concrete_Test is Multistrategy_Integration_Shared_T
 
     function test_Unpause_PausedContract() external whenCallerIsGuardian whenContractIsPaused {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit Unpaused({ account: users.guardian });
 
         // Pause the contract.

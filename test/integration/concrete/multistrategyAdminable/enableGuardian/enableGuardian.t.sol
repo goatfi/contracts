@@ -21,7 +21,7 @@ contract EnableGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
 
     function test_EnableGuardian_AlreadyEnabledGuardian() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianEnabled({ guardian: users.guardian });
 
         // Enable the guardian
@@ -35,7 +35,7 @@ contract EnableGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
 
     function test_EnableGuardian_ZeroAddress() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianEnabled({ guardian: address(0) });
 
         // Enable the guardian
@@ -57,7 +57,7 @@ contract EnableGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
         whenNotZeroAddress
     {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianEnabled({ guardian: users.bob });
 
         // Enable the guardian

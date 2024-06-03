@@ -22,7 +22,7 @@ contract RevokeGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
     /// @dev Aready revoked also means that hasn't been enabled
     function test_RevokeGuardian_AlreadyRevokedGuardian() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianRevoked({ guardian: users.alice });
 
         // Enable the guardian
@@ -36,7 +36,7 @@ contract RevokeGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
 
     function test_RevokeGuardian_ZeroAddress() external whenCallerOwner {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianRevoked({ guardian: address(0) });
 
         // Enable the guardian
@@ -58,7 +58,7 @@ contract RevokeGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
         whenNotZeroAddress
     {
         // Expect the relevant event to be emitted.
-        vm.expectEmit();
+        vm.expectEmit({ emitter: address(multistrategy) });
         emit GuardianRevoked({ guardian: users.guardian });
 
         // Enable the guardian
