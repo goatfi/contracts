@@ -65,6 +65,8 @@ abstract contract Base_Test is Test, Events {
 
         // Enable Guardian
         multistrategy.enableGuardian(users.guardian);
+        // Set deposit limit to 100K tokens
+        multistrategy.setDepositLimit(100_000 ether);
         // Set debt ratio to 90%
         multistrategy.setDebtRatio(9_000);
         // Set performance fee to 5%
