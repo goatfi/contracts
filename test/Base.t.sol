@@ -63,7 +63,12 @@ abstract contract Base_Test is Test, Events {
             _symbol: "GDAI"
         });
 
+        // Enable Guardian
         multistrategy.enableGuardian(users.guardian);
+        // Set debt ratio to 90%
+        multistrategy.setDebtRatio(9_000);
+        // Set performance fee to 5%
+        multistrategy.setPerformanceFee(500);
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }

@@ -1,0 +1,15 @@
+setDebtRatio.t.sol
+├── when the caller is not the manager
+│  └── it should revert
+└── when the caller is the manager
+   ├── when the debt ratio above MAX BPS
+   │  └── it should revert
+   ├── when the new debt ratio is same as old debt ratio
+   │  ├── it should set the debtRatio to new debt ratio
+   │  └── it should emit a {DebtRatioSet} event
+   ├── when the debt ratio is 0
+   │  ├── it should set the debtRatio to 0
+   │  └── it should emit a {DebtRatioSet} event
+   └── when the debt ratio is a new debt ratio
+      ├── it should set the debtRatio
+      └── it should emit a {DebtRatioSet} event
