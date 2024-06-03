@@ -40,6 +40,7 @@ abstract contract Base_Test is Test, Events {
         users = Users({
             owner: createUser("Owner"),
             keeper: createUser("Keeper"),
+            guardian: createUser("Guardian"),
             feeRecipient: createUser("FeeRecipient"),
             alice: createUser("Alice"),
             bob: createUser("Bob")
@@ -61,6 +62,8 @@ abstract contract Base_Test is Test, Events {
             _name: "Goat DAI",
             _symbol: "GDAI"
         });
+
+        multistrategy.enableGuardian(users.guardian);
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }
