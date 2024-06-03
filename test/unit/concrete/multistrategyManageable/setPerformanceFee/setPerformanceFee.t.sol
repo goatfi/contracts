@@ -48,7 +48,7 @@ contract SetPerformanceFee_Unit_Concrete_Test is Multistrategy_Unit_Shared_Test 
 
         multistrategy.setPerformanceFee(performanceFee);
 
-        // Assert debt ratio has been set
+        // Assert performance fee has been set
         uint256 actualPerformanceFee = multistrategy.performanceFee();
         uint256 expectedPerformanceFEe = performanceFee;
         assertEq(actualPerformanceFee, expectedPerformanceFEe, "performance fee");
@@ -68,7 +68,7 @@ contract SetPerformanceFee_Unit_Concrete_Test is Multistrategy_Unit_Shared_Test 
 
         multistrategy.setPerformanceFee(performanceFee);
 
-        // Assert debt ratio has been set
+        // Assert performance fee has been set
         uint256 actualPerformanceFee = multistrategy.performanceFee();
         uint256 expectedPerformanceFEe = performanceFee;
         assertEq(actualPerformanceFee, expectedPerformanceFEe, "performance fee");
@@ -93,7 +93,7 @@ contract SetPerformanceFee_Unit_Concrete_Test is Multistrategy_Unit_Shared_Test 
 
         multistrategy.setPerformanceFee(performanceFee);
 
-        // Assert debt ratio has been set
+        // Assert performance fee has been set
         uint256 actualPerformanceFee = multistrategy.performanceFee();
         uint256 expectedPerformanceFEe = performanceFee;
         assertEq(actualPerformanceFee, expectedPerformanceFEe, "performance fee");
