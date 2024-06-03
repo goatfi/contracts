@@ -1,0 +1,9 @@
+unpause.t.sol
+├── when the caller is not a guardian
+│  └── it should revert
+└── when the caller is a guardian
+   ├── when the contract is not paused
+   │  ├── it should revert
+   └── when the contract is paused
+      ├── it should unpause the contract
+      └── it should emit a {Unpaused} event

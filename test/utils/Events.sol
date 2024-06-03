@@ -46,4 +46,11 @@ abstract contract Events {
 
     event StrategyReported(address indexed strategy, uint256 debtRepaid, uint256 gain, uint256 loss);
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                        PAUSABLE
+    //////////////////////////////////////////////////////////////////////////*/
+
+    event Paused(address account);
+    
+    event Unpaused(address account);
 }
