@@ -2,15 +2,70 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Multistrategy_Unit_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetProtocolFeeRecipient_Unit_Concrete_Test is Multistrategy_Unit_Shared_Test {
-    function test_RevertWhen_CallerNotManager() external {
-
+    function test_RevertWhen_CallerNotOwner() external {
+        // Change caller to bob
+        swapCaller(users.bob);
+        
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, users.bob));
+        multistrategy.setProtocolFeeRecipient(users.feeRecipient);
     }
 
-    modifier whenCallerIsManager() {
-        swapCaller(users.keeper);
+    modifier whenCallerIsOwner() {
         _;
+    }
+
+    function test_SetProtocolFeeRecipient_SameFeeRecipient() external whenCallerIsOwner {
+        // Expect the relevant event to be emitted.
+        vm.expectEmit({ emitter: address(multistrategy) });
+        emit ProtocolFeeRecipientSet({ protocolFeeRecipient: users.feeRecipient });
+
+        // Set the protocol fee recipient
+        multistrategy.setProtocolFeeRecipient(users.feeRecipient);
+
+        // Assert the protocol fee recipeient has been set
+        address actualFeeRecipient = multistrategy.protocolFeeRecipient();
+        address expectedFeeRecipeient = users.feeRecipient;
+        assertEq(actualFeeRecipient, expectedFeeRecipeient, "protocol fee recipient");
+    }
+
+    function test_SetProtocolFeeRecipient_ZeroAddress() external whenCallerIsOwner {
+        // Expect the relevant event to be emitted.
+        vm.expectEmit({ emitter: address(multistrategy) });
+        emit ProtocolFeeRecipientSet({ protocolFeeRecipient: address(0) });
+
+        // Set the protocol fee recipient
+        multistrategy.setProtocolFeeRecipient(address(0));
+
+        // Assert the protocol fee recipeient has been set
+        address actualFeeRecipient = multistrategy.protocolFeeRecipient();
+        address expectedFeeRecipeient = address(0);
+        assertEq(actualFeeRecipient, expectedFeeRecipeient, "protocol fee recipient");
+    }
+
+    modifier whenNotZeroAddress() {
+        _;
+    }
+
+    function test_SetProtocolFeeRecipient_NewFeeRecipient()
+        external
+        whenCallerIsOwner
+        whenNotZeroAddress
+    {
+        // Expect the relevant event to be emitted.
+        vm.expectEmit({ emitter: address(multistrategy) });
+        emit ProtocolFeeRecipientSet({ protocolFeeRecipient: users.bob });
+
+        // Set the protocol fee recipient
+        multistrategy.setProtocolFeeRecipient(users.bob);
+
+        // Assert the protocol fee recipeient has been set
+        address actualFeeRecipient = multistrategy.protocolFeeRecipient();
+        address expectedFeeRecipeient = users.bob;
+        assertEq(actualFeeRecipient, expectedFeeRecipeient, "protocol fee recipient");
     }
 }
