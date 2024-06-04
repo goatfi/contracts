@@ -1,1 +1,14 @@
 setPerformanceFee.t.sol
+├── when the caller is not the owner
+│  └── it should revert
+└── when the caller is the owner
+   ├── when new performance fee is same as current performance fee
+   │  ├── it should re-set the performance fee
+   │  └── it should emit a {PerformanceFeeSet} event
+   └── when new performance fee is not same as current performance fee
+      ├── when the new performance fee is zero
+      │  ├── it should set the performance fee to zero
+      │  └── it should emit a {PerformanceFeeSet}
+      └── when the new performance fee is not zero
+         ├── it should set the new performance fee to the new performance fee
+         └── it should emit a {PerformanceFeeSet}
