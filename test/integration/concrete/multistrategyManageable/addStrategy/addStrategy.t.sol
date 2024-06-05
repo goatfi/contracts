@@ -19,7 +19,6 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
         address strategy = makeAddr("strategy");
         
-        
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);

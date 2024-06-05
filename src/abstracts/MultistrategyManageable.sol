@@ -193,7 +193,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         debtRatio -= strategies[_strategy].debtRatio;
         strategies[_strategy].debtRatio = 0;
 
-        emit StrategyRevoked(_strategy);
+        emit StrategyRetired(_strategy);
     }
 
     /// @inheritdoc IMultistrategyManageable

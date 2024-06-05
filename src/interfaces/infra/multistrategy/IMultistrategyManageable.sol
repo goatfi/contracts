@@ -37,9 +37,9 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param strategy The address of the newly added strategy.
     event StrategyAdded(address indexed strategy);
 
-    /// @notice Emitted when a strategy is revoked.
-    /// @param strategy The address of the revoked strategy.
-    event StrategyRevoked(address indexed strategy);
+    /// @notice Emitted when a strategy is retired.
+    /// @param strategy The address of the retired strategy.
+    event StrategyRetired(address indexed strategy);
 
     /// @notice Emitted when a strategy is removed.
     /// @param strategy The address of the removed strategy.

@@ -1,1 +1,14 @@
 retireStrategy.t.sol
+├── when the caller is not the manager
+│   └── it should revert
+└── when the caller is the manager
+    ├── when the strategy is not active
+    │   └── it should revert
+    ├── when the strategy is active
+    │   ├── it should update the debt ratio by subtracting the strategy's debt ratio
+    │   ├── it should set the strategy's debt ratio to 0
+    │   └── it should emit a {StrategyRetired} event
+    └── when the strategy is active and retired
+        ├── it should update the debt ratio by subtracting the strategy's debt ratio
+        ├── it should set the strategy's debt ratio to 0
+        └── it should emit a {StrategyRetired} event

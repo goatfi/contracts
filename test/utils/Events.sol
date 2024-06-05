@@ -34,7 +34,7 @@ abstract contract Events {
 
     event StrategyAdded(address indexed strategy);
 
-    event StrategyRevoked(address indexed strategy);
+    event StrategyRetired(address indexed strategy);
 
     event StrategyRemoved(address indexed strategy);
 
