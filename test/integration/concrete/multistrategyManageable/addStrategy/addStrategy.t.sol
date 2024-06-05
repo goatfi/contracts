@@ -248,8 +248,10 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         assertEq(actualStrategyParams.totalGain, expectedStrategyParams.totalGain, "addStrategy Params total gain");
         assertEq(actualStrategyParams.totalLoss, expectedStrategyParams.totalLoss, "addStrategy Params total loss");
 
-        // Assert multistrategy debt ratio and total active strategies
+        // Assert strategy debt ratio is added to multistrategy debt ratio
         assertEq(actualMultistrategyDebtRatio, expectedMultistrategyDebtRatio, "addStrategy DebtRatio");
+
+        // Assert active strategies is incremented
         assertEq(actualActiveStrategies, expectedActiveStrategies, "addStrategy Active strategies");
 
         // Assert that the strategy has been put in the 1st position of the withdraw order
