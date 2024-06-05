@@ -8,6 +8,7 @@ import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 import { ERC20Mock } from "./mocks/erc20/ERC20Mock.sol";
 import { ERC20MissingReturn } from "./mocks/erc20/ERC20MissingReturn.sol";
+import { StrategyWrapperMock } from "./mocks/StrategyWrapperMock.sol";
 import { Test } from "forge-std/Test.sol";
 import { Users } from "./utils/Types.sol";
 import { Events } from "./utils/Events.sol";
@@ -67,12 +68,14 @@ abstract contract Base_Test is Test, Events {
         multistrategy.enableGuardian(users.guardian);
         // Set deposit limit to 100K tokens
         multistrategy.setDepositLimit(100_000 ether);
-        // Set debt ratio to 90%
-        multistrategy.setDebtRatio(9_000);
         // Set performance fee to 5%
         multistrategy.setPerformanceFee(500);
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
+    }
+
+    function deployMockStrategyWrapper(address _multistrategy, address _depositToken) internal returns (address) {
+        return address(new StrategyWrapperMock(_multistrategy, _depositToken));
     }
 
     function swapCaller(address newCaller) internal {

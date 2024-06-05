@@ -1,1 +1,31 @@
 addStrategy.t.sol
+├── when the caller is not the manager
+│  └── it should revert
+└── when the caller is the manager
+   ├── when the multistrategy already has the maximum amount of strategies
+   │  └── it should revert
+   └── when the multistrategy has less than the maximum amount of strategies
+      ├── when the strategy added is the zero address
+      │   └── it should revert
+      └── when the strategy added is not the zero address
+          ├── when the strategy is the address of the multistrategy
+          │   └── it should revert
+          └── when the strategy is not the address of the multistrategy
+              ├── when the added strategy is active
+              │   └── it should revert
+              └── when the added strategy is not active
+                  ├── when the deposit token of the strategy doesn't match the deposit token of the multistrategy
+                  │   └── it should revert
+                  └── when the deposit token of the strategy matches the deposit token of the multistrategy
+                      ├── when the strategy debt ratio sets the multistrategy debt ratio above 100%
+                      │   └── it should revert
+                      └── when the strategy debt ratio doesn't set the multistrategy debt ratio above 100%
+                          ├── when min debt delta is higher than max debt delta
+                          │   └── it should revert
+                          └── when min debt delta is lower or equal than max debt delta
+                              ├── it should add the strategy parameters to the strategies array
+                              ├── it should add the strategy debt ratio to the multistrategy debt ratio
+                              ├── it should add the strategy address to the last position of the withdraw order array
+                              ├── it should increment activeStrategies by 1
+                              ├── it should organize the withdraw order array
+                              └── it should emit a {StrategyAdded} event.

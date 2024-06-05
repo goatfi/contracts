@@ -3,6 +3,7 @@
 pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IMultistrategyAdminable } from "interfaces/infra/multistrategy/IMultistrategyAdminable.sol";
+import { MStrat } from "src/types/DataTypes.sol";
 
 interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Emitted when the protocol fee recipient is set.
@@ -16,10 +17,6 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Emitted when the deposit limit is set.
     /// @param depositLimit The new deposit limit value.
     event DepositLimitSet(uint256 depositLimit);
-
-    /// @notice Emitted when the debt ratio is set.
-    /// @param debtRatio The new debt ratio value.
-    event DebtRatioSet(uint256 debtRatio);
 
     /// @notice Emitted when the debt ratio for a specific strategy is set.
     /// @param strategy The address of the strategy whose debt ratio was updated.
@@ -71,6 +68,13 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Amount of active strategies.
     function activeStrategies() external view returns(uint8);
 
+    /// @notice Returns the withdraw order.
+    function getWithdrawOrder() external view returns(address[] memory);
+
+    /// @notice Returns the strategy params of `strategy`
+    /// @param strategy Address of the strategy the it will returns the parameters of.
+    function getStrategyParameters(address strategy) external view returns(MStrat.StrategyParams calldata);
+
     /// @notice Sets the recipient address of the performance fee.
     /// @dev Emits a `SetProtocolFeeRecipient` event.
     /// @param protocolFeeRecipient Address that will receive the fees.
@@ -87,16 +91,10 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param depositLimit New deposit limit.
     function setDepositLimit(uint256 depositLimit) external;
 
-    /// @notice Sets the debt ratio.
-    /// @dev Reverts if `debtRatio` is higher than `MAX_BPS`
-    /// @dev Emits a `SetDebtRatio` event.
-    /// @param debtRatio New debt ratio.
-    function setDebtRatio(uint256 debtRatio) external;
-
     /// @notice Sets the withdraw order. First position in the array will be the first strategy that it will get the funds withdrawn
     /// @dev It will revert if a strategy in the array is not active or if the array contains duplicate addresses.
     /// @param strategies Array of strategy addresses
-    function setWithdrawalOrder(address[10] memory strategies) external;
+    function setWithdrawalOrder(address[] memory strategies) external;
 
     /// @notice Adds a strategy to the multistrategy.
     /// @dev The strategy will be appended to `withdrawOrder`.

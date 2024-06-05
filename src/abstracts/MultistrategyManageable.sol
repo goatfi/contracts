@@ -51,7 +51,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     //       The first time a zero address is enountered, it stops withdrawing, so it is
     //       possible that there isn't enough to withdraw if the amount of strategies in
     //       `withdrawOrder` is smaller than the amount of active strategies.
-    address[MAXIMUM_STRATEGIES] internal withdrawOrder;
+    address[] public withdrawOrder;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -71,6 +71,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     {
         depositToken = _depositToken;
         protocolFeeRecipient = _protocolFeeRecipient;
+        withdrawOrder = new address[](MAXIMUM_STRATEGIES);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -87,7 +88,21 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     }
 
     /*//////////////////////////////////////////////////////////////////////////
-                        CONTRACT PARAMETER SETTER FUNCTIONS
+                        USER FACING CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IMultistrategyManageable
+    function getWithdrawOrder() external view returns(address[] memory) {
+        return withdrawOrder;
+    }
+
+    /// @inheritdoc IMultistrategyManageable
+    function getStrategyParameters(address _strategy) external view returns(MStrat.StrategyParams memory) {
+        return strategies[_strategy];
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                        USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IMultistrategyManageable
@@ -112,21 +127,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     }
 
     /// @inheritdoc IMultistrategyManageable
-    function setDebtRatio(uint256 _debtRatio) external onlyManager {
-        if(_debtRatio > MAX_BPS) {
-            revert Errors.DebtRatioAboveMaximum({ debtRatio: _debtRatio });
-        }
-
-        debtRatio = _debtRatio;
-        emit DebtRatioSet(_debtRatio);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                        MULTISTRATEGY MANAGEMENT FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IMultistrategyManageable
-    function setWithdrawalOrder(address[MAXIMUM_STRATEGIES] memory _strategies) external onlyManager {
+    function setWithdrawalOrder(address[] memory _strategies) external onlyManager {
         _validateStrategyOrder(_strategies);
         withdrawOrder = _strategies;
     }
@@ -178,7 +179,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         });
 
         debtRatio += _debtRatio;
-        withdrawOrder[MAXIMUM_STRATEGIES] = _strategy;
+        withdrawOrder[MAXIMUM_STRATEGIES - 1] = _strategy;
         ++activeStrategies;
 
         // Organize the withdraw order
@@ -266,7 +267,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     /// @notice Validates `_strategies` input so all strategies are active, exist in the withdrawOrder and
     /// the input doesn't include any duplicate addresses.
     /// @param _strategies Array of active strategies
-    function _validateStrategyOrder(address[MAXIMUM_STRATEGIES] memory _strategies) internal view {
+    function _validateStrategyOrder(address[] memory _strategies) internal view {
+        // Revert if the strategies order length doesn't have the same length as withdrawOrder
+        if(_strategies.length != MAXIMUM_STRATEGIES) {
+            revert Errors.StrategiesLengthMissMatch();
+        }
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
             //Strategy needs to be active
             if(strategies[_strategies[i]].activation == 0) {
@@ -313,6 +318,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
                 withdrawOrder[i - position] = strategy;
                 withdrawOrder[i] = address(0);
             }
+            unchecked { ++i; }
         }
     }
 }
