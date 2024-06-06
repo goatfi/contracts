@@ -1,1 +1,12 @@
 setStrategyDebtRatio.t.sol
+├── when the caller is not the manager
+│   └── it should revert
+├── when the strategy is not active
+│   └── it should revert
+└── when the caller is the manager and the strategy is active
+    ├── when the new debt ratio sets the multistrategy debt ratio above 100%
+    │   └── it should revert with DebtRatioAboveMaximum error
+    └── when the new debt ratio does not set the multistrategy debt ratio above 100%
+        ├── it should update the strategy's debt ratio
+        ├── it should adjust the multistrategy's debt ratio
+        └── it should emit the StrategyDebtRatioSet event
