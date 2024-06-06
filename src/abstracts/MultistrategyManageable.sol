@@ -198,7 +198,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
 
     /// @inheritdoc IMultistrategyManageable
     function removeStrategy(address _strategy) external onlyManager {
-        for(uint8 i = 0; i <= MAXIMUM_STRATEGIES;) {
+        for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
             if(withdrawOrder[i] == _strategy) {
                 // Remove the strategy from the withdraw order and organize it.
                 withdrawOrder[i] = address(0);
