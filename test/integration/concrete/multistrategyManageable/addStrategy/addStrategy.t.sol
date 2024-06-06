@@ -168,8 +168,8 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    /// @dev Lq = Lower or Equal
-    modifier whenMinDebtDeltaLqMaxDebtDelta() {
+    /// @dev Le = Lower or Equal
+    modifier whenMinDebtDeltaLeMaxDebtDelta() {
         _;
     }
 
@@ -181,7 +181,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotMultistrategyAddress
         whenStrategyIsInactive
         whenDepositTokenMatch
-        whenMinDebtDeltaLqMaxDebtDelta
+        whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
         // 110% debt raito
@@ -192,8 +192,8 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    /// @dev Lq = Lower or Equal
-    modifier whenDebtRatioLqMax() {
+    /// @dev Le = Lower or Equal
+    modifier whenDebtRatioLeMax() {
         _;
     }
 
@@ -205,7 +205,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotMultistrategyAddress
         whenStrategyIsInactive
         whenDepositTokenMatch
-        whenMinDebtDeltaLqMaxDebtDelta
+        whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
 
