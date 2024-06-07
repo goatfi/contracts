@@ -305,6 +305,8 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
                         revert Errors.InvalidWithdrawOrder();
                     }
                 }
+                // Exit the loop and function, as we reached an address(0) and all following addresses are address(0)
+                return;
             }
         }
     }
