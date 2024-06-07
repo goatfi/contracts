@@ -4,18 +4,18 @@ pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IStrategyWrapper } from "interfaces/infra/multistrategy/IStrategyWrapper.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-abstract contract StrategyWrapper is IStrategyWrapper, Ownable {
+abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     using SafeERC20 for IERC20;
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     address public multistrategy;
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     address public depositToken;
     
     /// @dev Reverts if `_depositToken` doesn't match `depositToken` on the Multistrategy.
@@ -43,13 +43,13 @@ abstract contract StrategyWrapper is IStrategyWrapper, Ownable {
         _;
     }
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     function requestCredit() external onlyOwner {
         IMultistrategy(multistrategy).requestCredit();
         _deposit();
     }
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     function sendReport(uint256 _repayAmount) external onlyOwner {
         uint256 currentAssets = _totalAssets();
         uint256 totalDebt = IMultistrategy(multistrategy).strategyTotalDebt(address(this));
@@ -73,14 +73,14 @@ abstract contract StrategyWrapper is IStrategyWrapper, Ownable {
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     function withdraw(uint256 _amount) external onlyMultistrat {
         _tryWithdraw(_amount);
 
         IERC20(depositToken).safeTransfer(multistrategy, _amount);
     }
 
-    /// @inheritdoc IStrategyWrapper
+    /// @inheritdoc IStrategyAdapter
     function totalAssets() external view returns(uint256) {
         return _totalAssets();
     }

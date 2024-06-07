@@ -2,7 +2,7 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
-interface IStrategyWrapper {
+interface IStrategyAdapter {
 
     /// @notice Returns the address of the multistrategy this Strategy belongs to.
     function multistrategy() external view returns(address);

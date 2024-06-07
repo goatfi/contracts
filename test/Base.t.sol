@@ -8,7 +8,7 @@ import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 import { ERC20Mock } from "./mocks/erc20/ERC20Mock.sol";
 import { ERC20MissingReturn } from "./mocks/erc20/ERC20MissingReturn.sol";
-import { StrategyWrapperMock } from "./mocks/StrategyWrapperMock.sol";
+import { StrategyAdapterMock } from "./mocks/StrategyAdapterMock.sol";
 import { Test } from "forge-std/Test.sol";
 import { Users } from "./utils/Types.sol";
 import { Events } from "./utils/Events.sol";
@@ -74,8 +74,8 @@ abstract contract Base_Test is Test, Events {
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }
 
-    function deployMockStrategyWrapper(address _multistrategy, address _depositToken) internal returns (address) {
-        return address(new StrategyWrapperMock(_multistrategy, _depositToken));
+    function deployMockStrategyAdapter(address _multistrategy, address _depositToken) internal returns (address) {
+        return address(new StrategyAdapterMock(_multistrategy, _depositToken));
     }
 
     function swapCaller(address newCaller) internal {

@@ -8,7 +8,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { MultistrategyManageable } from "src/abstracts/MultistrategyManageable.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
-import { IStrategyWrapper } from "interfaces/infra/multistrategy/IStrategyWrapper.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
@@ -320,7 +320,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 }
 
                 // We withdraw from the strategy
-                IStrategyWrapper(strategy).withdraw(amountNeeded);
+                IStrategyAdapter(strategy).withdraw(amountNeeded);
                 uint256 withdrawn = IERC20(depositToken).balanceOf(address(this)) - balanceBeforeWithdraw;
 
                 // Reduce the strategy's and multistretegy's totalDebt

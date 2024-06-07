@@ -12,7 +12,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
     uint256 maxDebtRatio = 100_000 ether;
 
     function addMockStrategy() internal returns (address) {
-        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
         return mockStrategy;
     }
@@ -82,7 +82,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenNoDuplicates
     {
         // Create the strategy but we don't add it to the multistrategy, so it wont be active
-        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         
         // Create an array with an inactive strategy
         strategies = [

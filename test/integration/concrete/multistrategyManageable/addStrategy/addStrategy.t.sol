@@ -36,7 +36,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         
         // Deploy 10 strategies, each with 10% debt ratio
         for (uint256 i = 0; i < 10; i++) {
-            address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+            address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
             multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
         }
         _;
@@ -47,7 +47,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenCallerIsManager 
         whenActiveStrategiesAtMaximum
     {
-        address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.MaximumAmountStrategies.selector));
@@ -99,7 +99,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
     {
-        address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         // We add the strategy
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
 
@@ -113,7 +113,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     }
 
     /// @dev Testing this requires some setup. As creating a strategy with the wrong deposit token
-    ///      would revert, as it is checked in the constructor of the StrategyWrapper.
+    ///      would revert, as it is checked in the constructor of the StrategyAdapter.
     ///      We need to deploy a need multistrategy with a different token and create a strategy for
     ///      that multistrategy. Revert will happen when we try to add that strategy to the multistrategy
     ///      We're testing here.
@@ -135,7 +135,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         });
         
         // Deploy a mock strategy for the usdt multistrategy
-        address strategy = deployMockStrategyWrapper(address(usdtMultistrategy), usdtMultistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(usdtMultistrategy), usdtMultistrategy.depositToken());
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(
@@ -159,7 +159,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenStrategyIsInactive
         whenDepositTokenMatch
     {
-        address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         minDebtDelta = 200_000 ether;
         maxDebtDelta = 100_000 ether;
 
@@ -183,7 +183,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenDepositTokenMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         // 110% debt raito
         debtRatio = 11_000;
 
@@ -207,7 +207,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenDepositTokenMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
 
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy) });

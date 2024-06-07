@@ -4,7 +4,7 @@ pragma solidity >=0.8.20 <= 0.9.0;
 
 import { MultistrategyAdminable } from "src/abstracts/MultistrategyAdminable.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
-import { IStrategyWrapper } from "interfaces/infra/multistrategy/IStrategyWrapper.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -153,10 +153,10 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
             revert Errors.StrategyAlreadyActive({ strategy: _strategy });
         }
         // Assert strategy's `depositToken` matches this multistrategy's `depositToken`.
-        if(depositToken != IStrategyWrapper(_strategy).depositToken()) {
+        if(depositToken != IStrategyAdapter(_strategy).depositToken()) {
             revert Errors.DepositTokenMissmatch({
                 multDepositToken: depositToken,
-                stratDepositToken: IStrategyWrapper(_strategy).depositToken()
+                stratDepositToken: IStrategyAdapter(_strategy).depositToken()
             });
         }
         // Assert new `debtRatio` will be below or equal 100%.

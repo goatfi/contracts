@@ -36,7 +36,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
 
     /// @dev Add a mock strategy to the multistrategy
     modifier whenStrategyIsActive() {
-        strategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         debtRatio = 5_000;
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
