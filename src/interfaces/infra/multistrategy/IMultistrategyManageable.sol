@@ -18,6 +18,9 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param depositLimit The new deposit limit value.
     event DepositLimitSet(uint256 depositLimit);
 
+    /// @notice Emitted when a new withdrawal order has been set.
+    event WithdrawOrderSet();
+
     /// @notice Emitted when the debt ratio for a specific strategy is set.
     /// @param strategy The address of the strategy whose debt ratio was updated.
     /// @param debtRatio The new debt ratio value for the specified strategy.
@@ -94,7 +97,7 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Sets the withdraw order. First position in the array will be the first strategy that it will get the funds withdrawn
     /// @dev It will revert if a strategy in the array is not active or if the array contains duplicate addresses.
     /// @param strategies Array of strategy addresses
-    function setWithdrawalOrder(address[] memory strategies) external;
+    function setWithdrawOrder(address[] memory strategies) external;
 
     /// @notice Adds a strategy to the multistrategy.
     /// @dev The strategy will be appended to `withdrawOrder`.

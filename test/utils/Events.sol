@@ -24,7 +24,7 @@ abstract contract Events {
 
     event DepositLimitSet(uint256 depositLimit);
 
-    event DebtRatioSet(uint256 debtRatio);
+    event WithdrawOrderSet();
 
     event StrategyDebtRatioSet(address indexed strategy, uint256 debtRatio);
 

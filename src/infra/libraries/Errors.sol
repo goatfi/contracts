@@ -60,6 +60,9 @@ library Errors {
     /// @notice Thrown when a strategy is reporting a loss higher than its total debt.
     error InvalidStrategyLoss();
 
+    /// @notice Thrown when there is non-Zero Address following a Zero Address in withdrawOrder.
+    error InvalidWithdrawOrder();
+
     /// @notice Thrown when trying to add a new strategy to the multistrategy but it already reached the
     /// maximum amount of strategies.
     error MaximumAmountStrategies();
