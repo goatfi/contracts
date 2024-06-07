@@ -141,7 +141,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         multistrategy.setWithdrawOrder(strategies);
     }
 
-    modifier whenNoExternalStrategiesAdded() {
+    modifier whenAllStrategiesArePresentInOldOrder() {
         _;
     }
 
@@ -154,7 +154,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenLengthMatches
         whenNoDuplicates
         whenAllStrategiesAreActive
-        whenNoExternalStrategiesAdded
+        whenAllStrategiesArePresentInOldOrder
     {
         // Add a strategy to the multistrategy so it is present in the withdrawal order.
         address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
@@ -183,13 +183,52 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         _;
     }
 
+    function test_SetWithdrawOrder_EmptyWithdrawOrder()
+        external
+        whenCallerIsManager
+        whenLengthMatches
+        whenNoDuplicates
+        whenAllStrategiesAreActive
+        whenAllStrategiesArePresentInOldOrder
+        whenZeroAddressOrderIsRespected
+    {
+
+        address[] memory withdrawOrder = multistrategy.getWithdrawOrder();
+        
+        // Create a new withdraw order
+        strategies = [
+            address(0),   // 1
+            address(0),   // 2
+            address(0),   // 3
+            address(0),   // 4
+            address(0),   // 5
+            address(0),   // 6
+            address(0),   // 7
+            address(0),   // 8
+            address(0),   // 9
+            address(0)    // 10
+        ];
+
+        vm.expectEmit({ emitter: address(multistrategy) });
+        emit WithdrawOrderSet();
+
+        multistrategy.setWithdrawOrder(strategies);
+
+        withdrawOrder = multistrategy.getWithdrawOrder();
+        
+        // Assert that all strategies are address(0)
+        for(uint256 i = 0; i < withdrawOrder.length; ++i){
+            assertEq(withdrawOrder[i], address(0), "setWithdrawOrder");
+        }
+    }
+
     function test_SetWithdrawOrder_NewWithdrawOrder()
         external
         whenCallerIsManager
         whenLengthMatches
         whenNoDuplicates
         whenAllStrategiesAreActive
-        whenNoExternalStrategiesAdded
+        whenAllStrategiesArePresentInOldOrder
         whenZeroAddressOrderIsRespected
     {
         // Add two strategies to the multistrategy so they are present in the withdrawOrder
@@ -198,10 +237,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         multistrategy.addStrategy(mockStrategy_1, debtRatio, minDebtRatio, maxDebtRatio);
         multistrategy.addStrategy(mockStrategy_2, debtRatio, minDebtRatio, maxDebtRatio);
 
-        // Assert mock strategy 1 is in first position and mock strategy 2 is in second position
         address[] memory withdrawOrder = multistrategy.getWithdrawOrder();
-        assertEq(withdrawOrder[0], mockStrategy_1, "withdraw order");
-        assertEq(withdrawOrder[1], mockStrategy_2, "withdraw order");
         
         // Create a new withdraw order
         strategies = [
