@@ -11,6 +11,12 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
     uint256 minDebtRatio = 100 ether;
     uint256 maxDebtRatio = 100_000 ether;
 
+    function addMockStrategy() internal returns (address) {
+        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
+        multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        return mockStrategy;
+    }
+
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
@@ -44,8 +50,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenLengthMatches
     {   
         // Add a strategy to the multistrategy so it is present in the withdrawal order.
-        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
-        multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        address mockStrategy = addMockStrategy();
         
         // Create an array with duplicate strategies
         strategies = [
@@ -114,8 +119,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenAllStrategiesAreActive
     {
         // Add a strategy to the multistrategy so it is present in the withdrawal order.
-        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
-        multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        address mockStrategy = addMockStrategy();
 
         // Remove it from the withdrawalOrder
         // Now the strategy is active, but removed from the withdrawal order. So including it
@@ -157,8 +161,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenAllStrategiesArePresentInOldOrder
     {
         // Add a strategy to the multistrategy so it is present in the withdrawal order.
-        address mockStrategy = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
-        multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        address mockStrategy = addMockStrategy();
 
         // Create an array with an invalid order
         strategies = [
@@ -192,7 +195,6 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenAllStrategiesArePresentInOldOrder
         whenZeroAddressOrderIsRespected
     {
-
         address[] memory withdrawOrder = multistrategy.getWithdrawOrder();
         
         // Create a new withdraw order
@@ -232,10 +234,8 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenZeroAddressOrderIsRespected
     {
         // Add two strategies to the multistrategy so they are present in the withdrawOrder
-        address mockStrategy_1 = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
-        address mockStrategy_2 = deployMockStrategyWrapper(address(multistrategy), multistrategy.depositToken());
-        multistrategy.addStrategy(mockStrategy_1, debtRatio, minDebtRatio, maxDebtRatio);
-        multistrategy.addStrategy(mockStrategy_2, debtRatio, minDebtRatio, maxDebtRatio);
+        address mockStrategy_1 = addMockStrategy();
+        address mockStrategy_2 = addMockStrategy();
 
         address[] memory withdrawOrder = multistrategy.getWithdrawOrder();
         
