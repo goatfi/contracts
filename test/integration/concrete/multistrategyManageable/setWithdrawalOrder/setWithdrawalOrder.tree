@@ -1,1 +1,18 @@
-setWithdrawalOrder.t.sol
+setWithdrawOrder.t.sol
+├── when the caller is not the manager
+│   └── it should revert
+└── when the caller is the manager
+    ├── when _validateStrategyOrder fails
+    │   ├── when the order length is incorrect
+    │   │   └── it should revert with StrategiesLengthMissMatch error
+    │   ├── when there are duplicate strategies
+    │   │   └── it should revert with DuplicateStrategyInArray error
+    │   ├── when a strategy is inactive
+    │   │   └── it should revert with StrategyNotActive error
+    │   ├── when a strategy is not present in the previous withdraw order
+    │   │   └── it should revert with StrategyNotFound error
+    │   └── when a zero address is followed by a strategy address
+    │       └── it should revert with InvalidWithdrawOrder error
+    └── when _validateStrategyOrder passes
+        ├── it should set the new withdraw order
+        └── it should emit the WithdrawOrderSet event

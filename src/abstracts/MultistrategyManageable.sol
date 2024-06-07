@@ -127,9 +127,10 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     }
 
     /// @inheritdoc IMultistrategyManageable
-    function setWithdrawalOrder(address[] memory _strategies) external onlyManager {
+    function setWithdrawOrder(address[] memory _strategies) external onlyManager {
         _validateStrategyOrder(_strategies);
         withdrawOrder = _strategies;
+        emit WithdrawOrderSet();
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -272,36 +273,39 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         if(_strategies.length != MAXIMUM_STRATEGIES) {
             revert Errors.StrategiesLengthMissMatch();
         }
-        for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
-            //Strategy needs to be active
-            if(strategies[_strategies[i]].activation == 0) {
-                revert Errors.StrategyNotActive(_strategies[i]);
-            }
+        for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
+            address strategy = _strategies[i];
 
-            bool strategyExists = false;
-            for(uint8 j = 0; j < MAXIMUM_STRATEGIES;) {
-                if(_strategies[j] == address(0)) {
-                    strategyExists = true;
+            if(strategy != address(0)) {
+                //Strategy needs to be active
+                if(strategies[strategy].activation == 0) {
+                    revert Errors.StrategyNotActive(strategy);
                 }
-                // Check that the strategy exists 
-                if(_strategies[i] == withdrawOrder[j]) {
-                    strategyExists = true;
+
+                bool strategyExists = false;
+                // Start to check on the next startegy
+                for(uint8 j = 0; j < MAXIMUM_STRATEGIES; ++j) {
+                    // Check that the strategy exists 
+                    if(strategy == withdrawOrder[j]) {
+                        strategyExists = true;
+                    }
+                    // No duplicates
+                    if(i != j && strategy == _strategies[j]) {
+                        revert Errors.DuplicateStrategyInArray();
+                    }
                 }
-                // This prevents from checking already checked duplicates.
-                if(j <= i) {
-                    continue;
+                // If a strategy in _strategies doesn't exist in withdrawOrder. Throw an error.
+                if(!strategyExists) {
+                    revert Errors.StrategyNotFound();
                 }
-                // No duplicates
-                if(_strategies[i] != _strategies[j]) {
-                    revert Errors.DuplicateStrategyInArray();
+            } else {
+                // Check that the rest of the addresses are address(0)
+                for(uint8 j = i + 1; j < MAXIMUM_STRATEGIES; ++j) {
+                    if(_strategies[j] != address(0)) {
+                        revert Errors.InvalidWithdrawOrder();
+                    }
                 }
-                unchecked { ++j; }
             }
-            // If a strategy in _strategies doesn't exist in withdrawOrder. Throw an error.
-            if(!strategyExists) {
-                revert Errors.StrategyNotFound();
-            }
-            unchecked { ++i; }
         }
     }
 
