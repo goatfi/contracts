@@ -1,0 +1,11 @@
+totalAssets.t.sol
+├── when there have been no deposits
+│   └── it should return 0
+└── when there have been deposits
+    ├── when there are no active strategies
+    │   └── it should return the balance of the multistrategy
+    └── when there are active strategies
+        ├── when the strategies have not requested any credit
+        │   └── it should return the balance of the multistrategy
+        └── when the strategies have requested a credit
+            └── it should return the balance of the multistrategy plus the total debt

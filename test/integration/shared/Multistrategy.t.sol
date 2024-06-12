@@ -7,6 +7,11 @@ interface IOwnable {
     function transferOwnership(address newOwner) external;
 }
 
+interface IStrategyAdapterMock {
+    function earn(uint256 _amount) external;
+    function lose(uint256 _amount) external;
+}
+
 contract Multistrategy_Integration_Shared_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -19,5 +24,24 @@ contract Multistrategy_Integration_Shared_Test is Base_Test {
 
     function transferMultistrategyOwnershipToOwner() internal {
         IOwnable(address(multistrategy)).transferOwnership({ newOwner: users.owner });
+    }
+
+    function triggerStrategyGain(address _strategy, uint256 _amount) internal {
+        IStrategyAdapterMock(_strategy).earn(_amount);
+    }
+
+    function triggerStrategyLoss(address _strategy, uint256 _amount) internal {
+        IStrategyAdapterMock(_strategy).lose(_amount);
+    }
+
+    function triggerUserDeposit(address _user, uint256 _amount) internal {
+        dai.mint(_user, _amount);
+        
+        swapCaller(_user);
+        dai.approve(address(multistrategy), _amount);
+        multistrategy.deposit(_amount);
+
+        // Switch back the caller to the owner, as stated in the setup funciton
+        swapCaller(users.owner);
     }
 }

@@ -257,7 +257,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
 
         //Assert deposit limit is respected
-        if(_amount + _totalAssets() <= depositLimit) {
+        if(_amount + _totalAssets() > depositLimit) {
             revert Errors.DepositLimit();
         }
 
