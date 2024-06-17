@@ -48,7 +48,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         IMultistrategy(multistrategy).requestCredit();
         _deposit();
     }
-
+    
     /// @inheritdoc IStrategyAdapter
     function sendReport(uint256 _repayAmount) external onlyOwner {
         uint256 currentAssets = _totalAssets();

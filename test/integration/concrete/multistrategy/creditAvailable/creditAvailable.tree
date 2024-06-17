@@ -1,0 +1,22 @@
+creditAvailble.t.sol
+├── when the strategy is the zero address
+│   └── it should return 0
+└── when the strategy is not the zero address
+    ├── when the multistrategy doesn't have any deposits
+    │   └── it should return 0
+    └── when the multistrategy has deposits
+        ├── when the strategy asking for a credit is not active
+        │   └── it should return 0
+        └── when the strategy asking for a credit is active
+            ├── when the strategy has more debt than allowed
+            │   └── it should return 0
+            ├── when the strategy has same debt as allowed
+            │   └── it should return 0
+            └── when the strategy has less debt than allowed
+                ├── when the available credit is lower than the strategy min debt delta
+                │   └── it should return 0
+                └── when the available credit is higher or equal than the strategy min debt delta
+                    ├── when the available credit is higher than the max debt delta
+                    │   └── it should return the max debt delta
+                    └── when the available credit is lower or equal than the max debt delta
+                        └── it should return the available credit
