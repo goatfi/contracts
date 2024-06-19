@@ -237,7 +237,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
 
         if(lockedFundsRatio < DEGRADATION_COEFFICIENT) {
-            return lockedProfit - (lockedFundsRatio * lockedProfit / DEGRADATION_COEFFICIENT);
+            return lockedProfit - Math.mulDiv(lockedFundsRatio, lockedProfit, DEGRADATION_COEFFICIENT);
         }
         return 0;
     }
@@ -391,7 +391,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         uint256 profit = 0;
 
         if(_gain > 0) {
-            uint256 pFee = _gain * performanceFee / MAX_BPS;
+            uint256 pFee = Math.mulDiv(_gain, performanceFee, MAX_BPS);
 
             // Transfer the performance fee to the fee recipient
             if(pFee > 0) {

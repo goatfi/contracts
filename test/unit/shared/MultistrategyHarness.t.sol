@@ -12,18 +12,18 @@ interface IStrategyAdapterMock {
     function lose(uint256 _amount) external;
 }
 
-contract Multistrategy_Unit_Shared_Test is Base_Test {
+contract MultistrategyHarness_Unit_Shared_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
         
-        deployMultistrategy();
+        deployMultistrategyHarness();
         transferMultistrategyOwnershipToOwner();
 
         vm.startPrank({ msgSender: users.owner });
     }
 
     function transferMultistrategyOwnershipToOwner() internal {
-        IOwnable(address(multistrategy)).transferOwnership({ newOwner: users.owner });
+        IOwnable(address(multistrategyHarness)).transferOwnership({ newOwner: users.owner });
     }
 
     function triggerStrategyGain(address _strategy, uint256 _amount) internal {
@@ -38,8 +38,8 @@ contract Multistrategy_Unit_Shared_Test is Base_Test {
         dai.mint(_user, _amount);
         
         swapCaller(_user);
-        dai.approve(address(multistrategy), _amount);
-        multistrategy.deposit(_amount);
+        dai.approve(address(multistrategyHarness), _amount);
+        multistrategyHarness.deposit(_amount);
 
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);
