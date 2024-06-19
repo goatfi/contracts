@@ -82,6 +82,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         return _debtExcess(_strategy);
     }
 
+    /// @inheritdoc IMultistrategy
     function strategyTotalDebt(address _strategy) external view returns(uint256) {
         return strategies[_strategy].totalDebt;
     }
@@ -130,47 +131,74 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the assets this Multistrategy holds.
-    /// Note that these are the *expected* assets, as it is calculated via the totalDebt
-    /// this Multistrategy has issued to the strategies.
+    /// @notice Internal view function to calculate the total assets held by the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the balance of idle assets (tokens) held by the contract.
+    /// - Adds the total debt to the idle assets to determine the total assets.
+    /// 
+    /// @return The total assets held by the contract.
     function _totalAssets() internal view returns(uint256) {
         uint256 idleAssets = IERC20(depositToken).balanceOf(address(this));
         return idleAssets + totalDebt;
     }
 
-    /// @dev Determines the value of "shares" in depositToken amount
-    /// @param _shares Amount of shares
+    /// @notice Internal view function to calculate the value of a given number of shares.
+    /// 
+    /// This function performs the following actions:
+    /// - If the total supply of shares is zero, returns the number of shares as the value.
+    /// - Otherwise, calculates the value of the shares as a proportion of the free funds to the total supply.
+    /// 
+    /// @param _shares The number of shares to calculate the value for.
+    /// @return The value corresponding to the given number of shares.
     function _shareValue(uint256 _shares) internal view returns(uint256) {
         if(totalSupply() == 0){
             return _shares;
         }
 
-        uint256 value = _shares * _freeFunds() / totalSupply();
+        uint256 value = Math.mulDiv(_shares, _freeFunds(), totalSupply());
         return value;
     }
 
-    /// @dev Determines how many shares "amount" of depositToken would receieve
-    /// @param _amount Amount of depositToken
+    /// @notice Internal view function to calculate the number of shares corresponding to a given amount.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the free funds available in the contract.
+    /// - If there are free funds, calculates the shares as a proportion of the total supply to the free funds.
+    /// - If there are no free funds, returns zero.
+    /// 
+    /// @param _amount The amount for which to calculate the corresponding shares.
+    /// @return The number of shares corresponding to the given amount.
     function _sharesForAmount(uint256 _amount) internal view returns(uint256) {
         uint256 freeFunds = _freeFunds();
 
         if(freeFunds > 0){
-            uint256 shares = _amount * totalSupply() / freeFunds;
+            uint256 shares = Math.mulDiv(_amount, totalSupply(), freeFunds);
             return shares;
         }
 
         return 0;
     }
 
-    /// @dev This will check the strategy's debt limit and the tokens available in the Multistrategy 
-    ///      in order to calculate the max amount of tokens a strategy can borrow.
-    /// @param _strategy Address of the strategy we want to know the credit available for.
+    /// @notice Internal view function to calculate the available credit for a strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Determines the total assets and debt limits for both the multi-strategy and the specific strategy.
+    /// - Checks if the strategy or the multi-strategy has exceeded their respective debt limits, in which case no new credit is offered.
+    /// - Calculates the potential credit as the difference between the strategy's debt limit and its current debt.
+    /// - Limits the potential credit by the maximum available credit of the multi-strategy.
+    /// - Ensures the potential credit is within the strategy's minimum and maximum debt delta bounds.
+    /// - Returns zero if the available credit is below the strategy's minimum debt delta.
+    /// - Returns the available credit, ensuring it does not exceed the strategy's maximum debt delta.
+    /// 
+    /// @param _strategy The address of the strategy for which to determine the available credit.
+    /// @return The amount of credit available for the given strategy.
     function _creditAvailable(address _strategy) internal view returns(uint256) {
         uint256 mult_totalAssets = _totalAssets();
-        uint256 mult_debtLimit = debtRatio * mult_totalAssets / MAX_BPS;
+        uint256 mult_debtLimit = Math.mulDiv(debtRatio, mult_totalAssets, MAX_BPS);
         uint256 mult_totalDebt = totalDebt;
 
-        uint256 strat_debtLimit = strategies[_strategy].debtRatio * mult_totalAssets / MAX_BPS;
+        uint256 strat_debtLimit = Math.mulDiv(strategies[_strategy].debtRatio, mult_totalAssets, MAX_BPS);
         uint256 strat_totalDebt = strategies[_strategy].totalDebt;
         uint256 strat_minDebtDelta = strategies[_strategy].minDebtDelta;
         uint256 strat_maxDebtDelta = strategies[_strategy].maxDebtDelta;
@@ -204,8 +232,16 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
     }
 
-    /// @dev If a strategy doesn't have an excess of debt, it will return 0.
-    /// @param _strategy Address of the strategy we want to know if it has any debt excess.
+    /// @notice Internal view function to calculate the excess debt of a strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - If the overall debt ratio is zero, it returns the total debt of the strategy as excess debt.
+    /// - Calculates the strategy's debt limit based on its debt ratio and the total assets.
+    /// - If the strategy's total debt is less than or equal to its debt limit, it returns zero indicating no excess debt.
+    /// - If the strategy's total debt exceeds its debt limit, it returns the difference as the excess debt.
+    /// 
+    /// @param _strategy The address of the strategy for which to determine the debt excess.
+    /// @return The amount of excess debt for the given strategy.
     function _debtExcess(address _strategy) internal view returns(uint256) {
         // If the debtRatio is 0, means the multistrategy doesn't want to offer any credits
         // which means, all debt is excess debt.
@@ -213,7 +249,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             return strategies[_strategy].totalDebt;
         }
 
-        uint256 strat_debtLimit = strategies[_strategy].debtRatio * _totalAssets() / MAX_BPS;
+        uint256 strat_debtLimit = Math.mulDiv(strategies[_strategy].debtRatio, _totalAssets(), MAX_BPS);
         uint256 strat_totalDebt = strategies[_strategy].totalDebt;
 
         // If the total debt of a strategy is below its debt limit, there is no excess debt.
@@ -225,14 +261,25 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
     }
     
-    /// @dev Returns the assets the multistrategy holds minus the profit that is locked
-    ///      Used to calculate the share price, as the profit that is locked cannot be
-    ///      reflected in the share price.
+    /// @notice Internal view function to calculate the free funds available in the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the total assets held by the contract.
+    /// - Subtracts the current locked profit from the total assets to determine the free funds.
+    /// 
+    /// @return The amount of free funds available.
     function _freeFunds() internal view returns(uint256) {
         return _totalAssets() - _calculateLockedProfit();
     }
 
-    /// @dev Returns the amount of profit that is still locked.
+    /// @notice Internal view function to calculate the current locked profit.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the locked funds ratio based on the time elapsed since the last report and the locked profit degradation rate.
+    /// - If the locked funds ratio is less than the degradation coefficient, it computes the remaining locked profit by reducing it proportionally.
+    /// - If the locked funds ratio is greater than or equal to the degradation coefficient, it returns zero indicating no locked profit remains.
+    /// 
+    /// @return The calculated current locked profit.
     function _calculateLockedProfit() internal view returns(uint256) {
         uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
 
@@ -246,7 +293,25 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-
+    /// @notice Internal function to handle deposits into the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Validates that the recipient address is not the zero address or the contract address itself.
+    /// - Checks that the deposit amount is greater than zero.
+    /// - Ensures the deposit does not exceed the deposit limit.
+    /// - Mints shares equivalent to the deposit amount for the recipient.
+    /// - Transfers the deposit amount from the depositor to the contract.
+    ///
+    /// Requirements:
+    /// - The contract must not be paused.
+    /// - The recipient address must not be zero or the contract address.
+    /// - The deposit amount must be greater than zero.
+    /// - The deposit amount must not exceed the deposit limit.
+    ///
+    /// Emits a `Deposit` event.
+    /// 
+    /// @param _amount The amount to be deposited.
+    /// @param _recipient The address of the recipient to receive shares for the deposit.
     function _deposit(uint256 _amount, address _recipient) internal whenNotPaused {
         if(_recipient == address(0) || _recipient == address(this)) {
             revert Errors.InvalidAddress({ addr: _recipient });
@@ -270,6 +335,25 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         emit Deposit(_amount, _recipient);
     }
 
+    /// @notice Internal function to handle withdrawals from the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Ensures the withdrawer has sufficient balance to withdraw the specified amount.
+    /// - Validates that a non-zero amount is being withdrawn.
+    /// - Calculates the deposit token value from the amount of shares.
+    /// - Checks if the withdrawal amount exceeds the idle assets available in the contract and withdraws from strategies if needed.
+    /// - Iterates through the withdrawal queue to cover the withdrawal amount from different strategies.
+    /// - Burns the shares equivalent to the withdrawal amount.
+    /// - Transfers the withdrawal amount to the caller.
+    ///
+    /// Requirements:
+    /// - The contract must not be paused.
+    /// - The withdrawer must have enough balance to cover the withdrawal amount.
+    /// - The withdrawal amount must be greater than zero.
+    ///
+    /// Emits a `Withdraw` event.
+    ///
+    /// @param _amount The amount to be withdrawn.
     function _withdraw(uint256 _amount) internal whenNotPaused {
         //Assert withdrawer has enough balance
         if(balanceOf(msg.sender) > _amount) {
@@ -347,10 +431,28 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         //Send the tokens to the caller
         IERC20(depositToken).safeTransfer(msg.sender, balanceToWithdraw);
 
-        emit Withdraw(_amount);
+        emit Withdraw(balanceToWithdraw);
     }
 
-    function _requestCredit() internal whenNotPaused onlyActiveStrategy(msg.sender) {
+    /// @notice Internal function to request credit for an active strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the available credit for the strategy using `_creditAvailable`.
+    /// - If credit is available, it updates the total debt for the strategy and the multistrategy contract.
+    /// - Transfers the calculated credit amount to the strategy.
+    ///
+    /// Requirements:
+    /// - The contract must not be paused.
+    /// - The caller must be an active strategy.
+    ///
+    /// Emits a `CreditRequested` event.
+    ///
+    /// @dev This function should be called only by active strategies when they need to request credit.
+    function _requestCredit() 
+        internal 
+        whenNotPaused 
+        onlyActiveStrategy(msg.sender) 
+    {
         uint256 credit = _creditAvailable(msg.sender);
 
         // Check that the strategy has some credit available
@@ -367,6 +469,30 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
     }
 
+    /// @notice Internal function to report the performance of a strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Validates that the reporting strategy does not claim both a gain and a loss simultaneously.
+    /// - Checks that the strategy has sufficient tokens to cover the debt repayment and the gain.
+    /// - If there is a loss, it realizes the loss.
+    /// - Calculates and deducts the performance fee from the gain, transferring it to the fee recipient.
+    /// - Transfers the remaining profit to the contract.
+    /// - Determines the excess debt of the strategy and repays it up to the amount available.
+    /// - Adjusts the strategy's and contract's total debt accordingly.
+    /// - Calculates and updates the new locked profit after accounting for any losses.
+    /// - Updates the reporting timestamps for the strategy and the contract.
+    ///
+    /// Requirements:
+    /// - The contract must not be paused.
+    /// - The function must be called by an active strategy.
+    /// - The strategy must not report both gain and loss simultaneously.
+    /// - The strategy must have enough balance to cover the gain and debt repayment.
+    ///
+    /// Emits a `StrategyReported` event.
+    ///
+    /// @param _debtRepayment The amount of debt being repaid by the strategy.
+    /// @param _gain The amount of profit reported by the strategy.
+    /// @param _loss The amount of loss reported by the strategy.
     function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) 
         internal 
         whenNotPaused 
@@ -376,6 +502,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         if(_gain > 0 && _loss > 0) {
             revert Errors.GainLossMissmatch();
         }
+
         // Check that the strategy actually has the tokens to transfer the profits and repay the debt.
         if(IERC20(depositToken).balanceOf(msg.sender) < _debtRepayment + _gain) {
             revert Errors.InsufficientBalance({ 
@@ -383,6 +510,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 amount: _debtRepayment + _gain
             });
         }
+
         // If the strategy is reporting a loss, realize it.
         if(_loss > 0) {
             _reportLoss(msg.sender, _loss);
@@ -403,8 +531,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             IERC20(depositToken).safeTransferFrom(msg.sender, address(this), profit);
         } 
 
-        uint256 debt = _debtExcess(msg.sender);
-        uint256 debtToRepay = Math.min(_debtRepayment, debt);
+        uint256 exceedingDebt = _debtExcess(msg.sender);
+        uint256 debtToRepay = Math.min(_debtRepayment, exceedingDebt);
 
         // If the strategy has made any funds available for repayment and the strategy has more debt
         // than it should, the strategy will repay the debt with the funds that has made available
@@ -435,6 +563,19 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         emit StrategyReported(msg.sender, debtToRepay, profit, _loss);
     }
 
+    /// @notice Internal function to report a loss for a strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Validates that the loss reported by the strategy does not exceed its total debt.
+    /// - Updates the strategy's total loss by adding the reported loss.
+    /// - Reduces the strategy's total debt by the reported loss.
+    /// - Adjusts the contract's total debt by reducing it with the reported loss.
+    /// 
+    /// Requirements:
+    /// - The reported loss must not exceed the strategy's total debt.
+    ///
+    /// @param _strategy The address of the strategy reporting the loss.
+    /// @param _loss The amount of loss reported by the strategy.
     function _reportLoss(address _strategy, uint256 _loss) internal {
         uint256 strat_totalDebt = strategies[_strategy].totalDebt;
         // Check that the strategy isn't reporting an incorrect loss, as it can only lose up to
@@ -448,6 +589,16 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         totalDebt -= _loss;
     }
 
+    /// @notice Internal function to issue shares equivalent to a given amount for a recipient.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the number of shares to issue based on the current total supply and free funds.
+    /// - If the total supply is greater than zero, the shares are proportional to the amount and total supply.
+    /// - If the total supply is zero, the shares are equal to the amount.
+    /// - Mints the calculated number of shares for the recipient.
+    /// 
+    /// @param _amount The amount of funds for which shares are to be issued.
+    /// @param _recipient The address of the recipient to receive the issued shares.
     function _issueSharesForAmount(uint256 _amount, address _recipient) internal {
         uint256 shares = 0;
         uint256 totalSupply = totalSupply();
@@ -461,6 +612,18 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         _mint(_recipient, _amount);
     }
 
+    /// @notice Internal function to rescue tokens from the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the balance of the specified token in the contract.
+    /// - Transfers the entire balance of the specified token to the recipient address.
+    ///
+    /// Requirements:
+    /// - The caller must be the guardian.
+    /// - The specified token must not be the deposit token to prevent unauthorized withdrawals.
+    ///
+    /// @param _token The address of the token to be rescued.
+    /// @param _recipient The address to receive the rescued tokens.
     function _rescueToken(address _token, address _recipient) internal onlyGuardian {
         // Check that we aren't stealing from the multistrategy.
         if(_token == depositToken) {
