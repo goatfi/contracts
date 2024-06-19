@@ -1,0 +1,8 @@
+shareValue.t.sol
+├── when totalSupply is 0
+│   └── it should return the amount of shares
+└── when totalSupply is greater than 0
+    ├── when shares is 0
+    │   └── it should return 0
+    └── when shares is greater than 0
+        └── it should return shares multiplied by freeFunds divided by totalSupply

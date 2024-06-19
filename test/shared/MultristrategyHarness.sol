@@ -6,6 +6,9 @@ import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.so
 
 interface IMultistrategyHarness is IMultistrategy {
     function calculateLockedProfit() external view returns(uint256);
+    function shareValue(uint256 _shares) external view returns(uint256);
+    function sharesForAmount(uint256 _amount) external view returns(uint256);
+    function freeFunds() external view returns(uint256);
 }
 
 /// @dev This contract exposes the internal functions of the multistrategy contract.
@@ -28,5 +31,17 @@ contract MultistrategyHarness is IMultistrategyHarness, Multistrategy {
 
     function calculateLockedProfit() external view returns(uint256) {
         return _calculateLockedProfit();
+    }
+    
+    function shareValue(uint256 _shares) external view returns(uint256) {
+        return _shareValue(_shares);
+    }
+
+    function sharesForAmount(uint256 _amount) external view returns(uint256) {
+        return _sharesForAmount(_amount);
+    }
+
+    function freeFunds() external view returns(uint256) {
+        return _freeFunds();
     }
 }
