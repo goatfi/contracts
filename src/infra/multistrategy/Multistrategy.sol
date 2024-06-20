@@ -604,7 +604,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         uint256 totalSupply = totalSupply();
 
         if(totalSupply > 0) {
-            shares = _amount * totalSupply / _freeFunds();
+            shares = Math.mulDiv(_amount, totalSupply, _freeFunds());
         } else {
             shares = _amount;
         }
