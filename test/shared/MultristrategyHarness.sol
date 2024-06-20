@@ -9,6 +9,8 @@ interface IMultistrategyHarness is IMultistrategy {
     function shareValue(uint256 _shares) external view returns(uint256);
     function sharesForAmount(uint256 _amount) external view returns(uint256);
     function freeFunds() external view returns(uint256);
+    function reportLoss(address _strategy, uint256 _loss) external;
+    function issueSharesForAmount(uint256 _amount, address _recipient) external;
 }
 
 /// @dev This contract exposes the internal functions of the multistrategy contract.
@@ -43,5 +45,13 @@ contract MultistrategyHarness is IMultistrategyHarness, Multistrategy {
 
     function freeFunds() external view returns(uint256) {
         return _freeFunds();
+    }
+
+    function reportLoss(address _strategy, uint256 _loss) external {
+        _reportLoss(_strategy, _loss);
+    }
+
+    function issueSharesForAmount(uint256 _amount, address _recipient) external {
+        _issueSharesForAmount(_amount, _recipient);
     }
 }
