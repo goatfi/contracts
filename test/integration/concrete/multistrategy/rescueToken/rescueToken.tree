@@ -1,0 +1,11 @@
+rescueToken.t.sol
+├── when the caller is not a guardian
+│   └── it should revert with a CallerNotGuardian error
+└── when the caller is a guardian
+    ├── when the token address the depositToken address
+    │   └── it should revert with an InvalidAddress error
+    └── when the token address is not the depositToken address
+        ├── when the recipient address is the zero address
+        │   └── it should revert with an ERC20InvalidReceiver error
+        └── when the recipient address is not the zero address
+            └── it should transfer all the balance of token to the recipient address

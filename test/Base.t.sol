@@ -28,11 +28,13 @@ abstract contract Base_Test is Test, Events {
     IMultistrategy internal multistrategy;
     IMultistrategyHarness internal multistrategyHarness;
     ERC20Mock internal dai;
+    ERC20Mock internal weth;
     ERC20MissingReturn internal usdt;
 
     function setUp() public virtual {
         // Deploy the base test contracts.
         dai = new ERC20Mock("Dai Stablecoin", "DAI");
+        weth = new ERC20Mock("Wrapped Ether", "WETH");
         usdt = new ERC20MissingReturn("Tether USD", "USDT", 6);
 
         // Label the base test contracts.
