@@ -85,9 +85,14 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         return _totalAssets();
     }
 
-    /// @dev Tries to withdraw `_amount`. If `_withdraw` hasn't been able to withdraw
-    /// the desired amount, it reverts.
-    /// Is up to the `_withdraw` implementation
+    /// @notice Internal function to attempt to withdraw a specified amount from the strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Calls the internal `_withdraw` function to withdraw the desired amount.
+    /// - Checks the current balance of the contract after the withdrawal.
+    /// - If the balance is less than the desired amount, it reverts with an insufficient balance error.
+    /// 
+    /// @param _amount The amount to withdraw from the strategy.
     function _tryWithdraw(uint256 _amount) internal {
         // Withdraw the desired amount
         _withdraw(_amount);

@@ -265,9 +265,17 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Validates `_strategies` input so all strategies are active, exist in the withdrawOrder and
-    /// the input doesn't include any duplicate addresses.
-    /// @param _strategies Array of active strategies
+    /// @notice Internal view function to validate the order of strategies for withdrawals.
+    /// 
+    /// This function performs the following actions:
+    /// - Ensures the length of the provided strategies array matches the maximum number of strategies.
+    /// - Iterates through the provided strategies to validate each one:
+    ///   - Checks that non-zero addresses correspond to active strategies.
+    ///   - Ensures there are no duplicate strategies in the provided array.
+    ///   - Confirms that each strategy in the provided array exists in the withdraw order.
+    /// - If an address in the provided array is zero, it checks that all subsequent addresses are also zero.
+    /// 
+    /// @param _strategies The array of strategy addresses to validate.
     function _validateStrategyOrder(address[] memory _strategies) internal view {
         // Revert if the strategies order length doesn't have the same length as withdrawOrder
         if(_strategies.length != MAXIMUM_STRATEGIES) {
@@ -311,9 +319,12 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         }
     }
 
-    /// @notice Organizes `withdrawOrder` array so there is not a Zero Address between two active strategies.
-    /// This is needed because some functions end if they find a Zero Address in the array, as it is supposed that
-    /// All the addresses after Zero Address will be Zero Address too.
+    /// @notice Internal function to organize the withdraw order by removing gaps and shifting strategies.
+    /// 
+    /// This function performs the following actions:
+    /// - Iterates through the withdraw order array.
+    /// - For each strategy, if it encounters an empty slot (address(0)), it shifts subsequent strategies up to fill the gap.
+    /// - Ensures that any empty slots are moved to the end of the array.
     function _organizeWithdrawOrder() internal {
         uint8 position = 0;
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
