@@ -1,0 +1,11 @@
+issueSharesForAmount.t.sol
+└── when amount is zero
+    ├── it should mint zero receipt tokens
+    └── when amount is greater than zero
+        ├── when the recipient is the zero address
+        │   └── it should revert with ERC20InvalidReceiver error
+        └── when the recipient is not the zero address
+            ├── when the totalSupply is zero
+            │   └── it should mint the same shares as amount
+            └── when the totalSupply is greater than zero
+                └── it should mint shares for the amount multiplied by totalSupply and divided by freeFunds
