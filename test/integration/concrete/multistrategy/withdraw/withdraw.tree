@@ -1,0 +1,22 @@
+withdraw.t.sol
+├── when the caller doesn't have enough shares to cover the withdraw
+│   └── it should revert with an InsufficientBalance error
+└── when the caller has enough shares to cover the withdraw
+    ├── when `amount` is zero
+    │   └── it should revert with a Zero Amount error
+    └── when `amount` is greater than zero
+        ├── when the balance of depositToken of the contract is lower than the amount being withdrawn
+        │   └── it should withdraw the amount needed from the strategies
+        │       ├── when the balance to withdraw is greater than the balance of the contract
+        │       │   ├── it should adjust `amount` to the maximum amount possible to be withdrawn
+        │       │   ├── it should burn `amount` of shares
+        │       │   ├── it should transfer the deposit tokens to the caller
+        │       │   └── it should emit a Withdraw event
+        │       └── when the balance to withdraw is lower or equal than the balance of the contract
+        │           ├── it should burn `amount` of shares
+        │           ├── it should transfer the deposit token to the caller
+        │           └── it should emit a Withdraw event
+        └── when the deposit token balance of the contract is higher than the amount being withdrawn
+            ├── it should burn `amount` of shares
+            ├── it should transfer the deposit token to the caller
+            └── it should emit a Withdraw event

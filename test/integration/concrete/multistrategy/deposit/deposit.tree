@@ -1,0 +1,19 @@
+deposit.t.sol
+├── when the recipient is the zero address
+│   └── it should revert with an InvalidAddress error
+└── when the recipient is not the zero address
+    ├── when the recipient is the contract address
+    │   └── it should revert with an InvalidAddress error
+    └── when the recipient is not the contract address
+        ├── when the amount is zero
+        │   └── it should revert with a ZeroAmount error
+        └── when the amount is greater than zero
+            ├── when the amount plus total assets is greater than the deposit limit
+            │   └── it should revert with a DepositLimit error
+            └── when the amount plus the total assets is lower or equal than the deposit limit
+                ├── when the caller doesn't have enough funds to cover the deposit
+                │   └── it should revert with ERC20InsufficientBalance error
+                └── when the caller has enough funds to cover the deposit
+                    ├── it should issue shares according the shares for amount value
+                    ├── it should transfer the deposit token from the caller to the contract
+                    └── it should emit a Deposit event
