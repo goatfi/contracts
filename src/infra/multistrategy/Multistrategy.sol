@@ -356,7 +356,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// @param _amount The amount to be withdrawn.
     function _withdraw(uint256 _amount) internal whenNotPaused {
         //Assert withdrawer has enough balance
-        if(balanceOf(msg.sender) > _amount) {
+        if(balanceOf(msg.sender) < _amount) {
             revert Errors.InsufficientBalance({ 
                 currentBalance: balanceOf(msg.sender), 
                 amount: _amount 
