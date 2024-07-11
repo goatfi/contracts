@@ -1,0 +1,59 @@
+strategyReport.t.sol
+├── when the contract is paused
+│   └── it should revert
+└── when the contract is not paused
+    ├── when the caller is not an active strategy
+    │   └── it should revert
+    └── when the caller is an active strategy
+        ├── when the strategy is reporting a gain and a loss at the same time
+        │   └── it should revert with GainLossMissmatch error
+        └── when the strategy is only reporting a gain or a loss
+            ├── when the reporting strategy dont have enough balance to repay the debt and transfer the gains
+            │   └── it should revert with InsufficientBalance error
+            └── when the reporting strategy have enough balance to repay the debt and transfer the gains
+                ├── when the reporting startegy has made a loss
+                │   ├── when the strategy loss is higher than the new locked profit
+                │   │   ├── when the strategy has some exceeding debt
+                │   │   │   ├── it should report the loss
+                │   │   │   ├── it should repay the exceeding debt up to the balance made available by the strategy
+                │   │   │   ├── it should set the locked profit to zero
+                │   │   │   ├── it should update the strategy last report timestamp
+                │   │   │   ├── it should update the multistrategy last report timestamp
+                │   │   │   └── it should emit a StrategyReported event
+                │   │   └── when the strategy has no exceeding debt
+                │   │       ├── it should report the loss
+                │   │       ├── it should set the locked profit to zero
+                │   │       ├── it should update the strategy last report timestamp
+                │   │       ├── it should update the multistrategy last report timestamp
+                │   │       └── it should emit a StrategyReported event
+                │   └── when the strategy loss is lower than the new locked profit
+                │       ├── when the strategy has some exceeding debt
+                │       │   ├── it should report the loss
+                │       │   ├── it should repay the exceeding debt up to the balance made available by the strategy
+                │       │   ├── it should calculate the new locked profit and subtract the loss
+                │       │   ├── it should update the strategy last report timestamp
+                │       │   ├── it should update the multistrategy last report timestamp
+                │       │   └── it should emit a StrategyReported event
+                │       └── when the strategy has no exceeding debt
+                │           ├── it should report the loss
+                │           ├── it should calculate the new locked profit and subtract the loss
+                │           ├── it should update the strategy last report timestamp
+                │           ├── it should update the multistrategy last report timestamp
+                │           └── it should emit a StrategyReported event
+                └── when the reporting startegy has not made a loss
+                    └── when the reporting strategy has made a gain
+                        ├── when the strategy has some exceeding debt
+                        │   ├── it should send the collected fee from the strategy to the fee recipient
+                        │   ├── it should send the profit from the strategy to the multistrategy
+                        │   ├── it should repay the exceeding debt up to the balance made available by the strategy
+                        │   ├── it should set the new locked profit
+                        │   ├── it should update the strategy last report timestamp
+                        │   ├── it should update the multistrategy last report timestamp
+                        │   └── it should emit a StrategyReported event
+                        └── when the strategy has no exceeding debt
+                            ├── it should send the collected fee from the strategy to the fee recipient
+                            ├── it should send the profit from the strategy to the multistrategy
+                            ├── it should set the new locked profit
+                            ├── it should update the strategy last report timestamp
+                            ├── it should update the multistrategy last report timestamp
+                            └── it should emit a StrategyReported event

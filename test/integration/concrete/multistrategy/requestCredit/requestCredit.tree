@@ -1,0 +1,14 @@
+requestCredit.t.sol
+├── when the contract is paused
+│   └── it should revert
+└── when the contract is not paused
+    ├── when the caller is not an active strategy
+    │   └── it should revert
+    └── when the caller is an active strategy
+        ├── when the available credit is zero
+        │   └── it should not send any funds to the strategy
+        └── when the available credit is greater than zero
+            ├── it should increase the totalDebt of the strategy
+            ├── it should increase the totalDebt of the multistrategy
+            ├── it should transfer the tokens to the strategy
+            └── it should emit a CreditRequested event
