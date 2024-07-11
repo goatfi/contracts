@@ -199,6 +199,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
 
     /// @inheritdoc IMultistrategyManageable
     function removeStrategy(address _strategy) external onlyManager {
+        // Check that the startegy being removed doesn't have any outstanding debt.
+        if(strategies[_strategy].totalDebt > 0) {
+            revert Errors.StrategyWithOutstandingDebt();
+        }
+
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
             if(withdrawOrder[i] == _strategy) {
                 // Remove the strategy from the withdraw order and organize it.

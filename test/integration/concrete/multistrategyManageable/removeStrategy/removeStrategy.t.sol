@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
@@ -24,7 +25,36 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         _;
     }
 
-    function test_RevertWhen_StrategyIsNotInWithdrawOrder() external whenCallerIsManager {
+    function test_RevertWhen_StrategyHasOutstandingDebt() external whenCallerIsManager {
+        // Deploy and add a mock strategy adapter in order to request a credit
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
+
+        // Deposit to the multistrategy so the strategy has funds to request a credit.
+        uint256 depositAmount = 1_000 ether;
+        dai.mint(users.bob, depositAmount);
+        swapCaller(users.bob);
+        dai.approve(address(multistrategy), depositAmount);
+        multistrategy.deposit(depositAmount);
+
+        // Strategy requests a credit
+        swapCaller(users.keeper);
+        IStrategyAdapter(strategy).requestCredit();
+
+        // Expect a revert when trying to remove the strategy from the withdraw order
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyWithOutstandingDebt.selector));
+        multistrategy.removeStrategy(strategy);
+    }
+
+    modifier whenStrategyHasNoOutstandingDebt() {
+        _;
+    }
+
+    function test_RevertWhen_StrategyIsNotInWithdrawOrder() 
+        external 
+        whenCallerIsManager
+        whenStrategyHasNoOutstandingDebt
+    {
         // Create address for a strategy that wont be activated
         strategy = makeAddr("strategy");
 
@@ -47,6 +77,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     function test_RemoveStrategy_RemoveStrategyFromWithdrawOrder()
         external
         whenCallerIsManager
+        whenStrategyHasNoOutstandingDebt
         whenStrategyIsInWithdrawOrder
     {
         // Expect the relevant event

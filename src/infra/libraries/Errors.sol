@@ -54,6 +54,9 @@ library Errors {
     /// @notice Thrown when the debtRatio of a strategy or a multistrategy is above 100%.
     error DebtRatioAboveMaximum(uint256 debtRatio);
 
+    /// @notice Thrown when trying to remove a strategy from `withdrawOrder` that still has outstanding debt.
+    error StrategyWithOutstandingDebt();
+
     /// @notice Thrown when minDebtDelta is above maxDebtDelta or maxDebtDelta is below minDebtDelta.
     error InvalidDebtDelta();
 
@@ -74,7 +77,7 @@ library Errors {
     error StrategyNotFound();
 
     /*//////////////////////////////////////////////////////////////////////////
-                                STRATEGY WRAPPER
+                                STRATEGY ADAPTER
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Thrown when the caller is not the Multistrategy.
