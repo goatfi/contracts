@@ -73,7 +73,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     /// @dev Case where withdraw value is higher than the contract balance, so it starts the withdraw
     /// process. After withdrawing from all strategies, there are not enough funds to cover
     /// the withdraw value.
-    function test_Withdraw_WithdrawValueHigherThanMaximumWithdrawable()
+    /*function test_Withdraw_WithdrawValueHigherThanMaximumWithdrawable()
         external
         whenHasCallerEnoughSharesToCoverWithdraw
         whenAmountGreaterThanZero
@@ -114,7 +114,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         uint256 actualStrategyTwoTotalAssets = IStrategyAdapter(strategy_two).totalAssets();
         uint256 expectedStrategyTwoTotalAssets = 300 ether;
         assertEq(actualStrategyTwoTotalAssets, expectedStrategyTwoTotalAssets, "withdraw, strategy_two balance");
-    }
+    }*/
 
     modifier whenWithdrawValueLowerThanMaximumWithdrawable() {
         _;

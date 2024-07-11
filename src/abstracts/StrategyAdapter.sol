@@ -51,6 +51,32 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     
     /// @inheritdoc IStrategyAdapter
     function sendReport(uint256 _repayAmount) external onlyOwner {
+        _sendReport(_repayAmount);
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function sendReport() external onlyMultistrat {
+        _sendReport(0);
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function withdraw(uint256 _amount) external onlyMultistrat {
+        _tryWithdraw(_amount);
+
+        IERC20(depositToken).safeTransfer(multistrategy, _amount);
+    }
+
+    /// @notice Internal function to send a report on the strategy's performance.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the current assets and total debt of the strategy.
+    /// - Determines whether the strategy has made a gain or a loss.
+    /// - Attempts to withdraw the repayment amount plus any gain.
+    /// - Ensures that the gain is not used to repay the debt.
+    /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
+    /// 
+    /// @param _repayAmount The amount to be repaid to the multi-strategy.
+    function _sendReport(uint256 _repayAmount) internal {
         uint256 currentAssets = _totalAssets();
         uint256 totalDebt = IMultistrategy(multistrategy).strategyTotalDebt(address(this));
         uint256 gain = 0;
@@ -71,13 +97,6 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
         //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
-    }
-
-    /// @inheritdoc IStrategyAdapter
-    function withdraw(uint256 _amount) external onlyMultistrat {
-        _tryWithdraw(_amount);
-
-        IERC20(depositToken).safeTransfer(multistrategy, _amount);
     }
 
     /// @inheritdoc IStrategyAdapter

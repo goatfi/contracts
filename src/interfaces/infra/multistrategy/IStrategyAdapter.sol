@@ -15,6 +15,10 @@ interface IStrategyAdapter {
     /// maximum amount of credit available for this strategy.
     function requestCredit() external;
 
+    /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has made.
+    /// @dev This report wont withdraw any funds to reapay debt to the Multistrategy.
+    function sendReport() external;
+
     /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has
     ///         made along an amount to be withdrawn and be used for debt repayment.
     /// @param amountToWithdraw Amount that will be withdrawn from the strategy and will
