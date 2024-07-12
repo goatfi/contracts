@@ -28,6 +28,10 @@ contract StrategyAdapterMock is StrategyAdapter {
         IERC20Mock(depositToken).burn(address(staking), _amount);
     }
 
+    function withdrawFromStaking(uint256 _amount) external {
+        _withdraw(_amount);
+    }
+
     function _deposit() internal override {
         uint256 balance = IERC20(depositToken).balanceOf(address(this));
         staking.deposit(balance);
