@@ -107,12 +107,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     }
 
     /// @inheritdoc IMultistrategy
-    function withdrawAll() external {
-        uint256 userBalance = balanceOf(msg.sender);
-        _withdraw(userBalance);
-    }
-
-    /// @inheritdoc IMultistrategy
     function requestCredit() external {
         _requestCredit();
     }

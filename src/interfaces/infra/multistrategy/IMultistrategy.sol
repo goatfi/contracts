@@ -65,9 +65,6 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Withdraw an amount of shares in exchange for an amount of `depositToken`.
     /// @param amount Amount of Multistrategy shares.
     function withdraw(uint256 amount) external;
-
-    /// @notice Withdraw all the shares of the caller in exchange for an amount of `depositToken`.
-    function withdrawAll() external;
     
     /// @notice Send the available credit of the caller to the caller.
     /// @dev Reverts if the caller is *NOT* an active strategy
