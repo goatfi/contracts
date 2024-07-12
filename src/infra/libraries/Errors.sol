@@ -27,9 +27,6 @@ library Errors {
                                     MULTISTRATEGY
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Thrown when the caller is not an active strategy.
-    error CallerNotStrategy(address caller);
-
     /// @notice Thrown when performing an action on a non-active strategy.
     error StrategyNotActive(address strategy);
 
