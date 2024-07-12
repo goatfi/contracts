@@ -36,11 +36,7 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
         strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
-        swapCaller(users.bob);
-        dai.mint(users.bob, 1_000 ether);
-        dai.approve(address(multistrategy), 1_000 ether);
-        multistrategy.deposit(1_000 ether);
-        swapCaller(users.owner);
+        triggerUserDeposit(users.bob, 1_000 ether);
         _;
     }
 

@@ -46,11 +46,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
-        swapCaller(users.bob);
-        dai.mint(users.bob, userDepositAmount);
-        dai.approve(address(multistrategy), userDepositAmount);
-        multistrategy.deposit(userDepositAmount);
-        swapCaller(strategy);
+        triggerUserDeposit(users.bob, 1_000 ether);
         _;
     }
 
@@ -62,6 +58,8 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         repayAmount = 0;
         gainAmount = 100 ether;
         loseAmount = 100 ether;
+
+        swapCaller(strategy);
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.GainLossMissmatch.selector));
@@ -81,6 +79,8 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         repayAmount = 0;
         gainAmount = 100 ether;
         loseAmount = 0;
+
+        swapCaller(strategy);
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientBalance.selector, 0, repayAmount + gainAmount));

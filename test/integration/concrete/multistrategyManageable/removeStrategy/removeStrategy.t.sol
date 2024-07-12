@@ -31,11 +31,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
         // Deposit to the multistrategy so the strategy has funds to request a credit.
-        uint256 depositAmount = 1_000 ether;
-        dai.mint(users.bob, depositAmount);
-        swapCaller(users.bob);
-        dai.approve(address(multistrategy), depositAmount);
-        multistrategy.deposit(depositAmount);
+        triggerUserDeposit(users.bob, 1_000 ether);
 
         // Strategy requests a credit
         swapCaller(users.keeper);

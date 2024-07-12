@@ -29,11 +29,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenHasCallerEnoughSharesToCoverWithdraw() {
-        dai.mint(users.bob, depositAmount);
-        swapCaller(users.bob);
-        dai.approve(address(multistrategy), depositAmount);
-        multistrategy.deposit(depositAmount);
-        swapCaller(users.owner);
+        triggerUserDeposit(users.bob, depositAmount);
         _;
     }
 
