@@ -7,7 +7,7 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
 evm_version = "shanghai"
-gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter"]
+gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter", "StrategyAdapter", "Multistrategy"]
 build_info = false
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "./"}]

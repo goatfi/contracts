@@ -377,10 +377,15 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                     break;
                 }
 
-                // Ask the strategy to send a report as it could have an unrealized Gain or loss
+                // Get the current balance of this contract
+                uint256 balanceBeforeWithdraw = IERC20(depositToken).balanceOf(address(this));
+
+                // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
                 IStrategyAdapter(strategy).sendReport();
 
-                uint256 balanceBeforeWithdraw = IERC20(depositToken).balanceOf(address(this));
+                // Update the balance to withdraw as a strategy could have made a loss so the withdrawer
+                // must take a cut too.
+                balanceToWithdraw = _shareValue(_amount);
 
                 // If this condition is true, multistrategy now holds enough to cover the withdraw, 
                 // so we're done withdrawing from strategies.
