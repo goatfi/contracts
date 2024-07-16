@@ -1,6 +1,6 @@
 requestCredit.t.sol
 ├── when the contract is paused
-│   └── it should revert
+│   └── it should revert EnforcedPause error
 └── when the contract is not paused
     ├── when the caller is not an active strategy
     │   └── it should revert

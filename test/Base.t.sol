@@ -10,6 +10,7 @@ import { MultistrategyHarness, IMultistrategyHarness } from "./shared/Multristra
 import { ERC20Mock } from "./mocks/erc20/ERC20Mock.sol";
 import { ERC20MissingReturn } from "./mocks/erc20/ERC20MissingReturn.sol";
 import { StrategyAdapterMock } from "./mocks/StrategyAdapterMock.sol";
+import { StrategyAdapterSlippageMock } from "./mocks/StrategyAdapterSlippageMock.sol";
 import { Test } from "forge-std/Test.sol";
 import { Users } from "./utils/Types.sol";
 import { Events } from "./utils/Events.sol";
@@ -99,6 +100,13 @@ abstract contract Base_Test is Test, Events {
 
     function deployMockStrategyAdapter(address _multistrategy, address _depositToken) internal returns (address) {
         return address(new StrategyAdapterMock(_multistrategy, _depositToken));
+    }
+
+    function deployMockStrategyAdapterSlippage(address _multistrategy, address _depositToken, uint256 _slippage)
+        internal
+        returns (address)
+    {
+        return address(new StrategyAdapterSlippageMock(_multistrategy, _depositToken, _slippage));
     }
 
     function swapCaller(address newCaller) internal {
