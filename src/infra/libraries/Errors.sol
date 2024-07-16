@@ -83,4 +83,9 @@ library Errors {
     /// @notice Thrown when the `_depositToken` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
     error DepositTokenMissmatch(address multDepositToken, address stratDepositToken);
+
+    /// @notice Thrown when the actual slippage exceeds the allowed slippage.
+    /// @param amount0 The expected amount after accounting for allowed slippage.
+    /// @param amount1 The actual amount obtained.
+    error SlippageCheckFailed(uint256 amount0, uint256 amount1);
 }

@@ -134,7 +134,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippage, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
-            revert Errors.InsufficientBalance(currentBalance, _amount);
+            revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
         }
     }
 
