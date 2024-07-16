@@ -102,11 +102,11 @@ abstract contract Base_Test is Test, Events {
         return address(new StrategyAdapterMock(_multistrategy, _depositToken));
     }
 
-    function deployMockStrategyAdapterSlippage(address _multistrategy, address _depositToken, uint256 _slippage)
+    function deployMockStrategyAdapterSlippage(address _multistrategy, address _depositToken)
         internal
         returns (address)
     {
-        return address(new StrategyAdapterSlippageMock(_multistrategy, _depositToken, _slippage));
+        return address(new StrategyAdapterSlippageMock(_multistrategy, _depositToken));
     }
 
     function swapCaller(address newCaller) internal {

@@ -23,7 +23,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     address public depositToken;
 
     /// @inheritdoc IStrategyAdapter
-    uint256 public slippage;
+    uint256 public slippageLimit;
     
     /// @dev Reverts if `_depositToken` doesn't match `depositToken` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
@@ -38,7 +38,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
         multistrategy = _multistrategy;
         depositToken = _depositToken;
-        slippage = 0;
+        slippageLimit = 0;
 
         IERC20(depositToken).safeIncreaseAllowance(multistrategy, type(uint256).max);
     }
@@ -58,8 +58,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     }
 
     /// @inheritdoc IStrategyAdapter
-    function setSlippage(uint256 _slippage) external onlyOwner {
-        slippage = _slippage;
+    function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
+        slippageLimit = _slippageLimit;
     }
     
     /// @inheritdoc IStrategyAdapter
@@ -131,7 +131,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
         // Check that the strategy was able to withdraw the desired amount
         uint256 currentBalance = IERC20(depositToken).balanceOf(address(this));
-        uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippage, MAX_SLIPPAGE);
+        uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
             revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);

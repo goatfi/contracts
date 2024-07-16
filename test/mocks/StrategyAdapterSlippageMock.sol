@@ -13,12 +13,11 @@ contract StrategyAdapterSlippageMock is StrategyAdapter {
 
     constructor(
         address _multistrategy,
-        address _depositToken,
-        uint256 _slippage
+        address _depositToken
     ) 
         StrategyAdapter(_multistrategy, _depositToken) 
     {
-        staking = new StakingMockSlippage(_depositToken, _slippage);
+        staking = new StakingMockSlippage(_depositToken);
         IERC20(_depositToken).forceApprove(address(staking), type(uint256).max);
     }
 
@@ -32,6 +31,10 @@ contract StrategyAdapterSlippageMock is StrategyAdapter {
 
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
+    }
+
+    function setStakingSlippage(uint256 _slippage) external {
+        slippageLimitsetSlippage(_slippage);
     }
 
     function _deposit() internal override {
@@ -55,9 +58,8 @@ contract StakingMockSlippage {
     uint256 constant MAX_SLIPPAGE = 10_000;
     uint256 slippage;
 
-    constructor(address _depositToken, uint256 _slippage) {
+    constructor(address _depositToken) {
         depositToken = _depositToken;
-        slippage = _slippage;
     }
 
     function deposit(uint256 _amount) external {
@@ -68,5 +70,9 @@ contract StakingMockSlippage {
         uint256 lostAmount = Math.mulDiv(_amount, slippage, MAX_SLIPPAGE);
         IERC20(depositToken).safeTransfer(msg.sender, _amount - lostAmount);
         IERC20(depositToken).safeTransfer(address(42069), lostAmount);
+    }
+
+    function setSlippage(uint256 _slippage) external {
+        slippage = _slippage;
     }
 }
