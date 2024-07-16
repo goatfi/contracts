@@ -11,6 +11,14 @@ interface IStrategyAdapter {
     /// @dev it should be the same as the token used by the multistrategy.
     function depositToken() external view returns(address);
 
+    /// @notice Returns the slippage amount in BPS.
+    /// @dev 10_000 BPS = 100% 
+    function slippage() external view returns (uint256);
+
+    /// @notice Sets the slippage amount
+    /// @dev 10_000 BPS = 100% 
+    function setSlippage(uint256 slippage) external;
+
     /// @notice Requests a credit to the multistrategy. The multistrategy will send the
     /// maximum amount of credit available for this strategy.
     function requestCredit() external;

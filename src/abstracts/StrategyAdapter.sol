@@ -4,6 +4,7 @@ pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
@@ -12,11 +13,17 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     using SafeERC20 for IERC20;
 
+    /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
+    uint256 constant MAX_SLIPPAGE = 10_000;
+
     /// @inheritdoc IStrategyAdapter
     address public multistrategy;
 
     /// @inheritdoc IStrategyAdapter
     address public depositToken;
+
+    /// @inheritdoc IStrategyAdapter
+    uint256 public slippage;
     
     /// @dev Reverts if `_depositToken` doesn't match `depositToken` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
@@ -31,6 +38,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
         multistrategy = _multistrategy;
         depositToken = _depositToken;
+        slippage = 0;
 
         IERC20(depositToken).safeIncreaseAllowance(multistrategy, type(uint256).max);
     }
@@ -47,6 +55,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     function requestCredit() external onlyOwner {
         IMultistrategy(multistrategy).requestCredit();
         _deposit();
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function setSlippage(uint256 _slippage) external onlyOwner {
+        slippage = _slippage;
     }
     
     /// @inheritdoc IStrategyAdapter
@@ -118,7 +131,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
         // Check that the strategy was able to withdraw the desired amount
         uint256 currentBalance = IERC20(depositToken).balanceOf(address(this));
-        if(currentBalance < _amount) {
+        uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippage, MAX_SLIPPAGE);
+        if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
             revert Errors.InsufficientBalance(currentBalance, _amount);
         }
