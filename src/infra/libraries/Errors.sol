@@ -80,9 +80,9 @@ library Errors {
     /// @notice Thrown when the caller is not the Multistrategy.
     error CallerNotMultistrategy(address caller);
 
-    /// @notice Thrown when the `_depositToken` parameter on the constructor doesn't match 
+    /// @notice Thrown when the `_baseAsset` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
-    error DepositTokenMissmatch(address multDepositToken, address stratDepositToken);
+    error BaseAssetMissmatch(address multBaseAsset, address stratBaseAsset);
 
     /// @notice Thrown when the actual slippage exceeds the allowed slippage.
     /// @param amount0 The expected amount after accounting for allowed slippage.

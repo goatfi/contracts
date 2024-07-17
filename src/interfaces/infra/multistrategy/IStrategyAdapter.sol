@@ -9,7 +9,7 @@ interface IStrategyAdapter {
 
     /// @notice Returns the address of the token used tby this strategy.
     /// @dev it should be the same as the token used by the multistrategy.
-    function depositToken() external view returns(address);
+    function baseAsset() external view returns(address);
 
     /// @notice Returns the current slippage limit in basis points (BPS).
     /// @dev The slippage limit is expressed in BPS, where 10,000 BPS equals 100%.
@@ -37,11 +37,11 @@ interface IStrategyAdapter {
     ///         be available for debt repayment.
     function sendReport(uint256 amountToWithdraw) external;
 
-    /// @notice Withdraws `depositToken` from the strategy.
+    /// @notice Withdraws `baseAsset` from the strategy.
     /// @dev Only callable by the multistrategy.
     /// @param amount Amount of tokens to withdraw from the strategy.
     function withdraw(uint256 amount) external;
 
-    /// @notice Returns the amount of `depositToken` this strategy holds.
+    /// @notice Returns the amount of `baseAsset` this strategy holds.
     function totalAssets() external view returns(uint256);
 }

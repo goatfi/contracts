@@ -153,12 +153,12 @@ contract Deposit_Integration_Concrete_Test is
         uint256 expectedMintedShares = amount;
         assertEq(actualMintedShares, expectedMintedShares, "deposit");
 
-        // Assert the depositTokens have been deducted from the caller
+        // Assert the baseAssets have been deducted from the caller
         uint256 actualUserBalance = IERC20(address(dai)).balanceOf(recipient);
         uint256 expectedUserBalance = 0;
         assertEq(actualUserBalance, expectedUserBalance, "deposit user balance");
 
-        // Assert the depositTokens have been transfered to the multistrategy
+        // Assert the baseAssets have been transfered to the multistrategy
         uint256 actualMultistrategyBalance = IERC20(address(dai)).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = amount;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "deposit multistrategy balance");

@@ -14,7 +14,7 @@ contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Share
     }
 
     modifier whenNotZeroAddress() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         _;
     }
 

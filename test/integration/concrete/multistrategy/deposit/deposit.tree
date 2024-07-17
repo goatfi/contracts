@@ -18,5 +18,5 @@ deposit.t.sol
                     │   └── it should revert with ERC20InsufficientBalance error
                     └── when the caller has enough funds to cover the deposit
                         ├── it should issue shares according the shares for amount value
-                        ├── it should transfer the deposit token from the caller to the contract
+                        ├── it should transfer the base asset from the caller to the contract
                         └── it should emit a Deposit event

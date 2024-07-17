@@ -27,7 +27,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
 
     function test_RevertWhen_StrategyHasOutstandingDebt() external whenCallerIsManager {
         // Deploy and add a mock strategy adapter in order to request a credit
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
         // Deposit to the multistrategy so the strategy has funds to request a credit.
@@ -61,7 +61,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
 
     /// @dev Add a mock strategy to the multistrategy
     modifier whenStrategyIsInWithdrawOrder() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         uint256 debtRatio = 5_000;
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;

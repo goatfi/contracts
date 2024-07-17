@@ -15,7 +15,7 @@ contract ReportLoss_Integration_Concrete_Test is MultistrategyHarness_Integratio
     }
 
     modifier whenNotZeroAddress() {
-        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.baseAsset());
         _;
     }
 

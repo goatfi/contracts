@@ -12,20 +12,20 @@ contract StrategyAdapterMock is StrategyAdapter {
 
     constructor(
         address _multistrategy,
-        address _depositToken
+        address _baseAsset
     ) 
-        StrategyAdapter(_multistrategy, _depositToken) 
+        StrategyAdapter(_multistrategy, _baseAsset) 
     {
-        staking = new StakingMock(_depositToken);
-        IERC20(_depositToken).forceApprove(address(staking), type(uint256).max);
+        staking = new StakingMock(_baseAsset);
+        IERC20(_baseAsset).forceApprove(address(staking), type(uint256).max);
     }
 
     function earn(uint256 _amount) external {
-        IERC20Mock(depositToken).mint(address(staking), _amount);
+        IERC20Mock(baseAsset).mint(address(staking), _amount);
     }
 
     function lose(uint256 _amount) external {
-        IERC20Mock(depositToken).burn(address(staking), _amount);
+        IERC20Mock(baseAsset).burn(address(staking), _amount);
     }
 
     function withdrawFromStaking(uint256 _amount) external {
@@ -33,7 +33,7 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _deposit() internal override {
-        uint256 balance = IERC20(depositToken).balanceOf(address(this));
+        uint256 balance = IERC20(baseAsset).balanceOf(address(this));
         staking.deposit(balance);
     }
 
@@ -42,24 +42,24 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _totalAssets() internal override view returns(uint256) {
-         return IERC20(depositToken).balanceOf(address(staking));
+         return IERC20(baseAsset).balanceOf(address(staking));
     }
 }
 
 contract StakingMock {
     using SafeERC20 for IERC20;
 
-    address depositToken;
+    address baseAsset;
 
-    constructor(address _depositToken) {
-        depositToken = _depositToken;
+    constructor(address _baseAsset) {
+        baseAsset = _baseAsset;
     }
 
     function deposit(uint256 _amount) external {
-        IERC20(depositToken).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), _amount);
     }
 
     function withdraw(uint256 _amount) external {
-        IERC20(depositToken).safeTransfer(msg.sender, _amount);
+        IERC20(baseAsset).safeTransfer(msg.sender, _amount);
     }
 }

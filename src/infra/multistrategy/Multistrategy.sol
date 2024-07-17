@@ -14,7 +14,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     using SafeERC20 for IERC20;
     
-    /// @dev Used for locked profit calculations. Must be 10 ** depositToken decimals.
+    /// @dev Used for locked profit calculations. Must be 10 ** baseAsset decimals.
     uint256 immutable DEGRADATION_COEFFICIENT;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
     uint256 constant PROFIT_UNLOCK_TIME = 12 hours;
@@ -33,27 +33,27 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @dev Transfers ownership to the deployer of this contract
-    /// @param _depositToken Address of the token used in this Multistrategy
+    /// @param _baseAsset Address of the token used in this Multistrategy
     /// @param _manager Address of the initial Multistrategy manager
     /// @param _protocolFeeRecipient Address that will receive the performance fees
     /// @param _name Name of this Multistrategy receipt token
     /// @param _symbol Symbol of this Multistrategy receipt token
     constructor(
-        address _depositToken,
+        address _baseAsset,
         address _manager,
         address _protocolFeeRecipient,
         string memory _name, 
         string memory _symbol
     ) 
-        MultistrategyManageable(msg.sender, _manager, _depositToken, _protocolFeeRecipient) 
+        MultistrategyManageable(msg.sender, _manager, _baseAsset, _protocolFeeRecipient) 
         ERC20(_name, _symbol) 
     {   
         // Set performance fee to 4% of yield generated
         performanceFee = 400;
         // Set the initial lastReport to the timestamp when creating the multistrategy
         lastReport = block.timestamp;
-        // Set the degradation coefficient to 1 whole unit of deposit token.
-        DEGRADATION_COEFFICIENT = 10 ** IERC20Metadata(_depositToken).decimals();
+        // Set the degradation coefficient to 1 whole unit of base asset.
+        DEGRADATION_COEFFICIENT = 10 ** IERC20Metadata(_baseAsset).decimals();
         // How much profit is unlocked each second. This sets the unlock time to 12h
         lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
     }
@@ -133,7 +133,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// 
     /// @return The total assets held by the contract.
     function _totalAssets() internal view returns(uint256) {
-        uint256 idleAssets = IERC20(depositToken).balanceOf(address(this));
+        uint256 idleAssets = IERC20(baseAsset).balanceOf(address(this));
         return idleAssets + totalDebt;
     }
 
@@ -324,7 +324,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         _issueSharesForAmount(_amount, _recipient);
 
         //Get funds from depositor
-        IERC20(depositToken).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), _amount);
 
         emit Deposit(_amount, _recipient);
     }
@@ -334,7 +334,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// This function performs the following actions:
     /// - Ensures the withdrawer has sufficient balance to withdraw the specified amount.
     /// - Validates that a non-zero amount is being withdrawn.
-    /// - Calculates the deposit token value from the amount of shares.
+    /// - Calculates the base asset value from the amount of shares.
     /// - Checks if the withdrawal amount exceeds the idle assets available in the contract and withdraws from strategies if needed.
     /// - Iterates through the withdrawal queue to cover the withdrawal amount from different strategies.
     /// - Burns the shares equivalent to the withdrawal amount.
@@ -362,13 +362,13 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             revert Errors.ZeroAmount({ amount: _amount });
         }
 
-        // Get depositToken value from the amount of shares.
+        // Get baseAsset value from the amount of shares.
         // This is the amount that the user wants to receive.
         uint256 balanceToWithdraw = _shareValue(_amount);
 
         //If the amount the user wants to withdraw is higher than the amount of
         //idle assets on the multistrategy, withdraw from strategies
-        if(balanceToWithdraw > IERC20(depositToken).balanceOf(address(this))) {
+        if(balanceToWithdraw > IERC20(baseAsset).balanceOf(address(this))) {
             for(uint8 i = 0; i <= withdrawOrder.length;){
                 address strategy = withdrawOrder[i];
 
@@ -378,7 +378,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 }
 
                 // Get the current balance of this contract
-                uint256 balanceBeforeWithdraw = IERC20(depositToken).balanceOf(address(this));
+                uint256 balanceBeforeWithdraw = IERC20(baseAsset).balanceOf(address(this));
 
                 // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
                 IStrategyAdapter(strategy).sendReport();
@@ -407,7 +407,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
                 // We withdraw from the strategy
                 IStrategyAdapter(strategy).withdraw(amountNeeded);
-                uint256 withdrawn = IERC20(depositToken).balanceOf(address(this)) - balanceBeforeWithdraw;
+                uint256 withdrawn = IERC20(baseAsset).balanceOf(address(this)) - balanceBeforeWithdraw;
 
                 // Reduce the strategy's and multistretegy's totalDebt
                 strategies[strategy].totalDebt -= withdrawn;
@@ -416,7 +416,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 unchecked { ++i; }
             }
 
-            uint256 currentBalance = IERC20(depositToken).balanceOf(address(this));
+            uint256 currentBalance = IERC20(baseAsset).balanceOf(address(this));
 
             // At this point we have withdrawn everything possible from the withdrawal queue
             // so we need to make sure that the amount the caller wants to withdraw is lower or equal than the available balance
@@ -431,7 +431,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         //Burn the shares
         _burn(msg.sender, _amount);
         //Send the tokens to the caller
-        IERC20(depositToken).safeTransfer(msg.sender, balanceToWithdraw);
+        IERC20(baseAsset).safeTransfer(msg.sender, balanceToWithdraw);
 
         emit Withdraw(balanceToWithdraw);
     }
@@ -465,7 +465,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             totalDebt += credit;
 
             // Transfer the credit to the strategy
-            IERC20(depositToken).safeTransfer(msg.sender, credit);
+            IERC20(baseAsset).safeTransfer(msg.sender, credit);
 
             emit CreditRequested(msg.sender, credit);
         }
@@ -506,9 +506,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
 
         // Check that the strategy actually has the tokens to transfer the profits and repay the debt.
-        if(IERC20(depositToken).balanceOf(msg.sender) < _debtRepayment + _gain) {
+        if(IERC20(baseAsset).balanceOf(msg.sender) < _debtRepayment + _gain) {
             revert Errors.InsufficientBalance({ 
-                currentBalance: IERC20(depositToken).balanceOf(msg.sender),
+                currentBalance: IERC20(baseAsset).balanceOf(msg.sender),
                 amount: _debtRepayment + _gain
             });
         }
@@ -525,12 +525,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
             // Transfer the performance fee to the fee recipient
             if(pFee > 0) {
-                IERC20(depositToken).safeTransferFrom(msg.sender, protocolFeeRecipient, pFee);
+                IERC20(baseAsset).safeTransferFrom(msg.sender, protocolFeeRecipient, pFee);
             }
 
             // Transfer the profit from the strategy to this multistrategy.
             profit = _gain - pFee;
-            IERC20(depositToken).safeTransferFrom(msg.sender, address(this), profit);
+            IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), profit);
         } 
 
         uint256 exceedingDebt = _debtExcess(msg.sender);
@@ -543,7 +543,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             strategies[msg.sender].totalDebt -= debtToRepay;
             totalDebt -= debtToRepay;
 
-            IERC20(depositToken).safeTransferFrom(msg.sender, address(this), debtToRepay);
+            IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), debtToRepay);
         }
 
         // Calculate the new locked profit. Profit can be 0.
@@ -622,13 +622,13 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     ///
     /// Requirements:
     /// - The caller must be the guardian.
-    /// - The specified token must not be the deposit token to prevent unauthorized withdrawals.
+    /// - The specified token must not be the base asset to prevent unauthorized withdrawals.
     ///
     /// @param _token The address of the token to be rescued.
     /// @param _recipient The address to receive the rescued tokens.
     function _rescueToken(address _token, address _recipient) internal onlyGuardian {
         // Check that we aren't stealing from the multistrategy.
-        if(_token == depositToken) {
+        if(_token == baseAsset) {
             revert Errors.InvalidAddress(_token);
         }
 

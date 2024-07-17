@@ -49,7 +49,7 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     event StrategyRemoved(address indexed strategy);
 
     /// @notice Address of the token used in the Multistrategy.
-    function depositToken() external view returns(address);
+    function baseAsset() external view returns(address);
 
     /// @notice Address that will recieve performance fee.
     function protocolFeeRecipient() external view returns(address);
@@ -113,7 +113,7 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     ) external;
 
     /// @notice Sets the strategy debtRatio to 0, which prevents any further deposits into the strategy.
-    /// @dev Retiring a strategy will set the approval of `depositToken` to the retiried strategy to 0.
+    /// @dev Retiring a strategy will set the approval of `baseAsset` to the retiried strategy to 0.
     /// @param strategy The address of the strategy that will be retired.
     function retireStrategy(address strategy) external;
 

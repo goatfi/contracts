@@ -33,7 +33,7 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
     }
 
     modifier whenCallerActiveStrategy() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
         triggerUserDeposit(users.bob, 1_000 ether);

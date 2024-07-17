@@ -6,7 +6,7 @@ import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultis
 
 interface IMultistrategy is IMultistrategyManageable {
     /// @notice Emitted when an account has made a deposit.
-    /// @param amount Amount of depositToken that has been deposited.
+    /// @param amount Amount of baseAsset that has been deposited.
     /// @param recipient Address that will receive the receipt tokens.
     event Deposit(uint256 amount, address indexed recipient);
 
@@ -35,10 +35,10 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Rate at which the locked profit gets unlocked per second.
     function lockedProfitDegradation() external view returns(uint256);
 
-    /// @notice Returns the amount of `depositToken` this Multistrategy holds.
+    /// @notice Returns the amount of `baseAsset` this Multistrategy holds.
     function totalAssets() external returns(uint256);
 
-    /// @notice Returns the value of a share in `depositToken` value.
+    /// @notice Returns the value of a share in `baseAsset` value.
     function pricePerShare() external view returns(uint256);
 
     /// @notice Returns the amount of tokens a strategy can borrow from this Multistrategy.
@@ -53,16 +53,16 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @param strategy Address of the strategy we want to know the `totalDebt`.
     function strategyTotalDebt(address strategy) external view returns(uint256);
 
-    /// @notice Deposit an amount of `depositToken` and mint Multistrategy shares to recipient.
-    /// @param amount Amount of `depositToken` the caller wants to deposit.
+    /// @notice Deposit an amount of `baseAsset` and mint Multistrategy shares to recipient.
+    /// @param amount Amount of `baseAsset` the caller wants to deposit.
     /// @param recipient Address that will receive the Multistrategy shares.
     function deposit(uint256 amount, address recipient) external;
 
-    /// @notice Deposit an amount of `depositToken` and mint Multistrategy shares to `msg.sender`.
-    /// @param amount Amount of `depositToken` the caller wants to deposit.
+    /// @notice Deposit an amount of `baseAsset` and mint Multistrategy shares to `msg.sender`.
+    /// @param amount Amount of `baseAsset` the caller wants to deposit.
     function deposit(uint256 amount) external;
 
-    /// @notice Withdraw an amount of shares in exchange for an amount of `depositToken`.
+    /// @notice Withdraw an amount of shares in exchange for an amount of `baseAsset`.
     /// @param amount Amount of Multistrategy shares.
     function withdraw(uint256 amount) external;
     

@@ -61,8 +61,8 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenMultistrategyBalanceLowerThanWithdrawAmount() {
-        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
-        strategy_two = deployMockStrategyAdapterSlippage(address(multistrategy), multistrategy.depositToken());
+        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy_two = deployMockStrategyAdapterSlippage(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 ether);
         multistrategy.addStrategy(strategy_two, 2_000, 0, 100_000 ether);
 
@@ -271,7 +271,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenMultistrategyBalanceHigherOrEqualThanWithdrawAmount() {
-        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 ether);
 
         IStrategyAdapter(strategy_one).requestCredit();

@@ -19,24 +19,24 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_RevertWhen_SameAddressAsDepositToken()
+    function test_RevertWhen_SameAddressAsBaseAsset()
         external
         whenCallerIsGuardian
     {
-        address depositToken = multistrategy.depositToken();
+        address baseAsset = multistrategy.baseAsset();
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, multistrategy.depositToken()));
-        multistrategy.rescueToken(depositToken, users.bob);
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, multistrategy.baseAsset()));
+        multistrategy.rescueToken(baseAsset, users.bob);
     }
 
-    modifier whenAddressNotDepositToken() {
+    modifier whenAddressNotBaseAsset() {
         _;
     }
 
     function test_RevertWhen_ZeroAddress() 
         external
         whenCallerIsGuardian
-        whenAddressNotDepositToken
+        whenAddressNotBaseAsset
     {
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
@@ -50,7 +50,7 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
     function test_RescueToken() 
         external
         whenCallerIsGuardian
-        whenAddressNotDepositToken
+        whenAddressNotBaseAsset
         whenNotZeroAddres
     {   
         uint256 externalTokenBalance = 1000 ether;

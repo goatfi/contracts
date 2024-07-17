@@ -36,7 +36,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         
         // Deploy 10 strategies, each with 10% debt ratio
         for (uint256 i = 0; i < 10; i++) {
-            address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+            address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
             multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
         }
         _;
@@ -47,7 +47,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenCallerIsManager 
         whenActiveStrategiesAtMaximum
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.MaximumAmountStrategies.selector));
@@ -99,7 +99,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         // We add the strategy
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
 
@@ -112,12 +112,12 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    /// @dev Testing this requires some setup. As creating a strategy with the wrong deposit token
+    /// @dev Testing this requires some setup. As creating a strategy with the wrong base asset
     ///      would revert, as it is checked in the constructor of the StrategyAdapter.
     ///      We need to deploy a need multistrategy with a different token and create a strategy for
     ///      that multistrategy. Revert will happen when we try to add that strategy to the multistrategy
     ///      We're testing here.
-    function test_RevertWhen_DepositTokenDoNotMatch() 
+    function test_RevertWhen_baseAssetDoNotMatch() 
         external
         whenCallerIsManager
         whenActiveStrategiesBelowMaximum
@@ -125,9 +125,9 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotMultistrategyAddress
         whenStrategyIsInactive
     {
-        // Deploy a multistrategy with a different depositToken
+        // Deploy a multistrategy with a different baseAsset
         Multistrategy usdtMultistrategy = new Multistrategy({
-            _depositToken: address(usdt),
+            _baseAsset: address(usdt),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat USDT",
@@ -135,18 +135,18 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         });
         
         // Deploy a mock strategy for the usdt multistrategy
-        address strategy = deployMockStrategyAdapter(address(usdtMultistrategy), usdtMultistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(usdtMultistrategy), usdtMultistrategy.baseAsset());
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(
-            Errors.DepositTokenMissmatch.selector, 
-            multistrategy.depositToken(), 
-            usdtMultistrategy.depositToken()
+            Errors.BaseAssetMissmatch.selector, 
+            multistrategy.baseAsset(), 
+            usdtMultistrategy.baseAsset()
         ));
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    modifier whenDepositTokenMatch() {
+    modifier whenbaseAssetMatch() {
         _;
     }
 
@@ -157,9 +157,9 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenDepositTokenMatch
+        whenbaseAssetMatch
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         minDebtDelta = 200_000 ether;
         maxDebtDelta = 100_000 ether;
 
@@ -180,10 +180,10 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenDepositTokenMatch
+        whenbaseAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         // 110% debt raito
         debtRatio = 11_000;
 
@@ -204,10 +204,10 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenDepositTokenMatch
+        whenbaseAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        address strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
 
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy) });

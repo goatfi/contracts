@@ -20,27 +20,27 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     address public multistrategy;
 
     /// @inheritdoc IStrategyAdapter
-    address public depositToken;
+    address public baseAsset;
 
     /// @inheritdoc IStrategyAdapter
     uint256 public slippageLimit;
     
-    /// @dev Reverts if `_depositToken` doesn't match `depositToken` on the Multistrategy.
+    /// @dev Reverts if `_baseAsset` doesn't match `baseAsset` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
-    /// @param _depositToken Address of the token used to deposit and withdraw on this strategy.
-    constructor(address _multistrategy, address _depositToken) Ownable(msg.sender) {
-        if(IMultistrategyManageable(_multistrategy).depositToken() != _depositToken) {
-            revert Errors.DepositTokenMissmatch({
-                multDepositToken: IMultistrategyManageable(_multistrategy).depositToken(),
-                stratDepositToken: _depositToken
+    /// @param _baseAsset Address of the token used to deposit and withdraw on this strategy.
+    constructor(address _multistrategy, address _baseAsset) Ownable(msg.sender) {
+        if(IMultistrategyManageable(_multistrategy).baseAsset() != _baseAsset) {
+            revert Errors.BaseAssetMissmatch({
+                multBaseAsset: IMultistrategyManageable(_multistrategy).baseAsset(),
+                stratBaseAsset: _baseAsset
             });
         }
 
         multistrategy = _multistrategy;
-        depositToken = _depositToken;
+        baseAsset = _baseAsset;
         slippageLimit = 0;
 
-        IERC20(depositToken).safeIncreaseAllowance(multistrategy, type(uint256).max);
+        IERC20(baseAsset).safeIncreaseAllowance(multistrategy, type(uint256).max);
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
@@ -76,7 +76,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     function withdraw(uint256 _amount) external onlyMultistrat {
         uint256 withdrawn = _tryWithdraw(_amount);
 
-        IERC20(depositToken).safeTransfer(multistrategy, withdrawn);
+        IERC20(baseAsset).safeTransfer(multistrategy, withdrawn);
     }
 
     /// @notice Internal function to send a report on the strategy's performance.
@@ -130,7 +130,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         _withdraw(_amount);
 
         // Check that the strategy was able to withdraw the desired amount
-        uint256 currentBalance = IERC20(depositToken).balanceOf(address(this));
+        uint256 currentBalance = IERC20(baseAsset).balanceOf(address(this));
         uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
@@ -143,15 +143,15 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     /// @dev Must implement the logic that will put the funds to work.
     function _deposit() internal virtual {}
 
-    /// @dev Amount is `depositToken` amount. So if we call `withdraw(100 ether)` it should
-    /// withdraw 100 `depositToken`. Keep in mind that if a vault is in loss, we'll reach a point
+    /// @dev Amount is `baseAsset` amount. So if we call `withdraw(100 ether)` it should
+    /// withdraw 100 `baseAsset`. Keep in mind that if a vault is in loss, we'll reach a point
     /// where withdrawing is no longer possible.
     ///
     /// This function is used in `withdraw` and `sendReport` functions. These functions will revert
     /// if `_withdraw` hasn't been able to withdraw `_amount`.
     function _withdraw(uint256 _amount) internal virtual {}
 
-    /// @dev Must return the amount of `depositToken` this strategy holds. In the case this strategy
-    /// has swapped `depositToken` for another token, it should return the most approximate value.
+    /// @dev Must return the amount of `baseAsset` this strategy holds. In the case this strategy
+    /// has swapped `baseAsset` for another token, it should return the most approximate value.
     function _totalAssets() internal virtual view returns(uint256) {}
 }

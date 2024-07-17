@@ -20,7 +20,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     uint256 constant MAX_PERFORMANCE_FEE = 1_000;
 
     /// @inheritdoc IMultistrategyManageable
-    address public depositToken;
+    address public baseAsset;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;
@@ -64,12 +64,12 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     constructor(
         address _owner,
         address _manager,
-        address _depositToken,
+        address _baseAsset,
         address _protocolFeeRecipient
     ) 
         MultistrategyAdminable(_owner, _manager) 
     {
-        depositToken = _depositToken;
+        baseAsset = _baseAsset;
         protocolFeeRecipient = _protocolFeeRecipient;
         withdrawOrder = new address[](MAXIMUM_STRATEGIES);
     }
@@ -152,11 +152,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         if(strategies[_strategy].activation != 0) {
             revert Errors.StrategyAlreadyActive({ strategy: _strategy });
         }
-        // Assert strategy's `depositToken` matches this multistrategy's `depositToken`.
-        if(depositToken != IStrategyAdapter(_strategy).depositToken()) {
-            revert Errors.DepositTokenMissmatch({
-                multDepositToken: depositToken,
-                stratDepositToken: IStrategyAdapter(_strategy).depositToken()
+        // Assert strategy's `baseAsset` matches this multistrategy's `baseAsset`.
+        if(baseAsset != IStrategyAdapter(_strategy).baseAsset()) {
+            revert Errors.BaseAssetMissmatch({
+                multBaseAsset: baseAsset,
+                stratBaseAsset: IStrategyAdapter(_strategy).baseAsset()
             });
         }
         // Assert new `debtRatio` will be below or equal 100%.

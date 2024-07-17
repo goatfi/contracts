@@ -62,7 +62,7 @@ abstract contract Base_Test is Test, Events {
 
     function deployMultistrategy() internal {
         multistrategy = new Multistrategy({
-            _depositToken: address(dai),
+            _baseAsset: address(dai),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat DAI",
@@ -81,7 +81,7 @@ abstract contract Base_Test is Test, Events {
 
     function deployMultistrategyHarness() internal {
         multistrategyHarness = new MultistrategyHarness({
-            _depositToken: address(dai),
+            _baseAsset: address(dai),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat DAI",
@@ -98,15 +98,15 @@ abstract contract Base_Test is Test, Events {
         vm.label({ account: address(multistrategyHarness), newLabel: "Multistrategy Harness" });
     }
 
-    function deployMockStrategyAdapter(address _multistrategy, address _depositToken) internal returns (address) {
-        return address(new StrategyAdapterMock(_multistrategy, _depositToken));
+    function deployMockStrategyAdapter(address _multistrategy, address _baseAsset) internal returns (address) {
+        return address(new StrategyAdapterMock(_multistrategy, _baseAsset));
     }
 
-    function deployMockStrategyAdapterSlippage(address _multistrategy, address _depositToken)
+    function deployMockStrategyAdapterSlippage(address _multistrategy, address _baseAsset)
         internal
         returns (address)
     {
-        return address(new StrategyAdapterSlippageMock(_multistrategy, _depositToken));
+        return address(new StrategyAdapterSlippageMock(_multistrategy, _baseAsset));
     }
 
     function swapCaller(address newCaller) internal {

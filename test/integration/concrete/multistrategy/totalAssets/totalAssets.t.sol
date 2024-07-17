@@ -31,7 +31,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     modifier whenActiveStrategy() {
         // Add the strategy to the multistrategy
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy, 5_000, 100 ether, 100_000 ether);
         _;
     }

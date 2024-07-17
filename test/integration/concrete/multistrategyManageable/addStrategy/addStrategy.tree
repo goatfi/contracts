@@ -14,9 +14,9 @@ addStrategy.t.sol
               ├── when the added strategy is active
               │   └── it should revert
               └── when the added strategy is not active
-                  ├── when the deposit token of the strategy doesn't match the deposit token of the multistrategy
+                  ├── when the base asset of the strategy doesn't match the base asset of the multistrategy
                   │   └── it should revert
-                  └── when the deposit token of the strategy matches the deposit token of the multistrategy
+                  └── when the base asset of the strategy matches the base asset of the multistrategy
                       ├── when the strategy debt ratio sets the multistrategy debt ratio above 100%
                       │   └── it should revert
                       └── when the strategy debt ratio doesn't set the multistrategy debt ratio above 100%

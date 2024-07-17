@@ -35,7 +35,7 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
 
     /// @dev Add a mock strategy to the multistrategy
     modifier whenStrategyIsActive() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         uint256 debtRatio = 5_000;
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;

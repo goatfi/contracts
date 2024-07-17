@@ -18,7 +18,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     modifier whenNotZeroAddress() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         _;
     }
 

@@ -15,7 +15,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
     }
 
     modifier whenNotZeroAddress() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         _;
     }
 

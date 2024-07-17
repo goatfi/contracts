@@ -22,7 +22,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
 
     modifier whenThereIsPriorProfit() {
         // Strategy deployed and added
-        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.depositToken());
+        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.baseAsset());
         multistrategyHarness.addStrategy(strategy, 5_000, 100 ether, 10_000 ether);
 
         //User deposits
