@@ -6,12 +6,26 @@ import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.
 import {Errors} from "src/infra/libraries/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract Deposit_Integration_Concrete_Test is
     Multistrategy_Integration_Shared_Test
 {
     uint256 amount;
     address recipient;
+
+    function test_RevertWhen_ContractIsPaused() external {
+        // Pause the multistrategy
+        multistrategy.pause();
+
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        multistrategy.requestCredit();
+    }
+
+    modifier whenContractNotPaused() {
+        _;
+    }
 
     function test_RevertWhen_RecipientIsZeroAddress() external {
         amount = 0;
