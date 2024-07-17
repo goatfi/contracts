@@ -1,37 +1,38 @@
 withdraw.t.sol
-├── when the caller doesn't have enough shares to cover the withdraw
-│   └── it should revert with an InsufficientBalance error
-└── when the caller has enough shares to cover the withdraw
-    ├── when `amount` is zero
-    │   └── it should revert with a Zero Amount error
-    └── when `amount` is greater than zero
-        ├── when the balance of depositToken of the contract is lower than the amount to be withdrawn
-        │   ├── when the checked strategy is the zero address
-        │   │   ├── when the balance to withdraw is greater than the maximum withdrawable from all strategies
-        │   │   │   ├── it should adjust `amount` to the maximum amount possible to be withdrawn
-        │   │   │   ├── it should burn `amount` of shares
-        │   │   │   ├── it should transfer the deposit tokens to the caller
-        │   │   │   └── it should emit a Withdraw event
-        │   │   └── when the balance to withdraw is lower or equal thanthe maximum withdrawable from all strategies
-        │   │       ├── it should burn `amount` of shares
-        │   │       ├── it should transfer the deposit token to the caller
-        │   │       └── it should emit a Withdraw event
-        │   └── when the checked strategy is not a zero address
-        │       ├── when the balance to withdraw greater than the balance of the contract
-        │       │   ├── when the balance to withdraw is greater than the maximum withdrawable from all strategies
-        │       │   │   ├── it should adjust `amount` to the maximum amount possible to be withdrawn
-        │       │   │   ├── it should burn `amount` of shares
-        │       │   │   ├── it should transfer the deposit tokens to the caller
-        │       │   │   └── it should emit a Withdraw event
-        │       │   └── when the balance to withdraw is lower or equal thanthe maximum withdrawable from all strategies
-        │       │       ├── it should burn `amount` of shares
-        │       │       ├── it should transfer the deposit token to the caller
-        │       │       └── it should emit a Withdraw event
-        │       └── when the balance to withdraw is lower or equal than the balance of the contract
-        │           ├── it should withdraw from the strategy up to the amount needed
-        │           ├── it should reduce the debt of the strategy by the amount withdrawn
-        │           └── it should reduce the debt of the multistrategy by the amount withdrawn
-        └── when the deposit token balance of the contract is higher than the amount to be withdrawn
-            ├── it should burn `amount` of shares
-            ├── it should transfer the deposit token to the caller
-            └── it should emit a Withdraw event
+├── when the contract is paused
+│   └── it should revert with EnforcedPause error
+└── when the contract is not paused
+    ├── when the caller doesn't have enough shares to cover the withdraw
+    │   └── it should revert with an InsufficientBalance error
+    └── when the caller has enough shares to cover the withdraw
+        ├── when `amount` is zero
+        │   └── it should revert with a Zero Amount error
+        └── when `amount` is greater than zero
+            ├── when a strategy withdraw has a greater slippage than the slippage limit
+            │   └── it should revert with a SlippageCheckFailed error
+            └── when a strategy withdraw has less slippage than the slippge limit
+                ├── when the balance of depositToken of the contract is lower than the amount to be withdrawn
+                │   ├── when the checked strategy is the zero address
+                │   │   ├── when the balance to withdraw is greater than the maximum withdrawable from all strategies
+                │   │   │   ├── it should adjust `amount` to the maximum amount possible to be withdrawn
+                │   │   │   ├── it should burn `amount` of shares
+                │   │   │   ├── it should transfer the deposit tokens to the caller
+                │   │   │   └── it should emit a Withdraw event
+                │   │   └── when the balance to withdraw is lower or equal than the maximum withdrawable from all strategies
+                │   │       ├── it should burn `amount` of shares
+                │   │       ├── it should transfer the deposit token to the caller
+                │   │       └── it should emit a Withdraw event
+                │   └── when the checked strategy is not a zero address
+                │       ├── when the balance to withdraw is lower or equal than the balance of the contract
+                │       │   └── when the balance to withdraw is lower or equal than the maximum withdrawable from all strategies
+                │       │       ├── it should burn `amount` of shares
+                │       │       ├── it should transfer the deposit token to the caller
+                │       │       └── it should emit a Withdraw event
+                │       └── when the balance to withdraw is greater than the balance of the contract
+                │           ├── it should withdraw from the strategy up to the amount needed
+                │           ├── it should reduce the debt of the strategy by the amount withdrawn
+                │           └── it should reduce the debt of the multistrategy by the amount withdrawn
+                └── when the deposit token balance of the contract is higher than the amount to be withdrawn
+                    ├── it should burn `amount` of shares
+                    ├── it should transfer the deposit token to the caller
+                    └── it should emit a Withdraw event

@@ -34,7 +34,7 @@ contract StrategyAdapterSlippageMock is StrategyAdapter {
     }
 
     function setStakingSlippage(uint256 _slippage) external {
-        slippageLimitsetSlippage(_slippage);
+        staking.setSlippage(_slippage);
     }
 
     function _deposit() internal override {

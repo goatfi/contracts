@@ -74,9 +74,9 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
 
     /// @inheritdoc IStrategyAdapter
     function withdraw(uint256 _amount) external onlyMultistrat {
-        _tryWithdraw(_amount);
+        uint256 withdrawn = _tryWithdraw(_amount);
 
-        IERC20(depositToken).safeTransfer(multistrategy, _amount);
+        IERC20(depositToken).safeTransfer(multistrategy, withdrawn);
     }
 
     /// @notice Internal function to send a report on the strategy's performance.
@@ -103,10 +103,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         }
 
         // Withdraw the desired amount to repay plus the gain.
-        _tryWithdraw(_repayAmount + gain);
+        uint256 withdrawn = _tryWithdraw(_repayAmount + gain);
 
         // Gain shouldn't be used to repay the debt
-        uint256 availableForRepay = IERC20(depositToken).balanceOf(address(this)) - gain;
+        uint256 availableForRepay = withdrawn - gain;
 
         //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
@@ -125,7 +125,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     /// - If the balance is less than the desired amount, it reverts with an insufficient balance error.
     /// 
     /// @param _amount The amount to withdraw from the strategy.
-    function _tryWithdraw(uint256 _amount) internal {
+    function _tryWithdraw(uint256 _amount) internal returns (uint256){
         // Withdraw the desired amount
         _withdraw(_amount);
 
@@ -136,6 +136,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
             // If it hasn't been able, revert.
             revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
         }
+
+        return currentBalance;
     }
 
     /// @dev Must implement the logic that will put the funds to work.
