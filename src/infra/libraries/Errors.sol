@@ -67,11 +67,8 @@ library Errors {
     /// maximum amount of strategies.
     error MaximumAmountStrategies();
 
-    /// @notice Thrown when trying to retire a strategy that already has a `debtRatio` of 0.
-    error StrategyAlreadyRetired();
-
-    /// @notice Thrown when it couldn't find a strategy
-    error StrategyNotFound();
+    /// @notice Thrown when trying to remove a strategy that has a `debtRatio` greater than 0.
+    error StrategyNotRetired();
 
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY ADAPTER

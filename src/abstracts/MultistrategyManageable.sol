@@ -198,7 +198,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     }
 
     /// @inheritdoc IMultistrategyManageable
-    function removeStrategy(address _strategy) external onlyManager {
+    function removeStrategy(address _strategy) external onlyManager onlyActiveStrategy(_strategy) {
+        // Check that the strategy being removed has been retired.
+        if(strategies[_strategy].debtRatio > 0) {
+            revert Errors.StrategyNotRetired();
+        }
         // Check that the startegy being removed doesn't have any outstanding debt.
         if(strategies[_strategy].totalDebt > 0) {
             revert Errors.StrategyWithOutstandingDebt();
@@ -208,6 +212,8 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
             if(withdrawOrder[i] == _strategy) {
                 // Remove the strategy from the withdraw order and organize it.
                 withdrawOrder[i] = address(0);
+                strategies[_strategy].activation = 0;
+                --activeStrategies;
                 _organizeWithdrawOrder();
 
                 emit StrategyRemoved(_strategy);
@@ -215,8 +221,6 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
             }
             unchecked { ++i; }
         }
-        // If we reach this point, _strategy wasn't on the withdraw order array.
-        revert Errors.StrategyNotFound();
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -277,7 +281,6 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     /// - Iterates through the provided strategies to validate each one:
     ///   - Checks that non-zero addresses correspond to active strategies.
     ///   - Ensures there are no duplicate strategies in the provided array.
-    ///   - Confirms that each strategy in the provided array exists in the withdraw order.
     /// - If an address in the provided array is zero, it checks that all subsequent addresses are also zero.
     /// 
     /// @param _strategies The array of strategy addresses to validate.
@@ -294,22 +297,12 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
                 if(strategies[strategy].activation == 0) {
                     revert Errors.StrategyNotActive(strategy);
                 }
-
-                bool strategyExists = false;
                 // Start to check on the next startegy
                 for(uint8 j = 0; j < MAXIMUM_STRATEGIES; ++j) {
-                    // Check that the strategy exists 
-                    if(strategy == withdrawOrder[j]) {
-                        strategyExists = true;
-                    }
-                    // No duplicates
+                    // Check that the strategy isn't duplicate
                     if(i != j && strategy == _strategies[j]) {
                         revert Errors.DuplicateStrategyInArray();
                     }
-                }
-                // If a strategy in _strategies doesn't exist in withdrawOrder. Throw an error.
-                if(!strategyExists) {
-                    revert Errors.StrategyNotFound();
                 }
             } else {
                 // Check that the rest of the addresses are address(0)

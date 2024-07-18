@@ -1,4 +1,5 @@
 setWithdrawOrder.t.sol
+.
 ├── when the caller is not the manager
 │   └── it should revert
 └── when the caller is the manager
@@ -11,15 +12,12 @@ setWithdrawOrder.t.sol
             ├── when a strategy is inactive
             │   └── it should revert with StrategyNotActive error
             └── when all strategies are active
-                ├── when a strategy is not present in the previous withdraw order
-                │   └── it should revert with StrategyNotFound error
-                └── when all strategies are present in old withdraw order
-                    ├── when a zero address is followed by a strategy address
-                    │   └── it should revert with InvalidWithdrawOrder error
-                    └── when a zero address is followed by only zero addresses
-                        ├── when all strategies in new withdraw order are zero address
-                        │   ├── it should set the new withdraw order
-                        │   └── it should emit the WithdrawOrderSet event
-                        └── when all strategies in new withdraw order are addresses
-                            ├── it should set the new withdraw order
-                            └── it should emit the WithdrawOrderSet event
+                ├── when a zero address is followed by a strategy address
+                │   └── it should revert with InvalidWithdrawOrder error
+                └── when a zero address is followed by only zero addresses
+                    ├── when all strategies in new withdraw order are zero address
+                    │   ├── it should set the new withdraw order
+                    │   └── it should emit the WithdrawOrderSet event
+                    └── when all strategies in new withdraw order are addresses
+                        ├── it should set the new withdraw order
+                        └── it should emit the WithdrawOrderSet event

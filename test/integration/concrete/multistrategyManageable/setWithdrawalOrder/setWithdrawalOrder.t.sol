@@ -107,48 +107,6 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         _;
     }
 
-    /// @dev SetWithdrawOrder is used to move withdrawing order, not to add
-    /// a new strategy to the multistrategy, so if an address is added that isn't already
-    /// present in the withdrawOrder, it should revert. As a strategy can only be added to
-    /// the withdraw order via the addStrategy function.
-    function test_RevertWhen_AddingAnExternalStrategy()
-        external
-        whenCallerIsManager
-        whenLengthMatches
-        whenNoDuplicates
-        whenAllStrategiesAreActive
-    {
-        // Add a strategy to the multistrategy so it is present in the withdrawal order.
-        address mockStrategy = addMockStrategy();
-
-        // Remove it from the withdrawalOrder
-        // Now the strategy is active, but removed from the withdrawal order. So including it
-        // in the new withdrawal order is not permited.
-        multistrategy.removeStrategy(mockStrategy);
-
-        // Create an array with an external strategy
-        strategies = [
-            mockStrategy, // 1
-            address(0),   // 2
-            address(0),   // 3
-            address(0),   // 4
-            address(0),   // 5
-            address(0),   // 6
-            address(0),   // 7
-            address(0),   // 8
-            address(0),   // 9
-            address(0)    // 10
-        ];
-
-        // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotFound.selector));
-        multistrategy.setWithdrawOrder(strategies);
-    }
-
-    modifier whenAllStrategiesArePresentInOldOrder() {
-        _;
-    }
-
     /// @dev If a non-zeroAddress is placed after a zero address in the withdraw order
     /// it should revert, as that strategy wont be able to have withdraws, as the 
     /// withdraw function exits when it reaches a zero address
@@ -158,7 +116,6 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenLengthMatches
         whenNoDuplicates
         whenAllStrategiesAreActive
-        whenAllStrategiesArePresentInOldOrder
     {
         // Add a strategy to the multistrategy so it is present in the withdrawal order.
         address mockStrategy = addMockStrategy();
@@ -192,7 +149,6 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenLengthMatches
         whenNoDuplicates
         whenAllStrategiesAreActive
-        whenAllStrategiesArePresentInOldOrder
         whenZeroAddressOrderIsRespected
     {
         address[] memory withdrawOrder = multistrategy.getWithdrawOrder();
@@ -230,7 +186,6 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenLengthMatches
         whenNoDuplicates
         whenAllStrategiesAreActive
-        whenAllStrategiesArePresentInOldOrder
         whenZeroAddressOrderIsRespected
     {
         // Add two strategies to the multistrategy so they are present in the withdrawOrder

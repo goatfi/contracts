@@ -25,42 +25,17 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         _;
     }
 
-    function test_RevertWhen_StrategyHasOutstandingDebt() external whenCallerIsManager {
-        // Deploy and add a mock strategy adapter in order to request a credit
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
-        multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
-
-        // Deposit to the multistrategy so the strategy has funds to request a credit.
-        triggerUserDeposit(users.bob, 1_000 ether);
-
-        // Strategy requests a credit
-        swapCaller(users.keeper);
-        IStrategyAdapter(strategy).requestCredit();
-
-        // Expect a revert when trying to remove the strategy from the withdraw order
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyWithOutstandingDebt.selector));
-        multistrategy.removeStrategy(strategy);
-    }
-
-    modifier whenStrategyHasNoOutstandingDebt() {
-        _;
-    }
-
-    function test_RevertWhen_StrategyIsNotInWithdrawOrder() 
-        external 
-        whenCallerIsManager
-        whenStrategyHasNoOutstandingDebt
-    {
+    function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
         // Create address for a strategy that wont be activated
         strategy = makeAddr("strategy");
 
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotFound.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
         multistrategy.removeStrategy(strategy);
     }
 
     /// @dev Add a mock strategy to the multistrategy
-    modifier whenStrategyIsInWithdrawOrder() {
+    modifier whenStrategyIsActive() {
         strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         uint256 debtRatio = 5_000;
         uint256 minDebtDelta = 100 ether;
@@ -70,10 +45,69 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         _;
     }
 
+    function test_RevertWhen_StrategyDebtRatioNotZero()
+        external
+        whenCallerIsManager
+        whenStrategyIsActive
+    {
+        // Expect a revert when trying to remove the strategy from the withdraw order
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotRetired.selector));
+        multistrategy.removeStrategy(strategy);
+    }
+
+    modifier whenStrategyDebtGreaterThanZero() {
+        triggerUserDeposit(users.bob, 1000 ether);
+        swapCaller(users.keeper);
+        IStrategyAdapter(strategy).requestCredit();
+        _;
+    }
+
+    modifier whenDebtRatioIsZero() {
+        multistrategy.retireStrategy(strategy);
+        _;
+    }
+
+    function test_RevertWhen_StrategyHasOutstandingDebt() 
+        external 
+        whenCallerIsManager
+        whenStrategyIsActive
+        whenStrategyDebtGreaterThanZero
+        whenDebtRatioIsZero
+    {
+        // Expect a revert when trying to remove the strategy from the withdraw order
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyWithOutstandingDebt.selector));
+        multistrategy.removeStrategy(strategy);
+    }
+
+    modifier whenStrategyHasNoDebt() {
+        _;
+    }
+
+    function test_RevertWhen_StrategyIsNotInWithdrawOrder() 
+        external 
+        whenCallerIsManager
+        whenStrategyIsActive
+        whenDebtRatioIsZero
+        whenStrategyHasNoDebt
+    {
+        // Create address for a strategy that wont be activated
+        strategy = makeAddr("strategy");
+
+        // Expect Revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
+        multistrategy.removeStrategy(strategy);
+    }
+
+    modifier whenStrategyIsInWithdrawOrder() {
+        _;
+    }
+
     function test_RemoveStrategy_RemoveStrategyFromWithdrawOrder()
         external
         whenCallerIsManager
-        whenStrategyHasNoOutstandingDebt
+        whenStrategyIsActive
+        whenDebtRatioIsZero
+        whenStrategyHasNoDebt
         whenStrategyIsInWithdrawOrder
     {
         // Expect the relevant event
