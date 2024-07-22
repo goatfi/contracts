@@ -44,4 +44,14 @@ interface IStrategyAdapter {
 
     /// @notice Returns the amount of `baseAsset` this strategy holds.
     function totalAssets() external view returns(uint256);
+
+    /// @notice Pauses the smart contract.
+    /// @dev Functions that implement the `paused` modifier will revert when called.
+    /// Guardians and Owner can call this function
+    function pause() external;
+
+    /// @notice Unpauses the smart contract.
+    /// @dev Functions that implement the `paused` won't revert when called.
+    /// Only the Owner can call this function
+    function unpause() external;
 }

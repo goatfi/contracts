@@ -3,14 +3,14 @@
 pragma solidity >=0.8.20 <= 0.9.0;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { StrategyAdapterAdminable } from "src/abstracts/StrategyAdapterAdminable.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
+abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable {
     using SafeERC20 for IERC20;
 
     /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
@@ -28,7 +28,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     /// @dev Reverts if `_baseAsset` doesn't match `baseAsset` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
     /// @param _baseAsset Address of the token used to deposit and withdraw on this strategy.
-    constructor(address _multistrategy, address _baseAsset) Ownable(msg.sender) {
+    constructor(address _multistrategy, address _baseAsset) StrategyAdapterAdminable(msg.sender) {
         if(IMultistrategyManageable(_multistrategy).baseAsset() != _baseAsset) {
             revert Errors.BaseAssetMissmatch({
                 multBaseAsset: IMultistrategyManageable(_multistrategy).baseAsset(),
@@ -40,7 +40,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         baseAsset = _baseAsset;
         slippageLimit = 0;
 
-        IERC20(baseAsset).safeIncreaseAllowance(multistrategy, type(uint256).max);
+        IERC20(baseAsset).forceApprove(multistrategy, type(uint256).max);
+        _giveAllowances();
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
@@ -117,6 +118,21 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
         return _totalAssets();
     }
 
+    /// @inheritdoc IStrategyAdapter
+    function pause() external onlyGuardian {
+        // Withdraw as much assets as possible from the underlying platform
+        _emergencyWithdraw();
+
+        // Pause this contract.
+        _pause();
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function unpause() external onlyOwner {
+        // Unpause this contract.
+        _unpause();
+    }
+
     /// @notice Internal function to attempt to withdraw a specified amount from the strategy.
     /// 
     /// This function performs the following actions:
@@ -151,7 +167,19 @@ abstract contract StrategyAdapter is IStrategyAdapter, Ownable {
     /// if `_withdraw` hasn't been able to withdraw `_amount`.
     function _withdraw(uint256 _amount) internal virtual {}
 
+    /// @dev Internal function that will withdraw as much funds as possible from the strategy and send them
+    /// to the Multistrategy
+    function _emergencyWithdraw() internal virtual {}
+
     /// @dev Must return the amount of `baseAsset` this strategy holds. In the case this strategy
     /// has swapped `baseAsset` for another token, it should return the most approximate value.
     function _totalAssets() internal virtual view returns(uint256) {}
+
+    /// @dev Internal function to grant allowance for `baseAsset` to the contracts used by the strategy adapter.
+    /// It should be overridden by derived contracts to specify the exact contracts and amounts for the allowances.
+    function _giveAllowances() internal virtual {}
+
+    /// @dev Internal function to revoke all previously granted allowances for `baseAsset`.
+    /// It should be overridden by derived contracts to specify the exact contracts from which allowances are revoked.
+    function _revokeAllowances() internal virtual {}
 }
