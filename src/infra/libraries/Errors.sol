@@ -81,6 +81,10 @@ library Errors {
     /// the `deposit` token on Multistrategy.
     error BaseAssetMissmatch(address multBaseAsset, address stratBaseAsset);
 
+    /// @notice Thrown when the requested slippage limit exceeds the maximum permitted value.
+    /// @param slippageLimit The slippage limit in basis points (BPS).
+    error SlippageLimitExceeded(uint256 slippageLimit);
+
     /// @notice Thrown when the actual slippage exceeds the allowed slippage.
     /// @param amount0 The expected amount after accounting for allowed slippage.
     /// @param amount1 The actual amount obtained.

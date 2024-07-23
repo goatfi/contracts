@@ -17,10 +17,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     uint256 constant MAX_SLIPPAGE = 10_000;
 
     /// @inheritdoc IStrategyAdapter
-    address public multistrategy;
+    address public immutable multistrategy;
 
     /// @inheritdoc IStrategyAdapter
-    address public baseAsset;
+    address public immutable baseAsset;
 
     /// @inheritdoc IStrategyAdapter
     uint256 public slippageLimit;
@@ -77,7 +77,14 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
+        // Revert if the slippage limit is higher than 100%
+        if(_slippageLimit > MAX_SLIPPAGE) {
+            revert Errors.SlippageLimitExceeded(_slippageLimit);
+        }
+
         slippageLimit = _slippageLimit;
+
+        emit SlippageLimitSet(_slippageLimit);
     }
     
     /// @inheritdoc IStrategyAdapter
@@ -120,6 +127,16 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Internal view function to calculate the gain and loss based on current assets.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the total debt of the strategy from the multi-strategy contract.
+    /// - Determines whether the current assets are greater than or equal to the total debt to calculate the gain.
+    /// - If the current assets are less than the total debt, calculates the loss.
+    /// 
+    /// @param _currentAssets The current assets held by the strategy.
+    /// @return gain The calculated gain.
+    /// @return loss The calculated loss.
     function _calculateGainAndLoss(uint256 _currentAssets) internal view returns(uint256 gain, uint256 loss) {
         uint256 totalDebt = IMultistrategy(multistrategy).strategyTotalDebt(address(this));
 
@@ -145,8 +162,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @notice Internal function to send a report on the strategy's performance.
     /// 
     /// This function performs the following actions:
-    /// - Calculates the current assets and total debt of the strategy.
-    /// - Determines whether the strategy has made a gain or a loss.
+    /// - Calculates the current assets of the strategy.
     /// - Attempts to withdraw the repayment amount plus any gain.
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
@@ -169,8 +185,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @notice Internal function to repay this strategy's debt with the funds that have been emergency withdrawn
     /// 
     /// This function performs the following actions:
-    /// - Calculates the current assets and total debt of the strategy.
-    /// - Determines whether the strategy has made a gain or a loss.
+    /// - Calculates the current assets of the strategy.
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
     function _repayDebtAfterEmergencyWithdrawal() internal {

@@ -20,7 +20,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     uint256 constant MAX_PERFORMANCE_FEE = 1_000;
 
     /// @inheritdoc IMultistrategyManageable
-    address public baseAsset;
+    address public immutable baseAsset;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;

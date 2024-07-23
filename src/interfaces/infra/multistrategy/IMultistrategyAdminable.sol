@@ -12,16 +12,16 @@ interface IMultistrategyAdminable {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when a new manager is set.
-    /// @param manager The address of the new manager.
-    event ManagerSet(address indexed manager);
+    /// @param _manager The address of the new manager.
+    event ManagerSet(address indexed _manager);
 
     /// @notice Emitted when a new guardian has been granted access.
-    /// @param guardian The address of the guardian.
-    event GuardianEnabled(address indexed guardian);
+    /// @param _guardian The address of the guardian.
+    event GuardianEnabled(address indexed _guardian);
 
     /// @notice Emitted when a the access of a guardian has been revoked.
-    /// @param guardian The address of the guardian.
-    event GuardianRevoked(address indexed guardian);
+    /// @param _guardian The address of the guardian.
+    event GuardianRevoked(address indexed _guardian);
 
     /*//////////////////////////////////////////////////////////////////////////
                                  CONSTANT FUNCTIONS
@@ -31,8 +31,8 @@ interface IMultistrategyAdminable {
     function manager() external view returns (address);
 
     /// @notice List of addresses enabled as guardian.
-    /// @param guardian The address to check if it is a guardian.
-    function guardians(address guardian) external view returns (bool);
+    /// @param _guardian The address to check if it is a guardian.
+    function guardians(address _guardian) external view returns (bool);
     
     /*//////////////////////////////////////////////////////////////////////////
                                NON-CONSTANT FUNCTIONS
@@ -42,22 +42,22 @@ interface IMultistrategyAdminable {
     /// @dev Doesn't revert if:
     /// - manager address is zero address.
     /// - manager address is the same as previous manager address.
-    /// @param manager Address of the new manager.
-    function setManager(address manager) external;
+    /// @param _manager Address of the new manager.
+    function setManager(address _manager) external;
 
     /// @notice Enables an address to be a guardian.
     /// @dev Doesn't revert if:
     /// - guardian address is zero address.
     /// - guardian address is already enabled as guardian.
-    /// @param guardian The address of the guardian.
-    function enableGuardian(address guardian) external;
+    /// @param _guardian The address of the guardian.
+    function enableGuardian(address _guardian) external;
 
     /// @notice Revokes an address to be a guardian.
     /// @dev Doesn't revert if:
     /// - guardian address is zero address.
     /// - guardian address is already revoked.
-    /// @param guardian The address of the guardian.
-    function revokeGuardian(address guardian) external;
+    /// @param _guardian The address of the guardian.
+    function revokeGuardian(address _guardian) external;
 
     /// @notice Pauses the smart contract.
     /// @dev Functions that implement the `paused` modifier will revert when called.

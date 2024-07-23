@@ -3,6 +3,9 @@
 pragma solidity >=0.8.20 <= 0.9.0;
 
 interface IStrategyAdapter {
+    /// @notice Emitted when the slippage limit is set.
+    /// @param slippageLimit The new slippage limit in basis points (BPS).
+    event SlippageLimitSet(uint256 slippageLimit);
 
     /// @notice Returns the address of the multistrategy this Strategy belongs to.
     function multistrategy() external view returns(address);
@@ -20,8 +23,8 @@ interface IStrategyAdapter {
     /// @dev Slippage limit is expressed in basis points (BPS), where 10,000 BPS equals 100%.
     /// This limit represents the tolerated difference between the expected withdrawal amount
     /// and the actual amount withdrawn from the strategy.
-    /// @param slippageLimit The maximum allowable slippage in basis points.
-    function setSlippageLimit(uint256 slippageLimit) external;
+    /// @param _slippageLimit The maximum allowable slippage in basis points.
+    function setSlippageLimit(uint256 _slippageLimit) external;
 
     /// @notice Requests a credit to the multistrategy. The multistrategy will send the
     /// maximum amount of credit available for this strategy.
@@ -33,14 +36,14 @@ interface IStrategyAdapter {
 
     /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has
     ///         made along an amount to be withdrawn and be used for debt repayment.
-    /// @param amountToWithdraw Amount that will be withdrawn from the strategy and will
+    /// @param _amountToWithdraw Amount that will be withdrawn from the strategy and will
     ///         be available for debt repayment.
-    function sendReport(uint256 amountToWithdraw) external;
+    function sendReport(uint256 _amountToWithdraw) external;
 
     /// @notice Withdraws `baseAsset` from the strategy.
     /// @dev Only callable by the multistrategy.
-    /// @param amount Amount of tokens to withdraw from the strategy.
-    function withdraw(uint256 amount) external;
+    /// @param _amount Amount of tokens to withdraw from the strategy.
+    function withdraw(uint256 _amount) external;
 
     /// @notice Returns the amount of `baseAsset` this strategy holds.
     function totalAssets() external view returns(uint256);
