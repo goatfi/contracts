@@ -51,6 +51,9 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pa
 
     /// @inheritdoc IMultistrategyAdminable
     function setManager(address _manager) external onlyOwner {
+        if(_manager == address(0)) {
+            revert Errors.ZeroAddress();
+        }
         manager = _manager;
         emit ManagerSet(_manager);
     }

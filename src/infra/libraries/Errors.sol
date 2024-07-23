@@ -17,6 +17,9 @@ library Errors {
     /// @notice Thrown when `amount` is zero.
     error ZeroAmount(uint256 amount);
 
+    /// @notice Thrown when setting an address to the zero address.
+    error ZeroAddress();
+
     /// @notice Thrown when `currentBalance` is lower than `amount`.
     error InsufficientBalance(uint256 currentBalance, uint256 amount);
 

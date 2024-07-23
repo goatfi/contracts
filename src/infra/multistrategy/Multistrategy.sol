@@ -26,7 +26,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     uint256 public lockedProfit;
 
     /// @inheritdoc IMultistrategy
-    uint256 public lockedProfitDegradation;
+    uint256 public immutable lockedProfitDegradation;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR

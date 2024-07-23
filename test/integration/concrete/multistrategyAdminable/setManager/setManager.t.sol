@@ -17,11 +17,28 @@ contract SetManager_Integration_Concrete_Test is Multistrategy_Integration_Share
         multistrategy.setManager(users.bob);
     }
 
-    modifier whenCallerOwner() {
+    modifier whenCallerIsOwner() {
         _;
     }
 
-    function test_SetManager_SameManager() external whenCallerOwner {
+    function test_RevertWhen_ZeroAddress() 
+        external
+        whenCallerIsOwner
+    {
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddress.selector));
+        multistrategy.setManager(address(0));
+    }
+
+    modifier whenNotZeroAddress() {
+        _;
+    }
+
+    function test_SetManager_SameManager() 
+        external 
+        whenCallerIsOwner 
+        whenNotZeroAddress 
+    {
         // Expect the relevant event to be emitted.
         vm.expectEmit({ emitter: address(multistrategy) });
         emit ManagerSet({ manager: users.keeper });
@@ -35,25 +52,11 @@ contract SetManager_Integration_Concrete_Test is Multistrategy_Integration_Share
         assertEq(actualManager, expectedManager, "manager");
     }
 
-    function test_SetManager_ZeroAddress() external whenCallerOwner {
-        // Expect the relevant event to be emitted.
-        vm.expectEmit({ emitter: address(multistrategy) });
-        emit ManagerSet({ manager: address(0) });
-
-        // Set the manager
-        multistrategy.setManager(address(0));
-
-        // Assert the manager has been set
-        address actualManager = multistrategy.manager();
-        address expectedManager = address(0);
-        assertEq(actualManager, expectedManager, "manager");
-    }
-
-    modifier whenNotZeroAddress() {
-        _;
-    }
-
-    function test_SetManager_NewManager() external whenCallerOwner whenNotZeroAddress {
+    function test_SetManager_NewManager() 
+        external 
+        whenCallerIsOwner 
+        whenNotZeroAddress 
+    {
         // Expect the relevant event to be emitted.
         vm.expectEmit({ emitter: address(multistrategy) });
         emit ManagerSet({ manager: users.bob });

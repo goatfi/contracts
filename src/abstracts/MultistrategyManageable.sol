@@ -69,6 +69,9 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     ) 
         MultistrategyAdminable(_owner, _manager) 
     {
+        if(_baseAsset == address(0) || _protocolFeeRecipient == address(0)) {
+            revert Errors.ZeroAddress();
+        }
         baseAsset = _baseAsset;
         protocolFeeRecipient = _protocolFeeRecipient;
         withdrawOrder = new address[](MAXIMUM_STRATEGIES);
@@ -107,6 +110,9 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
 
     /// @inheritdoc IMultistrategyManageable
     function setProtocolFeeRecipient(address _protocolFeeRecipient) external onlyOwner {
+        if(_protocolFeeRecipient == address(0)) {
+            revert Errors.ZeroAddress();
+        }
         protocolFeeRecipient = _protocolFeeRecipient;
         emit ProtocolFeeRecipientSet(_protocolFeeRecipient);
     }
