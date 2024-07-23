@@ -45,6 +45,14 @@ interface IStrategyAdapter {
     /// @notice Returns the amount of `baseAsset` this strategy holds.
     function totalAssets() external view returns(uint256);
 
+    /// @notice Starts the panic process for this strategy.
+    /// The panic process consists of:
+    ///     - Withdraw as much funds as possible from the underlying strategy.
+    ///     - Report back to the multistrategy with the available funds.
+    ///     - Revoke the allowance that this adapter has given to the underlying strategy.
+    ///     - Pauses this contract.
+    function panic() external;
+
     /// @notice Pauses the smart contract.
     /// @dev Functions that implement the `paused` modifier will revert when called.
     /// Guardians and Owner can call this function
