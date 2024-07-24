@@ -27,7 +27,7 @@ contract MultistrategyHarness_Integration_Shared_Test is Base_Test {
         
         swapCaller(_user);
         dai.approve(address(multistrategyHarness), _amount);
-        multistrategyHarness.deposit(_amount);
+        multistrategyHarness.deposit(_amount, _user);
 
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);

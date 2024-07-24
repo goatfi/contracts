@@ -27,7 +27,7 @@ contract Multistrategy_Integration_Shared_Test is Base_Test {
         
         swapCaller(_user);
         dai.approve(address(multistrategy), _amount);
-        multistrategy.deposit(_amount);
+        multistrategy.deposit(_amount, _user);
 
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);

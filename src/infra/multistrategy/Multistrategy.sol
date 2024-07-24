@@ -92,32 +92,31 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IMultistrategy
-    function deposit(uint256 _amount, address _recipient) external {
+    function deposit(uint256 _amount, address _recipient) external whenNotPaused {
         _deposit(_amount, _recipient);
     }
 
     /// @inheritdoc IMultistrategy
-    function deposit(uint256 _amount) external {
-        _deposit(_amount, msg.sender);
-    }
-
-    /// @inheritdoc IMultistrategy
-    function withdraw(uint256 _amount) external {
+    function withdraw(uint256 _amount) external whenNotPaused {
         _withdraw(_amount);
     }
 
     /// @inheritdoc IMultistrategy
-    function requestCredit() external {
+    function requestCredit() external whenNotPaused onlyActiveStrategy(msg.sender) {
         _requestCredit();
     }
 
     /// @inheritdoc IMultistrategy
-    function strategyReport(uint256 _debtRepayment, uint256 _profit, uint256 _loss) external {
+    function strategyReport(uint256 _debtRepayment, uint256 _profit, uint256 _loss) 
+        external 
+        whenNotPaused 
+        onlyActiveStrategy(msg.sender)
+    {
         _report(_debtRepayment, _profit, _loss);
     }
 
     /// @inheritdoc IMultistrategy
-    function rescueToken(address _token, address _recipient) external {
+    function rescueToken(address _token, address _recipient) external onlyGuardian {
         _rescueToken(_token, _recipient);
     }
 
@@ -306,7 +305,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// 
     /// @param _amount The amount to be deposited.
     /// @param _recipient The address of the recipient to receive shares for the deposit.
-    function _deposit(uint256 _amount, address _recipient) internal whenNotPaused {
+    function _deposit(uint256 _amount, address _recipient) internal {
         if(_recipient == address(0) || _recipient == address(this)) {
             revert Errors.InvalidAddress({ addr: _recipient });
         }
@@ -348,7 +347,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// Emits a `Withdraw` event.
     ///
     /// @param _amount The amount to be withdrawn.
-    function _withdraw(uint256 _amount) internal whenNotPaused {
+    function _withdraw(uint256 _amount) internal {
         //Assert withdrawer has enough balance
         if(balanceOf(msg.sender) < _amount) {
             revert Errors.InsufficientBalance({ 
@@ -450,10 +449,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// Emits a `CreditRequested` event.
     ///
     /// @dev This function should be called only by active strategies when they need to request credit.
-    function _requestCredit() 
-        internal 
-        whenNotPaused 
-        onlyActiveStrategy(msg.sender) 
+    function _requestCredit() internal 
     {
         uint256 credit = _creditAvailable(msg.sender);
 
@@ -495,11 +491,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// @param _debtRepayment The amount of debt being repaid by the strategy.
     /// @param _gain The amount of profit reported by the strategy.
     /// @param _loss The amount of loss reported by the strategy.
-    function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) 
-        internal 
-        whenNotPaused 
-        onlyActiveStrategy(msg.sender) 
-    {
+    function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) internal {
         // Check that the strategy isn't reporting a gain and a loss at the same time.
         if(_gain > 0 && _loss > 0) {
             revert Errors.GainLossMissmatch();
@@ -626,7 +618,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     ///
     /// @param _token The address of the token to be rescued.
     /// @param _recipient The address to receive the rescued tokens.
-    function _rescueToken(address _token, address _recipient) internal onlyGuardian {
+    function _rescueToken(address _token, address _recipient) internal {
         // Check that we aren't stealing from the multistrategy.
         if(_token == baseAsset) {
             revert Errors.InvalidAddress(_token);

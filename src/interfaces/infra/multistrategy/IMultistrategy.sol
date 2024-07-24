@@ -58,10 +58,6 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @param recipient Address that will receive the Multistrategy shares.
     function deposit(uint256 amount, address recipient) external;
 
-    /// @notice Deposit an amount of `baseAsset` and mint Multistrategy shares to `msg.sender`.
-    /// @param amount Amount of `baseAsset` the caller wants to deposit.
-    function deposit(uint256 amount) external;
-
     /// @notice Withdraw an amount of shares in exchange for an amount of `baseAsset`.
     /// @param amount Amount of Multistrategy shares.
     function withdraw(uint256 amount) external;
