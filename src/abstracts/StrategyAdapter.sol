@@ -45,7 +45,6 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         slippageLimit = 0;
 
         IERC20(baseAsset).forceApprove(multistrategy, type(uint256).max);
-        _giveAllowances();
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.

@@ -6,12 +6,13 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IGoatVault } from "interfaces/infra/IGoatVault.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
+import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract GoatProtocolStrategyAdapter is StrategyAdapter {
     using SafeERC20 for IERC20;
 
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
-    address goatVault;
+    address immutable goatVault;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -32,8 +33,12 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         address _goatVault
     ) 
         StrategyAdapter(_multistrategy, _baseAsset)
-    {
+    {   
+        if(_goatVault == address(0)) {
+            revert Errors.ZeroAddress();
+        }
         goatVault = _goatVault;
+        _giveAllowances();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
