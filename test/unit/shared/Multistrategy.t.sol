@@ -2,15 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
-
-interface IOwnable {
-    function transferOwnership(address newOwner) external;
-}
-
-interface IStrategyAdapterMock {
-    function earn(uint256 _amount) external;
-    function lose(uint256 _amount) external;
-}
+import { IStrategyAdapterMock } from "../../shared/TestInterfaces.sol";
 
 contract Multistrategy_Unit_Shared_Test is Base_Test {
     function setUp() public virtual override {
@@ -19,11 +11,7 @@ contract Multistrategy_Unit_Shared_Test is Base_Test {
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
 
-        vm.startPrank({ msgSender: users.owner });
-    }
-
-    function transferMultistrategyOwnershipToOwner() internal {
-        IOwnable(address(multistrategy)).transferOwnership({ newOwner: users.owner });
+        swapCaller(users.owner);
     }
 
     function triggerStrategyGain(address _strategy, uint256 _amount) internal {

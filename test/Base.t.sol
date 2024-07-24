@@ -11,6 +11,7 @@ import { ERC20Mock } from "./mocks/erc20/ERC20Mock.sol";
 import { ERC20MissingReturn } from "./mocks/erc20/ERC20MissingReturn.sol";
 import { StrategyAdapterMock } from "./mocks/StrategyAdapterMock.sol";
 import { StrategyAdapterSlippageMock } from "./mocks/StrategyAdapterSlippageMock.sol";
+import { IOwnable } from "./shared/TestInterfaces.sol";
 import { Test } from "forge-std/Test.sol";
 import { Users } from "./utils/Types.sol";
 import { Events } from "./utils/Events.sol";
@@ -107,6 +108,15 @@ abstract contract Base_Test is Test, Events {
         returns (address)
     {
         return address(new StrategyAdapterSlippageMock(_multistrategy, _baseAsset));
+    }
+
+    function transferMultistrategyOwnershipToOwner() internal {
+        // Check if the deployed Multistrategy is the MultistrategyHarness
+        if(address(multistrategyHarness) == address(0)){
+            IOwnable(address(multistrategy)).transferOwnership({ newOwner: users.owner });
+        } else {
+            IOwnable(address(multistrategyHarness)).transferOwnership({ newOwner: users.owner });
+        }
     }
 
     function swapCaller(address newCaller) internal {
