@@ -15,6 +15,10 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
         strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        transferStrategyAdapterOwnershipToOwner();
+
+        swapCaller(users.owner);
+
         multistrategy.addStrategy(strategy, 10_000, 0, 100_000 ether);
     }
 
@@ -29,5 +33,9 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         swapCaller(users.owner);
 
         IStrategyAdapter(strategy).requestCredit();
+    }
+
+    function transferStrategyAdapterOwnershipToOwner() internal {
+        IOwnable(strategy).transferOwnership(users.owner);
     }
 }

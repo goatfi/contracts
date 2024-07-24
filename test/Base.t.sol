@@ -58,6 +58,7 @@ abstract contract Base_Test is Test, Events {
     function createUser(string memory name) internal returns (address payable) {
         address payable user = payable(makeAddr(name));
         vm.deal({account: user, newBalance: 100 ether});
+        vm.label({ account: address(user), newLabel: name });
         return user;
     }
 
