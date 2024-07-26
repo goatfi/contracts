@@ -70,8 +70,13 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function requestCredit() external onlyOwner whenNotPaused {
-        IMultistrategy(multistrategy).requestCredit();
-        _deposit();
+        // Ask the Multistrategy for a credit
+        uint256 credit = IMultistrategy(multistrategy).requestCredit();
+
+        // If the credit is greater than 0, deposit into the underlying strategy.
+        if(credit > 0) {
+            _deposit();
+        }
     }
 
     /// @inheritdoc IStrategyAdapter
@@ -92,8 +97,13 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function sendReport() external onlyMultistrat whenNotPaused {
+    function askReport() external onlyMultistrat whenNotPaused {
         _sendReport(0);
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function sendReportPanicked() external onlyOwner {
+        _sendReportPanicked();
     }
 
     /// @inheritdoc IStrategyAdapter
@@ -103,10 +113,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         IERC20(baseAsset).safeTransfer(multistrategy, withdrawn);
     }
 
+    
+
     /// @inheritdoc IStrategyAdapter
     function panic() external onlyGuardian {
         _emergencyWithdraw();
-        _repayDebtAfterEmergencyWithdrawal();
         _revokeAllowances();
         _pause();
     }
@@ -149,6 +160,36 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return (gain, loss);
     }
 
+    /// @notice Internal view function to calculate the amount to be withdrawn from the strategy.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the exceeding debt of the strategy from the multi-strategy contract.
+    /// - If there is exceeding debt and a repayment amount is specified:
+    ///   - Calculates the amount to be withdrawn to repay the exceeding debt at maximum slippage.
+    ///   - Ensures the amount to be withdrawn does not exceed the repayment amount, adding any strategy gain.
+    /// - If there is no exceeding debt or no repayment amount, returns the strategy gain as the amount to be withdrawn.
+    ///   - Note that slippage calculations are not applied here as any slippage would be considered a loss and subtracted from the gain.
+    /// 
+    /// @param _repayAmount The amount to be repaid.
+    /// @param _strategyGain The gain of the strategy.
+    /// @return The amount to be withdrawn from the strategy.
+    function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns(uint256) 
+    {   
+        // Get this strategy exceeding debt
+        uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
+        
+        // If this strategy has exceeding debt and wants to repay it
+        if(exceedingDebt > 0 && _repayAmount > 0) {
+            // Calculate the amount to be withdrawn to repay the exceeding debt at max slippage
+            uint256 exceedingDebtWithSlippage = Math.mulDiv(exceedingDebt, MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
+
+            // Only withdraw up to the amount this strategy manager wants to make available, plus any gains
+            return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
+        } 
+
+        return _strategyGain;
+    }
+
     /// @notice Return the amount of `baseAsset` the underlying strategy holds. In the case this strategy
     /// has swapped `baseAsset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
@@ -170,24 +211,26 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     function _sendReport(uint256 _repayAmount) internal {
         uint256 currentAssets = _totalAssets();
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
+        uint256 toBeWithdrawn = _calculateAmountToBeWithdrawn(_repayAmount, gain);
 
         // Withdraw the desired amount to repay plus the gain.
-        uint256 withdrawn = _tryWithdraw(_repayAmount + gain);
+        uint256 withdrawn = _tryWithdraw(toBeWithdrawn);
 
         // Gain shouldn't be used to repay the debt
         uint256 availableForRepay = withdrawn - gain;
-
         //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
 
-    /// @notice Internal function to repay this strategy's debt with the funds that have been emergency withdrawn
+    /// @notice Internal function to send a report on the strategy's performance after the strategy
+    ///         has been panicked.
     /// 
     /// This function performs the following actions:
-    /// - Calculates the current assets of the strategy.
+    /// - Retrieves the current balance of the base asset held by the contract.
+    /// - Calculates the gain and loss based on the current assets.
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
-    function _repayDebtAfterEmergencyWithdrawal() internal {
+    function _sendReportPanicked() internal {
         uint256 currentAssets = IERC20(baseAsset).balanceOf(address(this));
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
 

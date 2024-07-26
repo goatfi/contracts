@@ -102,8 +102,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     }
 
     /// @inheritdoc IMultistrategy
-    function requestCredit() external whenNotPaused onlyActiveStrategy(msg.sender) {
-        _requestCredit();
+    function requestCredit() external whenNotPaused onlyActiveStrategy(msg.sender) returns (uint256) {
+        return _requestCredit();
     }
 
     /// @inheritdoc IMultistrategy
@@ -380,7 +380,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 uint256 balanceBeforeWithdraw = IERC20(baseAsset).balanceOf(address(this));
 
                 // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
-                IStrategyAdapter(strategy).sendReport();
+                IStrategyAdapter(strategy).askReport();
 
                 // Update the balance to withdraw as a strategy could have made a loss so the withdrawer
                 // must take a cut too.
@@ -449,9 +449,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// Emits a `CreditRequested` event.
     ///
     /// @dev This function should be called only by active strategies when they need to request credit.
-    function _requestCredit() internal 
-    {
-        uint256 credit = _creditAvailable(msg.sender);
+    function _requestCredit() internal returns (uint256 credit){
+        credit = _creditAvailable(msg.sender);
 
         // Check that the strategy has some credit available
         if(credit > 0) {
@@ -465,6 +464,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
             emit CreditRequested(msg.sender, credit);
         }
+
+        return credit;
     }
 
     /// @notice Internal function to report the performance of a strategy.

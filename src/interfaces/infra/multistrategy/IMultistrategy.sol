@@ -64,7 +64,7 @@ interface IMultistrategy is IMultistrategyManageable {
     
     /// @notice Send the available credit of the caller to the caller.
     /// @dev Reverts if the caller is *NOT* an active strategy
-    function requestCredit() external;
+    function requestCredit() external returns(uint256);
 
     /// @notice Report the profit or loss of a strategy along any debt the strategy is willing to pay back.
     /// @dev Can only be called by an active strategy.

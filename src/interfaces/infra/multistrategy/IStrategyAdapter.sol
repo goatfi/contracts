@@ -30,15 +30,22 @@ interface IStrategyAdapter {
     /// maximum amount of credit available for this strategy.
     function requestCredit() external;
 
-    /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has made.
-    /// @dev This report wont withdraw any funds to reapay debt to the Multistrategy.
-    function sendReport() external;
-
     /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has
     ///         made along an amount to be withdrawn and be used for debt repayment.
+    /// @dev Only the owner can call it
     /// @param _amountToWithdraw Amount that will be withdrawn from the strategy and will
     ///         be available for debt repayment.
     function sendReport(uint256 _amountToWithdraw) external;
+
+    /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has made.
+    /// @dev This report wont withdraw any funds to reapay debt to the Multistrategy.
+    /// Only the multistrategy can call it
+    function askReport() external;
+
+    /// @notice Sends a report to the Multistrategy after this strategy has been panicked.
+    ///         Reporting any gains or loss based on the balance the could be emergency withdrawn
+    /// @dev This function should only be called after a strategy has been retired.
+    function sendReportPanicked() external;
 
     /// @notice Withdraws `baseAsset` from the strategy.
     /// @dev Only callable by the multistrategy.
