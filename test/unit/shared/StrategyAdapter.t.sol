@@ -7,19 +7,19 @@ import { IOwnable } from "../../shared/TestInterfaces.sol";
 
 contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
-    address strategy;
+    IStrategyAdapter strategy;
 
     function setUp() public virtual override {
         Base_Test.setUp();
 
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset()));
         transferStrategyAdapterOwnershipToOwner();
 
         swapCaller(users.owner);
 
-        multistrategy.addStrategy(strategy, 10_000, 0, 100_000 ether);
+        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
     }
 
     function requestCredit(uint256 _amount) internal {
@@ -32,10 +32,10 @@ contract StrategyAdapter_Unit_Shared_Test is Base_Test {
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);
 
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
     }
 
     function transferStrategyAdapterOwnershipToOwner() internal {
-        IOwnable(strategy).transferOwnership(users.owner);
+        IOwnable(address(strategy)).transferOwnership(users.owner);
     }
 }
