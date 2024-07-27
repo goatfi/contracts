@@ -9,4 +9,5 @@ interface IOwnable {
 interface IStrategyAdapterMock {
     function earn(uint256 _amount) external;
     function lose(uint256 _amount) external;
+    function stakingBalance() external view returns(uint256);
 }

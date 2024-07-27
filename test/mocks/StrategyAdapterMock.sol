@@ -3,9 +3,10 @@ pragma solidity ^0.8.20;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
+import { IStrategyAdapterMock } from "../shared/TestInterfaces.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 
-contract StrategyAdapterMock is StrategyAdapter {
+contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
     using SafeERC20 for IERC20;
 
     StakingMock staking;
@@ -30,6 +31,10 @@ contract StrategyAdapterMock is StrategyAdapter {
 
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
+    }
+
+    function stakingBalance() external view returns(uint256) {
+        return IERC20(baseAsset).balanceOf(address(staking));
     }
 
     function _deposit() internal override {
