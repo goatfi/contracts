@@ -41,6 +41,7 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         whenCallerIsOwner
         whenNotPaused
     {
+        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
         uint256 previousTotalAssets = strategy.totalAssets();
 
         strategy.requestCredit();
@@ -56,7 +57,8 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         whenCallerIsOwner
         whenNotPaused
     {
-        requestCredit(address(strategy), 1000 ether);
+        triggerUserDeposit(users.bob, 1000 ether);
+        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
         
         strategy.requestCredit();
 

@@ -37,6 +37,17 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         IStrategyAdapter(_strategy).requestCredit();
     }
 
+    function triggerUserDeposit(address _user, uint256 _amount) internal {
+        dai.mint(_user, _amount);
+        
+        swapCaller(_user);
+        dai.approve(address(multistrategy), _amount);
+        multistrategy.deposit(_amount, _user);
+
+        // Switch back the caller to the owner, as stated in the setup funciton
+        swapCaller(users.owner);
+    }
+
     function transferStrategyAdapterOwnershipToOwner() internal {
         IOwnable(address(strategy)).transferOwnership(users.owner);
         IOwnable(address(strategySlippage)).transferOwnership(users.owner);

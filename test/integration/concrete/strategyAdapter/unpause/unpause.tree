@@ -1,0 +1,9 @@
+unpause.t.sol
+├── when the caller is not the owner
+│   └── it should revert
+└── when the caller is the owner
+    ├── when the contract is not paused
+    │   └── it should revert with ExpectedPause error
+    └── when the contract is paused
+        ├── it should unpause the contract
+        └── it should set the required allowances to the underlying contracts

@@ -37,6 +37,10 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         return IERC20(baseAsset).balanceOf(address(staking));
     }
 
+    function stakingContract() external view returns(address) {
+        return address(staking);
+    }
+
     function _deposit() internal override {
         uint256 balance = IERC20(baseAsset).balanceOf(address(this));
         staking.deposit(balance);
