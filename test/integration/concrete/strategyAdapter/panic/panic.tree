@@ -1,0 +1,7 @@
+panic.t.sol
+├── when the caller is not a guardian
+│   └── it should revert with CallerNotGuardian error
+└── when the caller is a guardian
+    ├── it should withdraw as much assets as possible
+    ├── it should revoke the allowances of this strategy
+    └── it should pause the contract

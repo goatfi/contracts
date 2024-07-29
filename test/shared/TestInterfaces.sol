@@ -15,6 +15,7 @@ interface IPausable {
 interface IStrategyAdapterMock is IStrategyAdapter {
     function earn(uint256 _amount) external;
     function lose(uint256 _amount) external;
+    function tryWithdraw(uint256 _amount) external returns(uint256);
     function setStakingSlippage(uint256 slippage) external;
     function stakingBalance() external view returns(uint256);
     function stakingContract() external view returns(address);

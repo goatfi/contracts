@@ -30,6 +30,10 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         IERC20Mock(baseAsset).burn(address(staking), _amount);
     }
 
+    function tryWithdraw(uint256 _amount) external returns(uint256) {
+        return _tryWithdraw(_amount);
+    }
+
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
     }
@@ -53,6 +57,19 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
 
     function _withdraw(uint256 _amount) internal override {
         staking.withdraw(_amount);
+    }
+
+    function _emergencyWithdraw() internal override {
+        uint256 balance = IERC20(baseAsset).balanceOf(address(staking));
+        staking.withdraw(balance);
+    }
+
+    function _revokeAllowances() internal override {
+        IERC20(baseAsset).forceApprove(address(staking), 0);
+    }
+
+    function _giveAllowances() internal override {
+        IERC20(baseAsset).forceApprove(address(staking), type(uint256).max);
     }
 
     function _totalAssets() internal override view returns(uint256) {
