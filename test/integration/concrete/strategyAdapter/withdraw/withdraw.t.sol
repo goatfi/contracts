@@ -3,6 +3,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -40,19 +41,19 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         whenContractNotPaused
     {
         // Set the slippage limit of the strategy to 10%
-        strategySlippage.setSlippageLimit(1_000);
+        strategy.setSlippageLimit(1_000);
 
         // Set the staking slippage to be 15%
-        strategySlippage.setStakingSlippage(1_500);
+        IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategySlippage), 1_000 ether);
+        requestCredit(address(strategy), 1_000 ether);
 
         swapCaller(address(multistrategy));
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 900 ether, 850 ether));
-        strategySlippage.withdraw(1_000 ether);
+        strategy.withdraw(1_000 ether);
     }
 
     modifier whenSlippageLimitRespected() {
@@ -66,20 +67,20 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         whenSlippageLimitRespected
     {
         // Set the slippage limit of the strategy to 1%
-        strategySlippage.setSlippageLimit(100);
+        strategy.setSlippageLimit(100);
 
         // Set the staking slippage to be 0.5%
-        strategySlippage.setStakingSlippage(50);
+        IStrategyAdapterMock(address(strategy)).setStakingSlippage(50);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategySlippage), 1_000 ether);
+        requestCredit(address(strategy), 1_000 ether);
 
         // Make a withdraw
         swapCaller(address(multistrategy));
-        strategySlippage.withdraw(1_000 ether);
+        strategy.withdraw(1_000 ether);
 
         // Assert the strategy no longer has the assets
-        uint256 actualStrategyAssets = strategySlippage.totalAssets();
+        uint256 actualStrategyAssets = strategy.totalAssets();
         uint256 expectedStrategyAssets = 0;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 

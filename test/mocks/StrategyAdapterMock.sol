@@ -5,6 +5,7 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
 import { IStrategyAdapterMock } from "../shared/TestInterfaces.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
     using SafeERC20 for IERC20;
@@ -33,6 +34,10 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         _withdraw(_amount);
     }
 
+    function setStakingSlippage(uint256 _slippage) external {
+        staking.setSlippage(_slippage);
+    }
+
     function stakingBalance() external view returns(uint256) {
         return IERC20(baseAsset).balanceOf(address(staking));
     }
@@ -59,6 +64,8 @@ contract StakingMock {
     using SafeERC20 for IERC20;
 
     address baseAsset;
+    uint256 constant MAX_SLIPPAGE = 10_000;
+    uint256 slippage;
 
     constructor(address _baseAsset) {
         baseAsset = _baseAsset;
@@ -69,6 +76,12 @@ contract StakingMock {
     }
 
     function withdraw(uint256 _amount) external {
-        IERC20(baseAsset).safeTransfer(msg.sender, _amount);
+        uint256 lostAmount = Math.mulDiv(_amount, slippage, MAX_SLIPPAGE);
+        IERC20(baseAsset).safeTransfer(msg.sender, _amount - lostAmount);
+        IERC20(baseAsset).safeTransfer(address(42069), lostAmount);
+    }
+
+    function setSlippage(uint256 _slippage) external {
+        slippage = _slippage;
     }
 }

@@ -3,7 +3,7 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { IStrategyAdapterSlippage } from "../../../../shared/TestInterfaces.sol";
+import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -59,7 +59,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
     modifier whenMultistrategyBalanceLowerThanWithdrawAmount() {
         strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
-        strategy_two = deployMockStrategyAdapterSlippage(address(multistrategy), multistrategy.baseAsset());
+        strategy_two = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
         multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 ether);
         multistrategy.addStrategy(strategy_two, 2_000, 0, 100_000 ether);
 
@@ -75,7 +75,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         whenAmountGreaterThanZero
         whenMultistrategyBalanceLowerThanWithdrawAmount
     {
-        IStrategyAdapterSlippage(strategy_two).setStakingSlippage(5_000);
+        IStrategyAdapterMock(strategy_two).setStakingSlippage(5_000);
 
         amountToWithdraw = 1000 ether;
         swapCaller(users.bob);
@@ -91,10 +91,10 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
     modifier whenNotEnoughBalanceToCoverWithdraw() {
         // Remove slippage protecction
-        IStrategyAdapterSlippage(strategy_two).setSlippageLimit(10_000);
+        IStrategyAdapterMock(strategy_two).setSlippageLimit(10_000);
         // Set the staking slippage to 50%. If a user wants to withdram 1000 tokens, the staking
         // will only return 500 tokens
-        IStrategyAdapterSlippage(strategy_two).setStakingSlippage(5_000);
+        IStrategyAdapterMock(strategy_two).setStakingSlippage(5_000);
         _;
     }
 

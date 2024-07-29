@@ -247,6 +247,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// - If the balance is less than the desired amount, it reverts with an insufficient balance error.
     /// 
     /// @param _amount The amount to withdraw from the strategy.
+    /// @return The amount withdrawn from the strategy.
     function _tryWithdraw(uint256 _amount) internal returns (uint256){
         // Withdraw the desired amount
         _withdraw(_amount);

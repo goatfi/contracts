@@ -3,12 +3,11 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { IOwnable, IStrategyAdapterSlippage } from "../../shared/TestInterfaces.sol";
+import { IOwnable } from "../../shared/TestInterfaces.sol";
 
 contract StrategyAdapter_Integration_Shared_Test is Base_Test {
 
     IStrategyAdapter strategy;
-    IStrategyAdapterSlippage strategySlippage;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -16,7 +15,6 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
         strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset()));
-        strategySlippage = IStrategyAdapterSlippage(deployMockStrategyAdapterSlippage(address(multistrategy), multistrategy.baseAsset()));
         transferStrategyAdapterOwnershipToOwner();
 
         swapCaller(users.owner);
@@ -50,6 +48,5 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
 
     function transferStrategyAdapterOwnershipToOwner() internal {
         IOwnable(address(strategy)).transferOwnership(users.owner);
-        IOwnable(address(strategySlippage)).transferOwnership(users.owner);
     }
 }
