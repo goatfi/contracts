@@ -3,11 +3,12 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { IOwnable } from "../../shared/TestInterfaces.sol";
+import { IOwnable, IStrategyAdapterSlippage } from "../../shared/TestInterfaces.sol";
 
 contract StrategyAdapter_Integration_Shared_Test is Base_Test {
 
     IStrategyAdapter strategy;
+    IStrategyAdapterSlippage strategySlippage;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -15,14 +16,15 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
         strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset()));
+        strategySlippage = IStrategyAdapterSlippage(deployMockStrategyAdapterSlippage(address(multistrategy), multistrategy.baseAsset()));
         transferStrategyAdapterOwnershipToOwner();
 
         swapCaller(users.owner);
-
-        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
     }
 
-    function requestCredit(uint256 _amount) internal {
+    function requestCredit(address _strategy, uint256 _amount) internal {
+        // Add the strategy to the multistrategy
+        multistrategy.addStrategy(address(_strategy), 10_000, 0, 100_000 ether);
         dai.mint(users.bob, _amount);
         
         swapCaller(users.bob);
@@ -32,10 +34,11 @@ contract StrategyAdapter_Integration_Shared_Test is Base_Test {
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);
 
-        strategy.requestCredit();
+        IStrategyAdapter(_strategy).requestCredit();
     }
 
     function transferStrategyAdapterOwnershipToOwner() internal {
         IOwnable(address(strategy)).transferOwnership(users.owner);
+        IOwnable(address(strategySlippage)).transferOwnership(users.owner);
     }
 }

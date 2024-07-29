@@ -13,7 +13,7 @@ contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Sh
     }
 
     modifier whenCreditRequested() {
-        requestCredit(1000 ether);
+        requestCredit(address(strategy), 1000 ether);
         _;
     }
 

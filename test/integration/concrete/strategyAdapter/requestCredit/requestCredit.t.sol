@@ -56,7 +56,7 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         whenCallerIsOwner
         whenNotPaused
     {
-        requestCredit(1000 ether);
+        requestCredit(address(strategy), 1000 ether);
         
         strategy.requestCredit();
 
