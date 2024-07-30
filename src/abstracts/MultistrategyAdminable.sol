@@ -76,7 +76,7 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pa
     }
 
     /// @inheritdoc IMultistrategyAdminable
-    function unpause() external onlyGuardian {
+    function unpause() external onlyOwner {
         _unpause();
     }
 }

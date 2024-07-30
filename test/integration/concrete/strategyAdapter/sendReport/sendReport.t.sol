@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.20 <0.9.0;
 
+import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -35,6 +36,28 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
 
     modifier whenContractNotPaused() {
         _;
+    }
+
+    function test_RevertWhen_RepayAmountHigherThanTotalAssets()
+        external
+        whenCallerOwner
+        whenContractNotPaused
+    {
+        // Request a credit from the multistrategy
+        requestCredit(address(strategy), 1_000 ether);
+
+        // Make a loss
+        IStrategyAdapterMock(address(strategy)).lose(100 ether);
+
+        // Set the strategy debt ratio to 0, se we can repay the debt
+        multistrategy.setStrategyDebtRatio(address(strategy), 0);
+
+        uint256 repayAmount = 1000 ether;
+
+        // Expect a revert when the strategy manager wants to repay all the debt but it doesn't have the assets to do so
+        address stakingContrat = IStrategyAdapterMock(address(strategy)).stakingContract();
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, stakingContrat, 900 ether, repayAmount));
+        strategy.sendReport(repayAmount);
     }
 
     function test_RevertWhen_SlippageLimitNotRespected()

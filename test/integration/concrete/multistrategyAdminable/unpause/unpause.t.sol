@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -10,21 +11,23 @@ interface IPausable {
 }
 
 contract Unpause_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    function test_RevertWhen_CallerNotGuardian() external {
+    function test_RevertWhen_CallerNotOwner() external {
         // Change caller to bob
         swapCaller(users.bob);
         
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotGuardian.selector, users.bob));
-        multistrategy.pause();
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, users.bob));
+        multistrategy.unpause();
     }
 
-    modifier whenCallerIsGuardian() {
-        swapCaller(users.guardian);
+    modifier whenCallerIsOwner() {
         _;
     }
 
-    function test_RevertWhen_ContractIsUnpaused() external whenCallerIsGuardian {
+    function test_RevertWhen_ContractIsUnpaused() 
+        external 
+        whenCallerIsOwner 
+    {
         // Expect a revert.
         vm.expectRevert(abi.encodeWithSelector(Pausable.ExpectedPause.selector));
         multistrategy.unpause();
@@ -35,10 +38,14 @@ contract Unpause_Integration_Concrete_Test is Multistrategy_Integration_Shared_T
         _;
     }
 
-    function test_Unpause_PausedContract() external whenCallerIsGuardian whenContractIsPaused {
+    function test_Unpause_PausedContract() 
+        external 
+        whenCallerIsOwner 
+        whenContractIsPaused 
+    {
         // Expect the relevant event to be emitted.
         vm.expectEmit({ emitter: address(multistrategy) });
-        emit Unpaused({ account: users.guardian });
+        emit Unpaused({ account: users.owner });
 
         // Pause the contract.
         multistrategy.unpause();

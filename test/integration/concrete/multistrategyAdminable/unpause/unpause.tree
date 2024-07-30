@@ -1,7 +1,7 @@
 unpause.t.sol
-├── when the caller is not a guardian
+├── when the caller is not the owner
 │  └── it should revert
-└── when the caller is a guardian
+└── when the caller is the owner
    ├── when the contract is not paused
    │  ├── it should revert
    └── when the contract is paused
