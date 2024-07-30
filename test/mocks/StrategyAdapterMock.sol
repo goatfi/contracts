@@ -34,6 +34,15 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         return _tryWithdraw(_amount);
     }
 
+    function calculateGainAndLoss(uint256 _currentAssets) external view returns(uint256 gain, uint256 loss) {
+        (gain, loss) = _calculateGainAndLoss(_currentAssets);
+        return (gain, loss);
+    }
+
+    function calculateAmounToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) external view returns(uint256) {
+        return _calculateAmountToBeWithdrawn(_repayAmount, _strategyGain);
+    }
+
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
     }

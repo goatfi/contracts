@@ -1,0 +1,19 @@
+calculateGainAndLoss.t.sol
+├── when currentAssets is zero
+│   ├── when strategy's totalDebt is zero
+│   │   ├── it should return zero for gain
+│   │   └── it should return zero for loss
+│   └── when strategy's totalDebt is not zero
+│       ├── it should return zero for gain
+│       └── it should return totalDebt for loss
+└── when currentAssets is not zero
+    ├── when strategy's totalDebt is zero
+    │   ├── it should return current assets for gain
+    │   └── it should return zero for loss
+    └── when strategy's totalDebt is not zero
+        ├── when currentAssets is greater than totalDebt
+        │   ├── it should return currentAssets minus totalDebt for gain
+        │   └── it should return zero for loss
+        └── when currentAssets is lower than totalDebt
+            ├── it should return zero for gain
+            └── it should return totalDebt minus currentAssets for loss
