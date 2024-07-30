@@ -82,7 +82,7 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
     }
 
     function _totalAssets() internal override view returns(uint256) {
-         return IERC20(baseAsset).balanceOf(address(staking));
+        return IERC20(baseAsset).balanceOf(address(staking));
     }
 }
 

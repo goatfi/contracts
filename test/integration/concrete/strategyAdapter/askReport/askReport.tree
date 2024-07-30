@@ -1,0 +1,16 @@
+askReport.t.sol
+├── when the caller is not the multistrategy
+│   └── it should revert
+└── when the caller is the multistrategy
+    ├── when the contract is paused
+    │   └── it should revert with EnforcedPause error
+    └── when the contract is not paused
+        ├── when the slippage of the withdraw is greater than the slippage limit
+        │   └── it should revert with SlippageCheckFailed error
+        └── when the slippage of the withdraw is lower than the slippage limit
+            ├── when the strategy realised a gain
+            │   ├── it should withdraw the gain
+            │   ├── it should inform the multistrategy about the gain
+            │   └── it should reduce this strategy totalAssets by the gain amount
+            └── when the strategy realised a loss
+                └── it should inform the multistrategy about the loss

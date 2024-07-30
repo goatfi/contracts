@@ -102,7 +102,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function sendReportPanicked() external onlyOwner {
+    function sendReportPanicked() external onlyOwner whenPaused {
         _sendReportPanicked();
     }
 
