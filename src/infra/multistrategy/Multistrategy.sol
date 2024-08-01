@@ -2,8 +2,13 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { 
+    IERC20,
+    IERC4626,
+    ERC20,
+    ERC4626
+} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { MultistrategyManageable } from "src/abstracts/MultistrategyManageable.sol";
@@ -11,10 +16,10 @@ import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.so
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
+contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     using SafeERC20 for IERC20;
     
-    /// @dev Used for locked profit calculations. Must be 10 ** baseAsset decimals.
+    /// @dev Used for locked profit calculations. Must be 10 ** asset decimals.
     uint256 immutable DEGRADATION_COEFFICIENT;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
     uint256 constant PROFIT_UNLOCK_TIME = 12 hours;
@@ -33,27 +38,28 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @dev Transfers ownership to the deployer of this contract
-    /// @param _baseAsset Address of the token used in this Multistrategy
+    /// @param _asset Address of the token used in this Multistrategy
     /// @param _manager Address of the initial Multistrategy manager
     /// @param _protocolFeeRecipient Address that will receive the performance fees
     /// @param _name Name of this Multistrategy receipt token
     /// @param _symbol Symbol of this Multistrategy receipt token
     constructor(
-        address _baseAsset,
+        address _asset,
         address _manager,
         address _protocolFeeRecipient,
         string memory _name, 
         string memory _symbol
     ) 
-        MultistrategyManageable(msg.sender, _manager, _baseAsset, _protocolFeeRecipient) 
+        MultistrategyManageable(msg.sender, _manager, _protocolFeeRecipient)
+        ERC4626(IERC20(_asset))
         ERC20(_name, _symbol) 
     {   
         // Set performance fee to 4% of yield generated
         performanceFee = 400;
         // Set the initial lastReport to the timestamp when creating the multistrategy
         lastReport = block.timestamp;
-        // Set the degradation coefficient to 1 whole unit of base asset.
-        DEGRADATION_COEFFICIENT = 10 ** IERC20Metadata(_baseAsset).decimals();
+        // Set the degradation coefficient to 1 whole unit of asset.
+        DEGRADATION_COEFFICIENT = 10 ** IERC20Metadata(_asset).decimals();
         // How much profit is unlocked each second. This sets the unlock time to 12h
         lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
     }
@@ -62,8 +68,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                         USER FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @inheritdoc IMultistrategy
-    function totalAssets() external view returns(uint256) {
+    /// @inheritdoc IERC4626
+    function totalAssets() public view override returns(uint256) {
         return _totalAssets();
     }
 
@@ -91,14 +97,56 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @inheritdoc IMultistrategy
-    function deposit(uint256 _amount, address _recipient) external whenNotPaused {
-        _deposit(_amount, _recipient);
+    /// @inheritdoc IERC4626
+    function deposit(uint256 _assets, address _receiver) public override whenNotPaused returns (uint256) {
+        uint256 maxAssets = maxDeposit(_receiver);
+        if (_assets > maxAssets) {
+            revert ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets);
+        }
+
+        uint256 shares = previewDeposit(_assets);
+        _deposit(_msgSender(), _receiver, _assets, shares);
+
+        return shares;
     }
 
-    /// @inheritdoc IMultistrategy
-    function withdraw(uint256 _amount) external whenNotPaused {
-        _withdraw(_amount);
+    /// @inheritdoc IERC4626
+    function mint(uint256 shares, address receiver) public override whenNotPaused returns (uint256) {
+        uint256 maxShares = maxMint(receiver);
+        if (shares > maxShares) {
+            revert ERC4626ExceededMaxMint(receiver, shares, maxShares);
+        }
+
+        uint256 assets = previewMint(shares);
+        _deposit(_msgSender(), receiver, assets, shares);
+
+        return assets;
+    }
+
+    /// @inheritdoc IERC4626
+    function withdraw(uint256 assets, address receiver, address owner) public override whenNotPaused returns (uint256) {
+        uint256 maxAssets = maxWithdraw(owner);
+        if (assets > maxAssets) {
+            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
+        }
+
+        uint256 shares = previewWithdraw(assets);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        return shares;
+    }
+
+    /// @inheritdoc IERC4626
+    function redeem(uint256 shares, address receiver, address owner) public override whenNotPaused returns (uint256) {
+        uint256 maxShares = maxRedeem(owner);
+        if (shares > maxShares) {
+            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
+        }
+
+        uint256 assets = previewRedeem(shares);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        return assets;
     }
 
     /// @inheritdoc IMultistrategy
@@ -132,7 +180,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// 
     /// @return The total assets held by the contract.
     function _totalAssets() internal view returns(uint256) {
-        uint256 idleAssets = IERC20(baseAsset).balanceOf(address(this));
+        uint256 idleAssets = IERC20(asset()).balanceOf(address(this));
         return idleAssets + totalDebt;
     }
 
@@ -323,7 +371,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         _issueSharesForAmount(_amount, _recipient);
 
         //Get funds from depositor
-        IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(asset()).safeTransferFrom(msg.sender, address(this), _amount);
 
         emit Deposit(_amount, _recipient);
     }
@@ -367,7 +415,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
         //If the amount the user wants to withdraw is higher than the amount of
         //idle assets on the multistrategy, withdraw from strategies
-        if(balanceToWithdraw > IERC20(baseAsset).balanceOf(address(this))) {
+        if(balanceToWithdraw > IERC20(asset()).balanceOf(address(this))) {
             for(uint8 i = 0; i <= withdrawOrder.length;){
                 address strategy = withdrawOrder[i];
 
@@ -377,7 +425,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 }
 
                 // Get the current balance of this contract
-                uint256 balanceBeforeWithdraw = IERC20(baseAsset).balanceOf(address(this));
+                uint256 balanceBeforeWithdraw = IERC20(asset()).balanceOf(address(this));
 
                 // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
                 IStrategyAdapter(strategy).askReport();
@@ -406,7 +454,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
                 // We withdraw from the strategy
                 IStrategyAdapter(strategy).withdraw(amountNeeded);
-                uint256 withdrawn = IERC20(baseAsset).balanceOf(address(this)) - balanceBeforeWithdraw;
+                uint256 withdrawn = IERC20(asset()).balanceOf(address(this)) - balanceBeforeWithdraw;
 
                 // Reduce the strategy's and multistretegy's totalDebt
                 strategies[strategy].totalDebt -= withdrawn;
@@ -415,7 +463,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
                 unchecked { ++i; }
             }
 
-            uint256 currentBalance = IERC20(baseAsset).balanceOf(address(this));
+            uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
 
             // At this point we have withdrawn everything possible from the withdrawal queue
             // so we need to make sure that the amount the caller wants to withdraw is lower or equal than the available balance
@@ -430,7 +478,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         //Burn the shares
         _burn(msg.sender, _amount);
         //Send the tokens to the caller
-        IERC20(baseAsset).safeTransfer(msg.sender, balanceToWithdraw);
+        IERC20(asset()).safeTransfer(msg.sender, balanceToWithdraw);
 
         emit Withdraw(balanceToWithdraw);
     }
@@ -460,7 +508,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             totalDebt += credit;
 
             // Transfer the credit to the strategy
-            IERC20(baseAsset).safeTransfer(msg.sender, credit);
+            IERC20(asset()).safeTransfer(msg.sender, credit);
 
             emit CreditRequested(msg.sender, credit);
         }
@@ -499,9 +547,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
         }
 
         // Check that the strategy actually has the tokens to transfer the profits and repay the debt.
-        if(IERC20(baseAsset).balanceOf(msg.sender) < _debtRepayment + _gain) {
+        if(IERC20(asset()).balanceOf(msg.sender) < _debtRepayment + _gain) {
             revert Errors.InsufficientBalance({ 
-                currentBalance: IERC20(baseAsset).balanceOf(msg.sender),
+                currentBalance: IERC20(asset()).balanceOf(msg.sender),
                 amount: _debtRepayment + _gain
             });
         }
@@ -518,12 +566,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
 
             // Transfer the performance fee to the fee recipient
             if(pFee > 0) {
-                IERC20(baseAsset).safeTransferFrom(msg.sender, protocolFeeRecipient, pFee);
+                IERC20(asset()).safeTransferFrom(msg.sender, protocolFeeRecipient, pFee);
             }
 
             // Transfer the profit from the strategy to this multistrategy.
             profit = _gain - pFee;
-            IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), profit);
+            IERC20(asset()).safeTransferFrom(msg.sender, address(this), profit);
         } 
 
         uint256 exceedingDebt = _debtExcess(msg.sender);
@@ -536,7 +584,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
             strategies[msg.sender].totalDebt -= debtToRepay;
             totalDebt -= debtToRepay;
 
-            IERC20(baseAsset).safeTransferFrom(msg.sender, address(this), debtToRepay);
+            IERC20(asset()).safeTransferFrom(msg.sender, address(this), debtToRepay);
         }
 
         // Calculate the new locked profit. Profit can be 0.
@@ -621,7 +669,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC20 {
     /// @param _recipient The address to receive the rescued tokens.
     function _rescueToken(address _token, address _recipient) internal {
         // Check that we aren't stealing from the multistrategy.
-        if(_token == baseAsset) {
+        if(_token == asset()) {
             revert Errors.InvalidAddress(_token);
         }
 

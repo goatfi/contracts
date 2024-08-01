@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import {Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
 import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import {Errors} from "src/infra/libraries/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -35,7 +35,7 @@ contract Deposit_Integration_Concrete_Test is
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidAddress.selector, address(0))
         );
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenRecipientNotZeroAddress() {
@@ -56,7 +56,7 @@ contract Deposit_Integration_Concrete_Test is
                 address(multistrategy)
             )
         );
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenRecipientNotContractAddress() {
@@ -73,7 +73,7 @@ contract Deposit_Integration_Concrete_Test is
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAmount.selector, 0));
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenAmountIsGreaterThanZero() {
@@ -92,7 +92,7 @@ contract Deposit_Integration_Concrete_Test is
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.DepositLimit.selector));
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     /// @dev Approve the tokens to be able to deposit
@@ -123,7 +123,7 @@ contract Deposit_Integration_Concrete_Test is
             )
         );
         swapCaller(users.bob);
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenCallerHasEnoughBalance() {
@@ -146,7 +146,7 @@ contract Deposit_Integration_Concrete_Test is
         emit Deposit(amount, recipient);
 
         swapCaller(users.bob);
-        multistrategy.deposit(amount, recipient);
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
 
         // Assert correct amount of shares have been minted to recipient
         uint256 actualMintedShares = IERC20(address(multistrategy)).balanceOf(recipient);

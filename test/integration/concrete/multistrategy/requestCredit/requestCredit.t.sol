@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -33,7 +33,7 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
     }
 
     modifier whenCallerActiveStrategy() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
         triggerUserDeposit(users.bob, 1_000 ether);

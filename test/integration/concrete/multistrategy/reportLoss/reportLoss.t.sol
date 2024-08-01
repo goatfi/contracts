@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
+import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract ReportLoss_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
@@ -15,7 +15,7 @@ contract ReportLoss_Integration_Concrete_Test is MultistrategyHarness_Integratio
     }
 
     modifier whenNotZeroAddress() {
-        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.baseAsset());
+        strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
         _;
     }
 

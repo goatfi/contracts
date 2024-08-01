@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -34,7 +34,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientBalance.selector, 0, amountToWithdraw));
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 
     modifier whenHasCallerEnoughSharesToCoverWithdraw() {
@@ -50,7 +50,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAmount.selector, amountToWithdraw));
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 
     modifier whenAmountGreaterThanZero() {
@@ -58,8 +58,8 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenMultistrategyBalanceLowerThanWithdrawAmount() {
-        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
-        strategy_two = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy_one = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        strategy_two = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 ether);
         multistrategy.addStrategy(strategy_two, 2_000, 0, 100_000 ether);
 
@@ -82,7 +82,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 200 ether, 100 ether));
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 
     modifier whenWithdrawOrderEndReached() {
@@ -113,7 +113,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 1000 ether;
 
         swapCaller(users.bob);
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
         uint256 actualUserBalance = dai.balanceOf(users.bob);
@@ -169,7 +169,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 1000 ether;
 
         swapCaller(users.bob);
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
         uint256 actualUserBalance = dai.balanceOf(users.bob);
@@ -224,7 +224,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 800 ether;
 
         swapCaller(users.bob);
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
         uint256 actualUserBalance = dai.balanceOf(users.bob);
@@ -268,7 +268,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenMultistrategyBalanceHigherOrEqualThanWithdrawAmount() {
-        strategy_one = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy_one = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 ether);
 
         IStrategyAdapter(strategy_one).requestCredit();
@@ -286,7 +286,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 500 ether;
 
         swapCaller(users.bob);
-        multistrategy.withdraw(amountToWithdraw);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
         uint256 actualUserBalance = dai.balanceOf(users.bob);

@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IOwnable } from "../../shared/TestInterfaces.sol";
 
@@ -14,7 +15,7 @@ contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
-        strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset()));
+        strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset()));
         transferStrategyAdapterOwnershipToOwner();
 
         swapCaller(users.owner);
@@ -27,7 +28,7 @@ contract StrategyAdapter_Unit_Shared_Test is Base_Test {
         
         swapCaller(users.bob);
         dai.approve(address(multistrategy), _amount);
-        multistrategy.deposit(_amount, users.bob);
+        IERC4626(address(multistrategy)).deposit(_amount, users.bob);
 
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);

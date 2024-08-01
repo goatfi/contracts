@@ -59,12 +59,12 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         strategy.sendReportPanicked();
 
         // Assert that the strategy repaid 0 tokens
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy report a 0 gain
-        uint256 actualFeeRecipientBalance = IERC20(strategy.baseAsset()).balanceOf(users.feeRecipient);
+        uint256 actualFeeRecipientBalance = IERC20(strategy.asset()).balanceOf(users.feeRecipient);
         uint256 expectedFeeRecipientBalance = 0;
         assertEq(actualFeeRecipientBalance, expectedFeeRecipientBalance, "sendReportPanicked, fee recipient balance");
 
@@ -88,13 +88,13 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         strategy.sendReportPanicked();
 
         // Assert that the strategy repaid the gain
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 95 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy has the same balance of assets as debt amount
         uint256 actualStrategyDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
-        uint256 actualStrategyTotalAssets = IERC20(strategy.baseAsset()).balanceOf(address(strategy));
+        uint256 actualStrategyTotalAssets = IERC20(strategy.asset()).balanceOf(address(strategy));
         assertEq(actualStrategyDebt, actualStrategyTotalAssets, "sendReportPanicked, assets and debt match");
     }
 
@@ -108,13 +108,13 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         strategy.sendReportPanicked();
 
         // Assert that the strategy hasn't repaid anything
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy has the same balance of assets as debt amount
         uint256 actualStrategyDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
-        uint256 actualStrategyTotalAssets = IERC20(strategy.baseAsset()).balanceOf(address(strategy));
+        uint256 actualStrategyTotalAssets = IERC20(strategy.asset()).balanceOf(address(strategy));
         assertEq(actualStrategyDebt, actualStrategyTotalAssets, "sendReportPanicked, assets and debt match");
     }
 
@@ -134,7 +134,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         strategy.sendReportPanicked();
 
         // Assert that the strategy repaid the gain
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 1095 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
@@ -144,7 +144,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         assertEq(actualStrategyDebt, expectedStrategyTotalDebt, "sendReportPanicked, strategy total debt");
 
         // Assert that the strategy total assets is 0
-        uint256 actualStrategyTotalAssets = IERC20(strategy.baseAsset()).balanceOf(address(strategy));
+        uint256 actualStrategyTotalAssets = IERC20(strategy.asset()).balanceOf(address(strategy));
         uint256 expectedStrategyTotalAssets = 0;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "sendReportPanicked, strategy total assets");
     }
@@ -160,7 +160,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         strategy.sendReportPanicked();
 
         // Assert that the strategy repaid the loss
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 900 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
@@ -170,7 +170,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         assertEq(actualStrategyDebt, expectedStrategyTotalDebt, "sendReportPanicked, strategy total debt");
 
         // Assert that the strategy total assets is 0
-        uint256 actualStrategyTotalAssets = IERC20(strategy.baseAsset()).balanceOf(address(strategy));
+        uint256 actualStrategyTotalAssets = IERC20(strategy.asset()).balanceOf(address(strategy));
         uint256 expectedStrategyTotalAssets = 0;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "sendReportPanicked, strategy total assets");
     }

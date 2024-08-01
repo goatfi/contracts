@@ -2,13 +2,14 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { MultistrategyAdminable } from "src/abstracts/MultistrategyAdminable.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdminable {
+abstract contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdminable {
 
     /// @dev Maximum amount of different strategies this contract can deposit into
     uint8 constant MAXIMUM_STRATEGIES = 10;
@@ -18,9 +19,6 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
 
     /// @dev Maximum performance fee that the owner can set is 10%
     uint256 constant MAX_PERFORMANCE_FEE = 1_000;
-
-    /// @inheritdoc IMultistrategyManageable
-    address public immutable baseAsset;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;
@@ -64,15 +62,13 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     constructor(
         address _owner,
         address _manager,
-        address _baseAsset,
         address _protocolFeeRecipient
     ) 
         MultistrategyAdminable(_owner, _manager) 
     {
-        if(_baseAsset == address(0) || _protocolFeeRecipient == address(0)) {
+        if(_protocolFeeRecipient == address(0)) {
             revert Errors.ZeroAddress();
         }
-        baseAsset = _baseAsset;
         protocolFeeRecipient = _protocolFeeRecipient;
         withdrawOrder = new address[](MAXIMUM_STRATEGIES);
     }
@@ -158,11 +154,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         if(strategies[_strategy].activation != 0) {
             revert Errors.StrategyAlreadyActive({ strategy: _strategy });
         }
-        // Assert strategy's `baseAsset` matches this multistrategy's `baseAsset`.
-        if(baseAsset != IStrategyAdapter(_strategy).baseAsset()) {
-            revert Errors.BaseAssetMissmatch({
-                multBaseAsset: baseAsset,
-                stratBaseAsset: IStrategyAdapter(_strategy).baseAsset()
+        // Assert strategy's `asset` matches this multistrategy's `asset`.
+        if(IERC4626(address(this)).asset() != IStrategyAdapter(_strategy).asset()) {
+            revert Errors.AssetMissmatch({
+                multAsset: IERC4626(address(this)).asset(),
+                stratAsset: IStrategyAdapter(_strategy).asset()
             });
         }
         // Assert new `debtRatio` will be below or equal 100%.

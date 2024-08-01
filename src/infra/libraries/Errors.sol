@@ -82,7 +82,7 @@ library Errors {
 
     /// @notice Thrown when the `_baseAsset` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
-    error BaseAssetMissmatch(address multBaseAsset, address stratBaseAsset);
+    error AssetMissmatch(address multAsset, address stratAsset);
 
     /// @notice Thrown when the requested slippage limit exceeds the maximum permitted value.
     /// @param slippageLimit The slippage limit in basis points (BPS).

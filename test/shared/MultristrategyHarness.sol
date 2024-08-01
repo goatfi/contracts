@@ -17,14 +17,14 @@ interface IMultistrategyHarness is IMultistrategy {
 /// ONLY TO BE USED FOR TESTING
 contract MultistrategyHarness is IMultistrategyHarness, Multistrategy {
     constructor(
-        address _baseAsset,
+        address _asset,
         address _manager,
         address _protocolFeeRecipient,
         string memory _name, 
         string memory _symbol
     ) 
         Multistrategy(
-            _baseAsset,
+            _asset,
             _manager,
             _protocolFeeRecipient,
             _name,

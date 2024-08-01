@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -43,7 +43,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
     }
 
     modifier whenCallerActiveStrategy() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
 
         triggerUserDeposit(users.bob, 1_000 ether);
@@ -129,7 +129,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         // Assert that the loss has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount - loseAmount;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
@@ -179,7 +179,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         // Assert that the loss has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount - loseAmount;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
@@ -240,7 +240,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         // Assert that the loss has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount + profit - loseAmount;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
@@ -292,7 +292,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         // Assert that the loss has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount + profit - loseAmount;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
@@ -353,7 +353,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualFeeRecipientBalance, expectedFeeRecipientBalance, "strategyReport, fee recipient balance");
 
         // Assert that the gain has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount + gainAmount - fee;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
@@ -407,7 +407,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualFeeRecipientBalance, expectedFeeRecipientBalance, "strategyReport, fee recipient balance");
 
         // Assert that the gain has been reported
-        uint256 actualMultistrategyTotalAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyTotalAssets = userDepositAmount + gainAmount - fee;
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 

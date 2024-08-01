@@ -3,7 +3,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -124,7 +124,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 1095 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
@@ -145,7 +145,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 900 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
@@ -170,7 +170,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 1095 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
@@ -191,7 +191,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 900 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
@@ -220,7 +220,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 1095 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
@@ -244,7 +244,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
-        uint256 actualMultistrategyAssets = multistrategy.totalAssets();
+        uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedMultistrategyAssets = 900 ether;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }

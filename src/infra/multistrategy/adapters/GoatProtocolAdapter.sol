@@ -25,14 +25,14 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// - Sets the GoatVault address.
     /// 
     /// @param _multistrategy The address of the multi-strategy contract.
-    /// @param _baseAsset The address of the base asset token.
+    /// @param _asset The address of the asset.
     /// @param _goatVault The address of the GoatVault.
     constructor(
         address _multistrategy,
-        address _baseAsset,
+        address _asset,
         address _goatVault
     ) 
-        StrategyAdapter(_multistrategy, _baseAsset)
+        StrategyAdapter(_multistrategy, _asset)
     {   
         if(_goatVault == address(0)) {
             revert Errors.ZeroAddress();
@@ -83,8 +83,8 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// - Retrieves the current balance of the base asset held by the contract.
     /// - Deposits the entire base asset balance into the GoatVault.
     function _deposit() internal override {
-        uint256 baseAssetBalance = IERC20(baseAsset).balanceOf(address(this));
-        IGoatVault(goatVault).deposit(baseAssetBalance);
+        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
+        IGoatVault(goatVault).deposit(assetBalance);
     }
 
     /// @notice Internal function to withdraw a specified amount of assets from the GoatVault.
@@ -104,7 +104,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// This function performs the following actions:
     /// - Grants the GoatVault an unlimited allowance to spend the base asset held by the contract.
     function _giveAllowances() internal override {
-        IERC20(baseAsset).forceApprove(goatVault, type(uint256).max);
+        IERC20(asset).forceApprove(goatVault, type(uint256).max);
     }
 
     /// @notice Internal function to revoke the allowance of the base asset for the GoatVault.
@@ -112,6 +112,6 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// This function performs the following actions:
     /// - Sets the allowance of the base asset for the GoatVault to zero, effectively revoking any previous allowances.
     function _revokeAllowances() internal override {
-        IERC20(baseAsset).forceApprove(goatVault, 0);
+        IERC20(asset).forceApprove(goatVault, 0);
     }
 }

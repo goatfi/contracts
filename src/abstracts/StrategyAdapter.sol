@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterAdminable } from "src/abstracts/StrategyAdapterAdminable.sol";
@@ -20,7 +21,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     address public immutable multistrategy;
 
     /// @inheritdoc IStrategyAdapter
-    address public immutable baseAsset;
+    address public immutable asset;
 
     /// @inheritdoc IStrategyAdapter
     uint256 public slippageLimit;
@@ -31,20 +32,20 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     
     /// @dev Reverts if `_baseAsset` doesn't match `baseAsset` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
-    /// @param _baseAsset Address of the token used to deposit and withdraw on this strategy.
-    constructor(address _multistrategy, address _baseAsset) StrategyAdapterAdminable(msg.sender) {
-        if(IMultistrategyManageable(_multistrategy).baseAsset() != _baseAsset) {
-            revert Errors.BaseAssetMissmatch({
-                multBaseAsset: IMultistrategyManageable(_multistrategy).baseAsset(),
-                stratBaseAsset: _baseAsset
+    /// @param _asset Address of the token used to deposit and withdraw on this strategy.
+    constructor(address _multistrategy, address _asset) StrategyAdapterAdminable(msg.sender) {
+        if(IERC4626(_multistrategy).asset() != _asset) {
+            revert Errors.AssetMissmatch({
+                multAsset: IERC4626(_multistrategy).asset(),
+                stratAsset: _asset
             });
         }
 
         multistrategy = _multistrategy;
-        baseAsset = _baseAsset;
+        asset = _asset;
         slippageLimit = 0;
 
-        IERC20(baseAsset).forceApprove(multistrategy, type(uint256).max);
+        IERC20(asset).forceApprove(multistrategy, type(uint256).max);
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
@@ -110,7 +111,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     function withdraw(uint256 _amount) external onlyMultistrat whenNotPaused {
         uint256 withdrawn = _tryWithdraw(_amount);
 
-        IERC20(baseAsset).safeTransfer(multistrategy, withdrawn);
+        IERC20(asset).safeTransfer(multistrategy, withdrawn);
     }
 
     /// @inheritdoc IStrategyAdapter
@@ -229,7 +230,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
     function _sendReportPanicked() internal {
-        uint256 currentAssets = IERC20(baseAsset).balanceOf(address(this));
+        uint256 currentAssets = IERC20(asset).balanceOf(address(this));
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
 
         // Gain shouldn't be used to repay the debt
@@ -253,7 +254,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         _withdraw(_amount);
 
         // Check that the strategy was able to withdraw the desired amount
-        uint256 currentBalance = IERC20(baseAsset).balanceOf(address(this));
+        uint256 currentBalance = IERC20(asset).balanceOf(address(this));
         uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.

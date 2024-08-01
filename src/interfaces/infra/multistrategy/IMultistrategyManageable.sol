@@ -48,9 +48,6 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param _strategy The address of the removed strategy.
     event StrategyRemoved(address indexed _strategy);
 
-    /// @notice Address of the token used in the Multistrategy.
-    function baseAsset() external view returns(address);
-
     /// @notice Address that will recieve performance fee.
     function protocolFeeRecipient() external view returns(address);
 

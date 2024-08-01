@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 
 interface IMultistrategy is IMultistrategyManageable {
@@ -35,9 +36,6 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Rate at which the locked profit gets unlocked per second.
     function lockedProfitDegradation() external view returns(uint256);
 
-    /// @notice Returns the amount of `baseAsset` this Multistrategy holds.
-    function totalAssets() external returns(uint256);
-
     /// @notice Returns the value of a share in `baseAsset` value.
     function pricePerShare() external view returns(uint256);
 
@@ -52,15 +50,6 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Returns the total debt of `strategy`.
     /// @param strategy Address of the strategy we want to know the `totalDebt`.
     function strategyTotalDebt(address strategy) external view returns(uint256);
-
-    /// @notice Deposit an amount of `baseAsset` and mint Multistrategy shares to recipient.
-    /// @param amount Amount of `baseAsset` the caller wants to deposit.
-    /// @param recipient Address that will receive the Multistrategy shares.
-    function deposit(uint256 amount, address recipient) external;
-
-    /// @notice Withdraw an amount of shares in exchange for an amount of `baseAsset`.
-    /// @param amount Amount of Multistrategy shares.
-    function withdraw(uint256 amount) external;
     
     /// @notice Send the available credit of the caller to the caller.
     /// @dev Reverts if the caller is *NOT* an active strategy
