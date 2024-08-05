@@ -33,7 +33,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 1000 ether;
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientBalance.selector, 0, amountToWithdraw));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxWithdraw.selector, users.bob, amountToWithdraw, 0));
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 
@@ -100,7 +100,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
     /// @dev Test case where it reaches the end of the withdraw queue but it doesn't
     /// have enough funds to cover the withdraw.
-    function test_Withdraw_QueueEndNoBalanceToCoverWithdraw() 
+    function test_RevertWhen_QueueEndNoBalanceToCoverWithdraw() 
         external
         whenContractNotPaused
         whenHasCallerEnoughSharesToCoverWithdraw
@@ -113,47 +113,9 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 1000 ether;
 
         swapCaller(users.bob);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientLiquidity.selector, amountToWithdraw, 900 ether));
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
-
-        // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
-        uint256 expectedUserBalance = 900 ether;
-        assertEq(actualUserBalance, expectedUserBalance, "withdraw, user balance");
-
-        // Assert the user shares balance
-        uint256 actualUserSharesBalance = IERC20(address(multistrategy)).balanceOf(users.bob);
-        uint256 expectedUserSharesBalance = 100 ether;
-        assertEq(actualUserSharesBalance, expectedUserSharesBalance, "withdraw, user shares balance");
-
-        // Assert multistrategy reserves.
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 0;
-        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "withdraw, multistrategy balance");
-
-        // Assert strategy_one assets.
-        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
-        uint256 expectedStrategyOneAssets = 0;
-        assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "withdraw, strategy one assets");
-
-        // Assert strategy_two assets.
-        uint256 actualStrategyTwoAssets = IStrategyAdapter(strategy_two).totalAssets();
-        uint256 expectedStrategyTwoAssets = 0;
-        assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "withdraw, strategy two assets");
-
-        // Assert multisrategy totalDebt
-        uint256 actualMultistrategyDebt = multistrategy.totalDebt();
-        uint256 expectedMultistrategyDebt = 100 ether;
-        assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "withdraw, multistrategy total debt");
-
-        // Assert strategy_one totalDebt
-        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
-        uint256 expectedStrategyOneDebt = 0;
-        assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "withdraw, strategy one debt");
-
-        // Assert strategy_two totalDebt
-        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(strategy_two).totalDebt;
-        uint256 expectedStrategyTwoDebt = 100 ether;
-        assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "withdraw, strategy two debt");
     }
 
     /// @dev Test case where it reaches the end of the withdraw queue and it has enough

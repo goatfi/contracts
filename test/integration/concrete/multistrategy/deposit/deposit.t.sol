@@ -91,7 +91,7 @@ contract Deposit_Integration_Concrete_Test is
         recipient = users.bob;
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.DepositLimit.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 ether));
         IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
@@ -141,16 +141,17 @@ contract Deposit_Integration_Concrete_Test is
     {
         amount = 1000 ether;
         recipient = users.bob;
+        uint256 shares = IERC4626(address(multistrategy)).previewDeposit(amount);
 
         vm.expectEmit({emitter: address(multistrategy)});
-        emit Deposit(amount, recipient);
+        emit Deposit(users.bob, recipient, amount, shares);
 
         swapCaller(users.bob);
         IERC4626(address(multistrategy)).deposit(amount, recipient);
 
         // Assert correct amount of shares have been minted to recipient
         uint256 actualMintedShares = IERC20(address(multistrategy)).balanceOf(recipient);
-        uint256 expectedMintedShares = amount;
+        uint256 expectedMintedShares = shares;
         assertEq(actualMintedShares, expectedMintedShares, "deposit");
 
         // Assert the baseAssets have been deducted from the caller

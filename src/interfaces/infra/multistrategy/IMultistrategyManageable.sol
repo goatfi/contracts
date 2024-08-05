@@ -18,6 +18,10 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param _depositLimit The new deposit limit value.
     event DepositLimitSet(uint256 _depositLimit);
 
+    /// @notice Emitted when the slippage limit is set.
+    /// @param _slippageLimit The new slippage limit value.
+    event SlippageLimitSet(uint256 _slippageLimit);
+
     /// @notice Emitted when a new withdrawal order has been set.
     event WithdrawOrderSet();
 
@@ -65,6 +69,10 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Amount of tokens that the strategies have borrowed in total.
     function totalDebt() external view returns(uint256);
 
+    /// @notice Returns the current slippage limit in basis points (BPS).
+    /// @dev The slippage limit is expressed in BPS, where 10,000 BPS equals 100%.
+    function slippageLimit() external view returns(uint256);
+
     /// @notice Amount of active strategies.
     function activeStrategies() external view returns(uint8);
 
@@ -90,6 +98,11 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @dev Emits a `SetDepositLimit` event.
     /// @param _depositLimit New deposit limit.
     function setDepositLimit(uint256 _depositLimit) external;
+
+    /// @notice Sets the slippage limit of this Multistrategy.
+    /// @dev The slippage limit is expressed in BPS, where 10,000 BPS equals 100%.
+    /// @param _slippageLimit New slippage limit.
+    function setSlippageLimit(uint256 _slippageLimit) external;
 
     /// @notice Sets the withdraw order. First position in the array will be the first strategy that it will get the funds withdrawn
     /// @dev It will revert if a strategy in the array is not active or if the array contains duplicate addresses.

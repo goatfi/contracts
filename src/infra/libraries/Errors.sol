@@ -73,6 +73,11 @@ library Errors {
     /// @notice Thrown when trying to remove a strategy that has a `debtRatio` greater than 0.
     error StrategyNotRetired();
 
+    /// @notice Thrown when there isn't enough liquidity to cover a withdraw
+    /// @param assets The amount of assets requested.
+    /// @param liquidity The current liquidity available in the contract.
+    error InsufficientLiquidity(uint256 assets, uint256 liquidity);
+
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY ADAPTER
     //////////////////////////////////////////////////////////////////////////*/
@@ -92,4 +97,28 @@ library Errors {
     /// @param amount0 The expected amount after accounting for allowed slippage.
     /// @param amount1 The actual amount obtained.
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    ERC-4626
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev Attempted to deposit more assets than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxDeposit(address receiver, uint256 assets, uint256 max);
+
+    /**
+     * @dev Attempted to mint more shares than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxMint(address receiver, uint256 shares, uint256 max);
+
+    /**
+     * @dev Attempted to withdraw more assets than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxWithdraw(address owner, uint256 assets, uint256 max);
+
+    /**
+     * @dev Attempted to redeem more shares than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxRedeem(address owner, uint256 shares, uint256 max);
 }

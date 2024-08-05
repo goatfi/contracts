@@ -18,6 +18,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     using SafeERC20 for IERC20;
+    using Math for uint256;
     
     /// @dev Used for locked profit calculations. Must be 10 ** asset decimals.
     uint256 immutable DEGRADATION_COEFFICIENT;
@@ -52,7 +53,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     ) 
         MultistrategyManageable(msg.sender, _manager, _protocolFeeRecipient)
         ERC4626(IERC20(_asset))
-        ERC20(_name, _symbol) 
+        ERC20(_name, _symbol)
     {   
         // Set performance fee to 4% of yield generated
         performanceFee = 400;
@@ -70,12 +71,48 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view override returns(uint256) {
-        return _totalAssets();
+        return _liquidity() + totalDebt;
+    }
+
+    /// @inheritdoc IERC4626
+    function maxDeposit(address) public view override returns (uint256) {
+        return depositLimit - totalAssets();
+    }
+
+    /// @inheritdoc IERC4626
+    function maxMint(address _receiver) public view override returns (uint256) {
+        return convertToShares(maxDeposit(_receiver));
+    }
+
+    /// @inheritdoc IERC4626
+    function previewWithdraw(uint256 _assets) public view override returns (uint256) {
+        // If the liquidity is enough, return the amount of shares needed at current rate.
+        if(_assets <= _liquidity()) {
+            return convertToShares(_assets);
+        } else {
+            // Otherwise, return the number of shares required at the current rate, accounting for slippage.
+            // A withdrawal requiring more shares to get the amount of assets needed will revert.
+            uint256 shares = convertToShares(_assets);
+            return shares.mulDiv(MAX_BPS + slippageLimit, MAX_BPS, Math.Rounding.Ceil);
+        }
+    }
+
+    /// @inheritdoc IERC4626
+    function previewRedeem(uint256 _shares) public view override returns (uint256) {
+        uint256 assets = convertToAssets(_shares);
+        // If the liquidity is enough, return the amount of assets redeemed at current rate.
+        if(assets <= _liquidity()) {
+            return assets;
+        } else {
+            // Otherwise, return the number of assets redeemable at the maximum permitted slippage.
+            // Any redemption resulting in fewer assets than this threshold will revert.
+            return assets.mulDiv(MAX_BPS - slippageLimit, MAX_BPS, Math.Rounding.Floor);
+        }
     }
 
     /// @inheritdoc IMultistrategy
     function pricePerShare() external view returns(uint256) {
-        return _shareValue(1 ether);
+        return convertToAssets(1 ether);
     }
 
     /// @inheritdoc IMultistrategy
@@ -130,8 +167,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
         }
 
-        uint256 shares = previewWithdraw(assets);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        uint256 maxShares = previewWithdraw(assets);
+        uint256 shares = _withdraw(_msgSender(), receiver, owner, assets);
+
+        if(shares > maxShares) {
+            revert Errors.SlippageCheckFailed(maxShares, shares);
+        }
 
         return shares;
     }
@@ -143,8 +184,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
         }
 
-        uint256 assets = previewRedeem(shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        uint256 minAssets = previewRedeem(shares);
+        uint256 assets = _redeem(_msgSender(), receiver, owner, shares);
+
+        if(assets < minAssets) {
+            revert Errors.SlippageCheckFailed(minAssets, assets);
+        }
 
         return assets;
     }
@@ -172,16 +217,27 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to calculate the total assets held by the contract.
+    /// @notice Internal view function to retrieve the current liquidity of the contract.
     /// 
     /// This function performs the following actions:
-    /// - Retrieves the balance of idle assets (tokens) held by the contract.
-    /// - Adds the total debt to the idle assets to determine the total assets.
+    /// - Retrieves the balance of the asset held by the contract.
     /// 
-    /// @return The total assets held by the contract.
-    function _totalAssets() internal view returns(uint256) {
-        uint256 idleAssets = IERC20(asset()).balanceOf(address(this));
-        return idleAssets + totalDebt;
+    /// @return The current liquidity (balance of the asset) of the contract.
+    function _liquidity() internal view returns(uint256) {
+        return IERC20(asset()).balanceOf(address(this));
+    }
+
+    /// @notice Internal view function to calculate the number of shares corresponding to a given amount.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the free funds available in the contract.
+    /// - If there are free funds, calculates the shares as a proportion of the total supply to the free funds.
+    /// - If there are no free funds, returns zero.
+    /// 
+    /// @param _assets The amount for which to calculate the corresponding shares.
+    /// @return The number of shares corresponding to the given amount.
+    function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns(uint256) {
+        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _freeFunds() + 1, rounding);
     }
 
     /// @notice Internal view function to calculate the value of a given number of shares.
@@ -192,33 +248,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// 
     /// @param _shares The number of shares to calculate the value for.
     /// @return The value corresponding to the given number of shares.
-    function _shareValue(uint256 _shares) internal view returns(uint256) {
-        if(totalSupply() == 0){
-            return _shares;
-        }
-
-        uint256 value = Math.mulDiv(_shares, _freeFunds(), totalSupply());
-        return value;
-    }
-
-    /// @notice Internal view function to calculate the number of shares corresponding to a given amount.
-    /// 
-    /// This function performs the following actions:
-    /// - Retrieves the free funds available in the contract.
-    /// - If there are free funds, calculates the shares as a proportion of the total supply to the free funds.
-    /// - If there are no free funds, returns zero.
-    /// 
-    /// @param _amount The amount for which to calculate the corresponding shares.
-    /// @return The number of shares corresponding to the given amount.
-    function _sharesForAmount(uint256 _amount) internal view returns(uint256) {
-        uint256 freeFunds = _freeFunds();
-
-        if(freeFunds > 0){
-            uint256 shares = Math.mulDiv(_amount, totalSupply(), freeFunds);
-            return shares;
-        }
-
-        return 0;
+    function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns(uint256) {
+        return _shares.mulDiv(_freeFunds() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
     }
 
     /// @notice Internal view function to calculate the available credit for a strategy.
@@ -235,11 +266,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @param _strategy The address of the strategy for which to determine the available credit.
     /// @return The amount of credit available for the given strategy.
     function _creditAvailable(address _strategy) internal view returns(uint256) {
-        uint256 mult_totalAssets = _totalAssets();
-        uint256 mult_debtLimit = Math.mulDiv(debtRatio, mult_totalAssets, MAX_BPS);
+        uint256 mult_totalAssets = totalAssets();
+        uint256 mult_debtLimit = debtRatio.mulDiv(mult_totalAssets, MAX_BPS);
         uint256 mult_totalDebt = totalDebt;
 
-        uint256 strat_debtLimit = Math.mulDiv(strategies[_strategy].debtRatio, mult_totalAssets, MAX_BPS);
+        uint256 strat_debtLimit = strategies[_strategy].debtRatio.mulDiv(mult_totalAssets, MAX_BPS);
         uint256 strat_totalDebt = strategies[_strategy].totalDebt;
         uint256 strat_minDebtDelta = strategies[_strategy].minDebtDelta;
         uint256 strat_maxDebtDelta = strategies[_strategy].maxDebtDelta;
@@ -290,7 +321,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             return strategies[_strategy].totalDebt;
         }
 
-        uint256 strat_debtLimit = Math.mulDiv(strategies[_strategy].debtRatio, _totalAssets(), MAX_BPS);
+        uint256 strat_debtLimit = strategies[_strategy].debtRatio.mulDiv(totalAssets(), MAX_BPS);
         uint256 strat_totalDebt = strategies[_strategy].totalDebt;
 
         // If the total debt of a strategy is below its debt limit, there is no excess debt.
@@ -310,7 +341,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// 
     /// @return The amount of free funds available.
     function _freeFunds() internal view returns(uint256) {
-        return _totalAssets() - _calculateLockedProfit();
+        return totalAssets() - _calculateLockedProfit();
     }
 
     /// @notice Internal view function to calculate the current locked profit.
@@ -325,7 +356,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
 
         if(lockedFundsRatio < DEGRADATION_COEFFICIENT) {
-            return lockedProfit - Math.mulDiv(lockedFundsRatio, lockedProfit, DEGRADATION_COEFFICIENT);
+            return lockedProfit - lockedFundsRatio.mulDiv(lockedProfit, DEGRADATION_COEFFICIENT);
         }
         return 0;
     }
@@ -337,85 +368,58 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @notice Internal function to handle deposits into the contract.
     /// 
     /// This function performs the following actions:
-    /// - Validates that the recipient address is not the zero address or the contract address itself.
-    /// - Checks that the deposit amount is greater than zero.
-    /// - Ensures the deposit does not exceed the deposit limit.
-    /// - Mints shares equivalent to the deposit amount for the recipient.
-    /// - Transfers the deposit amount from the depositor to the contract.
-    ///
-    /// Requirements:
-    /// - The contract must not be paused.
-    /// - The recipient address must not be zero or the contract address.
-    /// - The deposit amount must be greater than zero.
-    /// - The deposit amount must not exceed the deposit limit.
-    ///
-    /// Emits a `Deposit` event.
+    /// - Validates that the receiver address is not zero or the contract address itself.
+    /// - Ensures that the deposited amount is greater than zero.
+    /// - Checks that the deposit does not exceed the deposit limit.
+    /// - Transfers the assets from the caller to the contract.
+    /// - Mints the corresponding shares for the receiver.
+    /// - Emits a `Deposit` event with the caller, receiver, amount of assets, and number of shares.
     /// 
-    /// @param _amount The amount to be deposited.
-    /// @param _recipient The address of the recipient to receive shares for the deposit.
-    function _deposit(uint256 _amount, address _recipient) internal {
-        if(_recipient == address(0) || _recipient == address(this)) {
-            revert Errors.InvalidAddress({ addr: _recipient });
+    /// @param _caller The address of the entity initiating the deposit.
+    /// @param _receiver The address of the recipient to receive the shares.
+    /// @param _assets The amount of assets being deposited.
+    /// @param _shares The number of shares to be minted for the receiver.
+    function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal override {
+        if(_receiver == address(0) || _receiver == address(this)) {
+            revert Errors.InvalidAddress({ addr: _receiver });
         }
-        //Assert something gets deposited
-        if(_amount == 0) {
-            revert Errors.ZeroAmount({ amount: _amount });
+        // Assert something gets deposited
+        if(_assets == 0) {
+            revert Errors.ZeroAmount({ amount: _assets });
         }
 
-        //Assert deposit limit is respected
-        if(_amount + _totalAssets() > depositLimit) {
+        // Assert deposit limit is respected
+        if(_assets + totalAssets() > depositLimit) {
             revert Errors.DepositLimit();
         }
 
-        //Mint shares
-        _issueSharesForAmount(_amount, _recipient);
-
         //Get funds from depositor
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(asset()).safeTransferFrom(_caller, address(this), _assets);
+        //Mint shares
+        _mint(_receiver, _shares);
 
-        emit Deposit(_amount, _recipient);
+        emit Deposit(_caller, _receiver, _assets, _shares);
     }
 
-    /// @notice Internal function to handle withdrawals from the contract.
-    /// 
-    /// This function performs the following actions:
-    /// - Ensures the withdrawer has sufficient balance to withdraw the specified amount.
-    /// - Validates that a non-zero amount is being withdrawn.
-    /// - Calculates the base asset value from the amount of shares.
-    /// - Checks if the withdrawal amount exceeds the idle assets available in the contract and withdraws from strategies if needed.
-    /// - Iterates through the withdrawal queue to cover the withdrawal amount from different strategies.
-    /// - Burns the shares equivalent to the withdrawal amount.
-    /// - Transfers the withdrawal amount to the caller.
-    ///
-    /// Requirements:
-    /// - The contract must not be paused.
-    /// - The withdrawer must have enough balance to cover the withdrawal amount.
-    /// - The withdrawal amount must be greater than zero.
-    ///
-    /// Emits a `Withdraw` event.
-    ///
-    /// @param _amount The amount to be withdrawn.
-    function _withdraw(uint256 _amount) internal {
-        //Assert withdrawer has enough balance
-        if(balanceOf(msg.sender) < _amount) {
-            revert Errors.InsufficientBalance({ 
-                currentBalance: balanceOf(msg.sender), 
-                amount: _amount 
-            });
+    
+    function _withdraw(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _assets
+    ) internal returns (uint256) {
+        if (_caller != _owner) {
+            _spendAllowance(_owner, _caller, previewWithdraw(_assets));
         }
 
-        //Assert something is being withdrawn
-        if(_amount == 0) {
-            revert Errors.ZeroAmount({ amount: _amount });
+        // Assert something gets withdrawn
+        if(_assets == 0) {
+            revert Errors.ZeroAmount({ amount: _assets });
         }
-
-        // Get baseAsset value from the amount of shares.
-        // This is the amount that the user wants to receive.
-        uint256 balanceToWithdraw = _shareValue(_amount);
 
         //If the amount the user wants to withdraw is higher than the amount of
         //idle assets on the multistrategy, withdraw from strategies
-        if(balanceToWithdraw > IERC20(asset()).balanceOf(address(this))) {
+        if(_assets > _liquidity()) {
             for(uint8 i = 0; i <= withdrawOrder.length;){
                 address strategy = withdrawOrder[i];
 
@@ -424,37 +428,30 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // Get the current balance of this contract
-                uint256 balanceBeforeWithdraw = IERC20(asset()).balanceOf(address(this));
-
                 // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
                 IStrategyAdapter(strategy).askReport();
 
-                // Update the balance to withdraw as a strategy could have made a loss so the withdrawer
-                // must take a cut too.
-                balanceToWithdraw = _shareValue(_amount);
-
                 // If this condition is true, multistrategy now holds enough to cover the withdraw, 
                 // so we're done withdrawing from strategies.
-                if(balanceToWithdraw <= balanceBeforeWithdraw){
+                if(_assets <= _liquidity()){
                     break;
                 }
 
                 // At this point we don't have enough to cover the withdraw, so
                 // we need to know the amount we need to withdraw.
-                uint256 amountNeeded = balanceToWithdraw - balanceBeforeWithdraw;
+                // TODO: Withdraw some extra to cover for slippage so it doesn't trigger a withdraw for another strategy for a low amount
+                uint256 assetsToWithdraw = _assets - _liquidity();
 
                 // We can't withdraw from a strategy more than what it has.
-                amountNeeded = Math.min(amountNeeded, strategies[strategy].totalDebt);
+                assetsToWithdraw = Math.min(assetsToWithdraw, strategies[strategy].totalDebt);
 
                 // Check that the strategy actually has something to withdraw
-                if(amountNeeded == 0) {
+                if(assetsToWithdraw == 0) {
                     continue;
                 }
 
                 // We withdraw from the strategy
-                IStrategyAdapter(strategy).withdraw(amountNeeded);
-                uint256 withdrawn = IERC20(asset()).balanceOf(address(this)) - balanceBeforeWithdraw;
+                uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
 
                 // Reduce the strategy's and multistretegy's totalDebt
                 strategies[strategy].totalDebt -= withdrawn;
@@ -462,25 +459,87 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 unchecked { ++i; }
             }
+        }
 
-            uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
+        // If the withdrawal process couldn't withdraw enough assets, revert.
+        if(_assets > _liquidity()) {
+            revert Errors.InsufficientLiquidity(_assets, _liquidity());
+        }
 
-            // At this point we have withdrawn everything possible from the withdrawal queue
-            // so we need to make sure that the amount the caller wants to withdraw is lower or equal than the available balance
-            // In the case it isn't enough, we let the caller withdraw all the balance and we adjust the amount of shares we'll burn
-            // to the balance that is being withdrawn.
-            if(balanceToWithdraw > currentBalance) {
-                balanceToWithdraw = currentBalance;
-                _amount = _sharesForAmount(balanceToWithdraw);
+        uint256 shares = convertToShares(_assets);
+        _burn(_owner, shares);
+
+        IERC20(asset()).safeTransfer(_receiver, _assets);
+
+        emit Withdraw(_caller, _receiver, _owner, _assets, shares);
+
+        return shares;
+    }
+
+    function _redeem(
+        address _caller,
+        address _receiver,
+        address _owner,
+        uint256 _shares 
+    ) internal returns (uint256) {
+        if (_caller != _owner) {
+            _spendAllowance(_owner, _caller, _shares);
+        }
+
+        uint256 assets = convertToAssets(_shares);
+
+        if(assets > _liquidity()) {
+            for(uint8 i = 0; i <= withdrawOrder.length;){
+                address strategy = withdrawOrder[i];
+
+                // We reached the end of the withdraw queue
+                if(strategy == address(0)){
+                    break;
+                }
+
+                // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
+                IStrategyAdapter(strategy).askReport();
+
+                // Convert the shares to assets again, because the ratio changed after the strategy reported.
+                // Either more assets need to be withdrawn or the liquidity could be enough.
+                assets = convertToAssets(_shares);
+
+                // If this condition is true, multistrategy now holds enough to cover the withdraw, 
+                // so we're done withdrawing from strategies.
+                if(assets <= _liquidity()){
+                    break;
+                }
+
+                // At this point we don't have enough to cover the withdraw, so
+                // we need to know the amount we need to withdraw.
+                // TODO: Withdraw some extra to cover for slippage so it doesn't trigger a withdraw for another strategy for a low amount
+                uint256 assetsToWithdraw = assets - _liquidity();
+
+                // We can't withdraw from a strategy more than what it has.
+                assetsToWithdraw = Math.min(assetsToWithdraw, strategies[strategy].totalDebt);
+
+                // Check that the strategy actually has something to withdraw
+                if(assetsToWithdraw == 0) {
+                    continue;
+                }
+
+                // We withdraw from the strategy
+                uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
+
+                // Reduce the strategy's and multistretegy's totalDebt
+                strategies[strategy].totalDebt -= withdrawn;
+                totalDebt -= withdrawn;
+
+                unchecked { ++i; }
             }
         }
 
-        //Burn the shares
-        _burn(msg.sender, _amount);
-        //Send the tokens to the caller
-        IERC20(asset()).safeTransfer(msg.sender, balanceToWithdraw);
+        _burn(_owner, _shares);
+        IERC20(asset()).safeTransfer(_receiver, assets);
 
-        emit Withdraw(balanceToWithdraw);
+        emit Withdraw(_caller, _receiver, _owner, assets, _shares);
+
+        return assets;
     }
 
     /// @notice Internal function to request credit for an active strategy.
@@ -562,7 +621,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         uint256 profit = 0;
 
         if(_gain > 0) {
-            uint256 pFee = Math.mulDiv(_gain, performanceFee, MAX_BPS);
+            uint256 pFee = _gain.mulDiv(performanceFee, MAX_BPS);
 
             // Transfer the performance fee to the fee recipient
             if(pFee > 0) {
@@ -630,29 +689,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         strategies[_strategy].totalLoss += _loss;
         strategies[_strategy].totalDebt -= _loss;
         totalDebt -= _loss;
-    }
-
-    /// @notice Internal function to issue shares equivalent to a given amount for a recipient.
-    /// 
-    /// This function performs the following actions:
-    /// - Calculates the number of shares to issue based on the current total supply and free funds.
-    /// - If the total supply is greater than zero, the shares are proportional to the amount and total supply.
-    /// - If the total supply is zero, the shares are equal to the amount.
-    /// - Mints the calculated number of shares for the recipient.
-    /// 
-    /// @param _amount The amount of funds for which shares are to be issued.
-    /// @param _recipient The address of the recipient to receive the issued shares.
-    function _issueSharesForAmount(uint256 _amount, address _recipient) internal {
-        uint256 shares = 0;
-        uint256 totalSupply = totalSupply();
-
-        if(totalSupply > 0) {
-            shares = Math.mulDiv(_amount, totalSupply, _freeFunds());
-        } else {
-            shares = _amount;
-        }
-
-        _mint(_recipient, _amount);
     }
 
     /// @notice Internal function to rescue tokens from the contract.

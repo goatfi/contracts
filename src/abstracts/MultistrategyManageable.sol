@@ -36,6 +36,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     uint256 public totalDebt;
 
     /// @inheritdoc IMultistrategyManageable
+    uint256 public slippageLimit;
+
+    /// @inheritdoc IMultistrategyManageable
     uint8 public activeStrategies;
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -110,7 +113,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
             revert Errors.ZeroAddress();
         }
         protocolFeeRecipient = _protocolFeeRecipient;
-        emit ProtocolFeeRecipientSet(_protocolFeeRecipient);
+        emit ProtocolFeeRecipientSet(protocolFeeRecipient);
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -119,13 +122,18 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
             revert Errors.ExcessiveFee({ fee: _performanceFee });
         }
         performanceFee = _performanceFee;
-        emit PerformanceFeeSet(_performanceFee);
+        emit PerformanceFeeSet(performanceFee);
     }
 
     /// @inheritdoc IMultistrategyManageable
     function setDepositLimit(uint256 _depositLimit) external onlyManager {
         depositLimit = _depositLimit;
-        emit DepositLimitSet(_depositLimit);
+        emit DepositLimitSet(depositLimit);
+    }
+
+    function setSlippageLimit(uint256 _slippageLimit) external onlyManager {
+        slippageLimit = _slippageLimit;
+        emit SlippageLimitSet(slippageLimit);
     }
 
     /// @inheritdoc IMultistrategyManageable

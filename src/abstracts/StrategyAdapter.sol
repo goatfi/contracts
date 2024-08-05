@@ -108,10 +108,12 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function withdraw(uint256 _amount) external onlyMultistrat whenNotPaused {
+    function withdraw(uint256 _amount) external onlyMultistrat whenNotPaused returns (uint256) {
         uint256 withdrawn = _tryWithdraw(_amount);
 
         IERC20(asset).safeTransfer(multistrategy, withdrawn);
+
+        return withdrawn;
     }
 
     /// @inheritdoc IStrategyAdapter

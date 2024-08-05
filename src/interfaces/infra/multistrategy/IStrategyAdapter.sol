@@ -50,7 +50,7 @@ interface IStrategyAdapter {
     /// @notice Withdraws `baseAsset` from the strategy.
     /// @dev Only callable by the multistrategy.
     /// @param _amount Amount of tokens to withdraw from the strategy.
-    function withdraw(uint256 _amount) external;
+    function withdraw(uint256 _amount) external returns (uint256);
 
     /// @notice Returns the amount of `baseAsset` this strategy holds.
     function totalAssets() external view returns(uint256);
