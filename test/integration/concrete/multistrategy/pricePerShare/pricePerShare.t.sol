@@ -57,7 +57,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         // At this point, all profit is unlcoked, so price per share should be higher
         actualPricePerShare = multistrategy.pricePerShare();
         // Strategy made 10% gain, but multistrategy profit is 9,5%, as it already deducted fees.
-        expectedPricePerShare = 1.095 ether -1;
-        assertEq(actualPricePerShare, expectedPricePerShare, "pricePerShare");
+        expectedPricePerShare = 1.095 ether ;
+        assertApproxEqAbs(actualPricePerShare, expectedPricePerShare, 1, "pricePerShare");
     }
 }

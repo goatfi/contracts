@@ -43,7 +43,7 @@ contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integ
 
         // Assert share value is the amount of shares multiplied by freeFunds, divided by totalSupply
         uint256 ctualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(shares);
-        uint256 expectedAssets = Math.mulDiv(shares, freeFunds, totalSupply);
+        uint256 expectedAssets = Math.mulDiv(shares, freeFunds + 1, totalSupply + 1, Math.Rounding.Floor);
         assertEq(ctualAssets, expectedAssets, "convertToAssets");
     }
 }
