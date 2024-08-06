@@ -76,7 +76,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address) public view override returns (uint256) {
-        return depositLimit - totalAssets();
+        if(totalAssets() >= depositLimit) {
+            return 0;
+        } else {
+            return depositLimit - totalAssets();
+        }
     }
 
     /// @inheritdoc IERC4626
