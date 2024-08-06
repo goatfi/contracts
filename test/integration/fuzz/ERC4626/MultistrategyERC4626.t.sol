@@ -15,7 +15,7 @@ contract ERC4626StdTest is ERC4626Test {
     function setUp() public override {
         _underlying_ = address(new ERC20Mock("DAI Stablecoin", "DAI"));
         _vault_ = address(new Multistrategy(_underlying_, owner, makeAddr("fee"), "DAI Multistrategy", "gDAI"));
-        _delta_ = 1;
+        _delta_ = 0;
         _vaultMayBeEmpty = false;
         _unlimitedAmount = false;
     }
@@ -23,23 +23,7 @@ contract ERC4626StdTest is ERC4626Test {
     function setUpVault(Init memory init) public override {
         IMultistrategyManageable(_vault_).setDepositLimit(depositLimit);
         secureDeposit();
-        // setup initial shares and assets for individual users
-        for (uint i = 0; i < N; i++) {
-            address user = init.user[i];
-            vm.assume(_isEOA(user));
-            // shares
-            uint shares = init.share[i];
-            vm.assume(shares > 0 && shares <= depositLimit);
-            try IMockERC20(_underlying_).mint(user, shares) {} catch { vm.assume(false); }
-            _approve(_underlying_, user, _vault_, shares);
-            vm.prank(user); try IERC4626(_vault_).deposit(shares, user) {} catch { vm.assume(false); }
-            // assets
-            uint assets = init.asset[i];
-            try IMockERC20(_underlying_).mint(user, assets) {} catch { vm.assume(false); }
-        }
-
-        // setup initial yield for vault
-        setUpYield(init);
+        super.setUpVault(init);
     }
 
     // Each multistrategy will have security deposit that will be "burned"

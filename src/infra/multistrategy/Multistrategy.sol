@@ -90,20 +90,20 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 _assets) public view override returns (uint256) {
+        uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
         // If the liquidity is enough, return the amount of shares needed at current rate.
         if(_assets <= _liquidity()) {
-            return convertToShares(_assets);
+            return shares;
         } else {
             // Otherwise, return the number of shares required at the current rate, accounting for slippage.
             // A withdrawal requiring more shares to get the amount of assets needed will revert.
-            uint256 shares = convertToShares(_assets);
             return shares.mulDiv(MAX_BPS + slippageLimit, MAX_BPS, Math.Rounding.Ceil);
         }
     }
 
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 _shares) public view override returns (uint256) {
-        uint256 assets = convertToAssets(_shares);
+        uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
         // If the liquidity is enough, return the amount of assets redeemed at current rate.
         if(assets <= _liquidity()) {
             return assets;
@@ -443,7 +443,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 // At this point we don't have enough to cover the withdraw, so
                 // we need to know the amount we need to withdraw.
-                // TODO: Withdraw some extra to cover for slippage so it doesn't trigger a withdraw for another strategy for a low amount
                 uint256 assetsToWithdraw = _assets - _liquidity();
 
                 // We can't withdraw from a strategy more than what it has.
@@ -451,6 +450,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 // Check that the strategy actually has something to withdraw
                 if(assetsToWithdraw == 0) {
+                    unchecked { ++i; }
                     continue;
                 }
 
@@ -470,7 +470,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             revert Errors.InsufficientLiquidity(_assets, _liquidity());
         }
 
-        uint256 shares = convertToShares(_assets);
+        uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
         _burn(_owner, shares);
 
         IERC20(asset()).safeTransfer(_receiver, _assets);
@@ -490,7 +490,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             _spendAllowance(_owner, _caller, _shares);
         }
 
-        uint256 assets = convertToAssets(_shares);
+        uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
 
         if(assets > _liquidity()) {
             for(uint8 i = 0; i <= withdrawOrder.length;){
@@ -506,7 +506,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 // Convert the shares to assets again, because the ratio changed after the strategy reported.
                 // Either more assets need to be withdrawn or the liquidity could be enough.
-                assets = convertToAssets(_shares);
+                assets = _convertToAssets(_shares, Math.Rounding.Floor);
 
                 // If this condition is true, multistrategy now holds enough to cover the withdraw, 
                 // so we're done withdrawing from strategies.
@@ -516,7 +516,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 // At this point we don't have enough to cover the withdraw, so
                 // we need to know the amount we need to withdraw.
-                // TODO: Withdraw some extra to cover for slippage so it doesn't trigger a withdraw for another strategy for a low amount
                 uint256 assetsToWithdraw = assets - _liquidity();
 
                 // We can't withdraw from a strategy more than what it has.
@@ -524,6 +523,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 // Check that the strategy actually has something to withdraw
                 if(assetsToWithdraw == 0) {
+                    unchecked { ++i; }
                     continue;
                 }
 
