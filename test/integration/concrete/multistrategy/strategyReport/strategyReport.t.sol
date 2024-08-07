@@ -62,7 +62,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         swapCaller(strategy);
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.GainLossMissmatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.GainLossMismatch.selector));
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
     }
 

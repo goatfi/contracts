@@ -35,7 +35,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _asset Address of the token used to deposit and withdraw on this strategy.
     constructor(address _multistrategy, address _asset) StrategyAdapterAdminable(msg.sender) {
         if(IERC4626(_multistrategy).asset() != _asset) {
-            revert Errors.AssetMissmatch({
+            revert Errors.AssetMismatch({
                 multAsset: IERC4626(_multistrategy).asset(),
                 stratAsset: _asset
             });
@@ -49,7 +49,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
-    modifier onlyMultistrat() {
+    modifier onlyMultistrategy() {
         if(msg.sender != multistrategy) {
             revert Errors.CallerNotMultistrategy(msg.sender);
         }
@@ -98,7 +98,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function askReport() external onlyMultistrat whenNotPaused {
+    function askReport() external onlyMultistrategy whenNotPaused {
         _sendReport(0);
     }
 
@@ -108,7 +108,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function withdraw(uint256 _amount) external onlyMultistrat whenNotPaused returns (uint256) {
+    function withdraw(uint256 _amount) external onlyMultistrategy whenNotPaused returns (uint256) {
         uint256 withdrawn = _tryWithdraw(_amount);
 
         IERC20(asset).safeTransfer(multistrategy, withdrawn);
@@ -270,7 +270,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @dev Child contract must implement the logic that will put the funds to work.
     function _deposit() internal virtual {}
 
-    /// @notice Withdraws the specified `_amount` of `baseAsset` from the underlyind strategy. 
+    /// @notice Withdraws the specified `_amount` of `baseAsset` from the underlying strategy. 
     /// @dev Child contract must implement the logic that will withdraw the funds.
     /// @param _amount The amount of `baseAsset` to withdraw.
     function _withdraw(uint256 _amount) internal virtual {}

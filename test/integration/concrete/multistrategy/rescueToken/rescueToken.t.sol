@@ -19,7 +19,7 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_RevertWhen_SameAddressAsasset()
+    function test_RevertWhen_SameAddressAsset()
         external
         whenCallerIsGuardian
     {
@@ -43,7 +43,7 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         multistrategy.rescueToken(address(weth), address(0));
     }
 
-    modifier whenNotZeroAddres() {
+    modifier whenNotZeroAddress() {
         _;
     }
 
@@ -51,7 +51,7 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         external
         whenCallerIsGuardian
         whenAddressNotAsset
-        whenNotZeroAddres
+        whenNotZeroAddress
     {   
         uint256 externalTokenBalance = 1000 ether;
         weth.mint(address(multistrategy), externalTokenBalance);

@@ -58,7 +58,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
     }
 
     modifier whenDebtRatioBelowMaximum() {
-        // The mulistrategy only has 1 active strategy, so this will be below minimum
+        // The multistrategy only has 1 active strategy, so this will be below minimum
         debtRatio = 6_000;
         _;
     }

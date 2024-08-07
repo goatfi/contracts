@@ -49,7 +49,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     mapping(address strategyAddress => MStrat.StrategyParams strategyParameters) public strategies;
 
     /// @dev Order that `_withdraw()` uses to determine which strategy pull the funds from
-    //       The first time a zero address is enountered, it stops withdrawing, so it is
+    //       The first time a zero address is encountered, it stops withdrawing, so it is
     //       possible that there isn't enough to withdraw if the amount of strategies in
     //       `withdrawOrder` is smaller than the amount of active strategies.
     address[] public withdrawOrder;
@@ -164,7 +164,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         }
         // Assert strategy's `asset` matches this multistrategy's `asset`.
         if(IERC4626(address(this)).asset() != IStrategyAdapter(_strategy).asset()) {
-            revert Errors.AssetMissmatch({
+            revert Errors.AssetMismatch({
                 multAsset: IERC4626(address(this)).asset(),
                 stratAsset: IStrategyAdapter(_strategy).asset()
             });
@@ -213,7 +213,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         if(strategies[_strategy].debtRatio > 0) {
             revert Errors.StrategyNotRetired();
         }
-        // Check that the startegy being removed doesn't have any outstanding debt.
+        // Check that the strategy being removed doesn't have any outstanding debt.
         if(strategies[_strategy].totalDebt > 0) {
             revert Errors.StrategyWithOutstandingDebt();
         }
@@ -297,7 +297,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     function _validateStrategyOrder(address[] memory _strategies) internal view {
         // Revert if the strategies order length doesn't have the same length as withdrawOrder
         if(_strategies.length != MAXIMUM_STRATEGIES) {
-            revert Errors.StrategiesLengthMissMatch();
+            revert Errors.StrategiesLengthMismatch();
         }
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             address strategy = _strategies[i];
@@ -307,7 +307,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
                 if(strategies[strategy].activation == 0) {
                     revert Errors.StrategyNotActive(strategy);
                 }
-                // Start to check on the next startegy
+                // Start to check on the next strategy
                 for(uint8 j = 0; j < MAXIMUM_STRATEGIES; ++j) {
                     // Check that the strategy isn't duplicate
                     if(i != j && strategy == _strategies[j]) {

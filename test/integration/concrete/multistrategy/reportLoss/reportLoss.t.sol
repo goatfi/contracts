@@ -70,7 +70,7 @@ contract ReportLoss_Integration_Concrete_Test is MultistrategyHarness_Integratio
 
         uint256 actualMultistrategyTotalDebt = multistrategyHarness.totalDebt();
         uint256 expectedMultistrategyTotalDebt = 500 ether;
-        assertEq(actualMultistrategyTotalDebt, expectedMultistrategyTotalDebt, "reportLoss multistrat totalDebt");
+        assertEq(actualMultistrategyTotalDebt, expectedMultistrategyTotalDebt, "reportLoss multistrategy totalDebt");
     }
 
     modifier whenLossGreaterThanZero() {
@@ -99,6 +99,6 @@ contract ReportLoss_Integration_Concrete_Test is MultistrategyHarness_Integratio
 
         uint256 actualMultistrategyTotalDebt = multistrategyHarness.totalDebt();
         uint256 expectedMultistrategyTotalDebt = 400 ether;
-        assertEq(actualMultistrategyTotalDebt, expectedMultistrategyTotalDebt, "reportLoss multistrat totalDebt");
+        assertEq(actualMultistrategyTotalDebt, expectedMultistrategyTotalDebt, "reportLoss multistrategy totalDebt");
     }
 }

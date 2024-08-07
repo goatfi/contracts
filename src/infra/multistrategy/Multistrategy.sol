@@ -279,7 +279,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         uint256 strat_minDebtDelta = strategies[_strategy].minDebtDelta;
         uint256 strat_maxDebtDelta = strategies[_strategy].maxDebtDelta;
 
-        // If a strategy has borrowed more than what is permited
+        // If a strategy has borrowed more than what is permitted
         // or
         // the multistrategy has more debt than its limit
         // do *NOT* offer any new credit
@@ -432,7 +432,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
+                // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
                 IStrategyAdapter(strategy).askReport();
 
                 // If this condition is true, multistrategy now holds enough to cover the withdraw, 
@@ -457,7 +457,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                 // We withdraw from the strategy
                 uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
 
-                // Reduce the strategy's and multistretegy's totalDebt
+                // Reduce the strategy's and multistrategy totalDebt
                 strategies[strategy].totalDebt -= withdrawn;
                 totalDebt -= withdrawn;
 
@@ -501,7 +501,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // Ask for the strategy to send a report, as it could have an unlrealised Gain or Loss.
+                // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
                 IStrategyAdapter(strategy).askReport();
 
                 // Convert the shares to assets again, because the ratio changed after the strategy reported.
@@ -530,7 +530,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                 // We withdraw from the strategy
                 uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
 
-                // Reduce the strategy's and multistretegy's totalDebt
+                // Reduce the strategy's and multistrategy totalDebt
                 strategies[strategy].totalDebt -= withdrawn;
                 totalDebt -= withdrawn;
 
@@ -606,7 +606,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) internal {
         // Check that the strategy isn't reporting a gain and a loss at the same time.
         if(_gain > 0 && _loss > 0) {
-            revert Errors.GainLossMissmatch();
+            revert Errors.GainLossMismatch();
         }
 
         // Check that the strategy actually has the tokens to transfer the profits and repay the debt.
@@ -653,7 +653,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         // Calculate the new locked profit. Profit can be 0.
         uint256 newLockedProfit = _calculateLockedProfit() + profit;
         
-        // If the loss is smaller than the locked profit, we reduce it by the loss the strategy has realised.
+        // If the loss is smaller than the locked profit, we reduce it by the loss the strategy has realized.
         // Loss can be 0.
         if(newLockedProfit > _loss) {
             lockedProfit = newLockedProfit - _loss;

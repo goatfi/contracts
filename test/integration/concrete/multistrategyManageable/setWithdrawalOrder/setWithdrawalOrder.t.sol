@@ -32,11 +32,11 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
     }
 
     function test_RevertWhen_LengthDoNotMatch() external whenCallerIsManager {
-        // Multistrategy withdrawOrder is length 10, so we create a length 11 to missmatch.
+        // Multistrategy withdrawOrder is length 10, so we create a length 11 to mismatch.
         strategies = new address[](11);
 
         // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategiesLengthMissMatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategiesLengthMismatch.selector));
         multistrategy.setWithdrawOrder(strategies);
     }
 

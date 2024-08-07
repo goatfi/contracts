@@ -24,9 +24,9 @@ contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integ
         whenTotalSupplyNotZero
     {
         // Assert share value is zero when amount of shares is 0
-        uint256 ctualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(0);
+        uint256 actualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(0);
         uint256 expectedAssets = 0;
-        assertEq(ctualAssets, expectedAssets, "convertToAssets");
+        assertEq(actualAssets, expectedAssets, "convertToAssets");
     }
 
     modifier whenSharesAmountNotZero() {
@@ -42,8 +42,8 @@ contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integ
         uint256 totalSupply = IERC20(address(multistrategyHarness)).totalSupply();
 
         // Assert share value is the amount of shares multiplied by freeFunds, divided by totalSupply
-        uint256 ctualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(shares);
+        uint256 actualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(shares);
         uint256 expectedAssets = Math.mulDiv(shares, freeFunds + 1, totalSupply + 1, Math.Rounding.Floor);
-        assertEq(ctualAssets, expectedAssets, "convertToAssets");
+        assertEq(actualAssets, expectedAssets, "convertToAssets");
     }
 }

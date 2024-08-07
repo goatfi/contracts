@@ -14,7 +14,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
     }
 
     modifier whenTotalSupplyHigherThanZero() {
-        // Only whay to grow total supply is via a deposit
+        // Only way to grow total supply is via a deposit
         triggerUserDeposit(users.bob, 1_000 ether);
         _;
     }
@@ -54,7 +54,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
 
         vm.warp(block.timestamp + 1 days);
 
-        // At this point, all profit is unlcoked, so price per share should be higher
+        // At this point, all profit is unlocked, so price per share should be higher
         actualPricePerShare = multistrategy.pricePerShare();
         // Strategy made 10% gain, but multistrategy profit is 9,5%, as it already deducted fees.
         expectedPricePerShare = 1.095 ether ;

@@ -29,7 +29,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    /// @dev Deploy and add 10 mock strategies to the mulistrategy
+    /// @dev Deploy and add 10 mock strategies to the multistrategy
     modifier whenActiveStrategiesAtMaximum() {
         // Deployed strategies will have 10% debt ratio
         debtRatio = 1_000;
@@ -139,14 +139,14 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(
-            Errors.AssetMissmatch.selector, 
+            Errors.AssetMismatch.selector, 
             IERC4626(address(multistrategy)).asset(), 
             IERC4626(address(usdtMultistrategy)).asset()
         ));
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    modifier whenbaseAssetMatch() {
+    modifier whenBaseAssetMatch() {
         _;
     }
 
@@ -157,7 +157,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenbaseAssetMatch
+        whenBaseAssetMatch
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         minDebtDelta = 200_000 ether;
@@ -180,11 +180,11 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenbaseAssetMatch
+        whenBaseAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        // 110% debt raito
+        // 110% debt ratio
         debtRatio = 11_000;
 
         // Expect a revert
@@ -204,7 +204,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenbaseAssetMatch
+        whenBaseAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());

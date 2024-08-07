@@ -37,10 +37,10 @@ library Errors {
     error StrategyAlreadyActive(address strategy);
 
     /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
-    error StrategiesLengthMissMatch();
+    error StrategiesLengthMismatch();
 
     /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
-    error GainLossMissmatch();
+    error GainLossMismatch();
 
     /// @notice Thrown when there is a duplicate strategy when trying to update the deposit or withdraw order.
     error DuplicateStrategyInArray();
@@ -48,7 +48,7 @@ library Errors {
     /// @notice Thrown when a deposit would exceed the depositLimit
     error DepositLimit();
 
-    /// @notice Thrown when the owner tries to set a fee above the maximum permited fee.
+    /// @notice Thrown when the owner tries to set a fee above the maximum permitted fee.
     error ExcessiveFee(uint256 fee);
 
     /// @notice Thrown when the debtRatio of a strategy or a multistrategy is above 100%.
@@ -87,7 +87,7 @@ library Errors {
 
     /// @notice Thrown when the `_baseAsset` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
-    error AssetMissmatch(address multAsset, address stratAsset);
+    error AssetMismatch(address multAsset, address stratAsset);
 
     /// @notice Thrown when the requested slippage limit exceeds the maximum permitted value.
     /// @param slippageLimit The slippage limit in basis points (BPS).

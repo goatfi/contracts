@@ -30,7 +30,7 @@ contract MultistrategyHarness_Integration_Shared_Test is Base_Test {
         dai.approve(address(multistrategyHarness), _amount);
         IERC4626(address(multistrategyHarness)).deposit(_amount, _user);
 
-        // Switch back the caller to the owner, as stated in the setup funciton
+        // Switch back the caller to the owner, as stated in the setup function
         swapCaller(users.owner);
     }
 }

@@ -72,7 +72,7 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
 
     /// @dev Note that a strategy can be active and retired at the same time.
     ///      Retiring a strategy means we don't want any further deposits into the strategy
-    ///      and only withdraws and debt repayments are permited. So once we retire a strategy
+    ///      and only withdraws and debt repayments are permitted. So once we retire a strategy
     ///      it is active as it still can hold funds.
     function test_RetireStrategy_RetireAlreadyRetiredStrategy()
         external

@@ -90,9 +90,9 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
     }
 
     modifier whenNotEnoughBalanceToCoverWithdraw() {
-        // Remove slippage protecction
+        // Remove slippage protection
         IStrategyAdapterMock(strategy_two).setSlippageLimit(10_000);
-        // Set the staking slippage to 50%. If a user wants to withdram 1000 tokens, the staking
+        // Set the staking slippage to 50%. If a user wants to withdraw 1000 tokens, the staking
         // will only return 500 tokens
         IStrategyAdapterMock(strategy_two).setStakingSlippage(5_000);
         _;
@@ -158,7 +158,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         uint256 expectedStrategyTwoAssets = 0;
         assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "withdraw, strategy two assets");
 
-        // Assert multisrategy totalDebt
+        // Assert multistrategy totalDebt
         uint256 actualMultistrategyDebt = multistrategy.totalDebt();
         uint256 expectedMultistrategyDebt = depositAmount - amountToWithdraw;
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "withdraw, multistrategy total debt");
@@ -213,7 +213,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         uint256 expectedStrategyTwoAssets = 200 ether;
         assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "withdraw, strategy two assets");
 
-        // Assert multisrategy totalDebt
+        // Assert multistrategy totalDebt
         uint256 actualMultistrategyDebt = multistrategy.totalDebt();
         uint256 expectedMultistrategyDebt = depositAmount - amountToWithdraw;
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "withdraw, multistrategy total debt");
@@ -270,7 +270,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         uint256 expectedStrategyOneAssets = 500 ether;
         assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "withdraw, strategy one assets");
 
-        // Assert multisrategy totalDebt
+        // Assert multistrategy totalDebt
         uint256 actualMultistrategyDebt = multistrategy.totalDebt();
         uint256 expectedMultistrategyDebt = depositAmount - amountToWithdraw;
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "withdraw, multistrategy total debt");
