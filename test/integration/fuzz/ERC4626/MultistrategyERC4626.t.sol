@@ -13,12 +13,15 @@ import { StrategyAdapterMock } from "../../../mocks/StrategyAdapterMock.sol";
 contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
 
     address manager = makeAddr("manager");
+    address feeRecipient = makeAddr("fee");
     uint256 depositLimit = 100_000 ether;
     uint16 debtRatio = 2_000;
+    uint16[] slippageLimit = [0, 10, 50, 100]; // 0, 0.1%, 0.5%, 1%
+    uint16[] slippage = [0, 5, 20, 90]; // 0, 0.05%, 0.2%, 2%
 
     function setUp() public override {
         _underlying_ = address(new ERC20Mock("DAI Stablecoin", "DAI"));
-        _vault_ = address(new Multistrategy(_underlying_, manager, makeAddr("fee"), "DAI Multistrategy", "gDAI"));
+        _vault_ = address(new Multistrategy(_underlying_, manager, feeRecipient, "DAI Multistrategy", "gDAI"));
         _delta_ = 0;
         _vaultMayBeEmpty = false;
         _unlimitedAmount = false;
@@ -41,6 +44,7 @@ contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
             try IMockERC20(_underlying_).mint(user, assets) {} catch { vm.assume(false); }
             // strategies
             address strategy = addStrategy();
+            addMockSlippage(strategy, slippageLimit[i], slippage[i]);
             setUpYield(init, strategy);
         }
     }
@@ -79,5 +83,10 @@ contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
         vm.prank(manager); address strategy = address(new StrategyAdapterMock(_vault_, _underlying_));
         vm.prank(manager); IMultistrategyManageable(_vault_).addStrategy(strategy, debtRatio, 0, type(uint256).max);
         return strategy;
+    }
+
+    function addMockSlippage(address _strategy, uint16 _slippageLimit, uint16 _slippage) public {
+        vm.prank(manager); IStrategyAdapter(_strategy).setSlippageLimit(uint(_slippageLimit));
+        IStrategyAdapterMock(_strategy).setStakingSlippage(uint(_slippage));
     }
 }

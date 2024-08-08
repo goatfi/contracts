@@ -216,9 +216,13 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         // Withdraw the desired amount to repay plus the gain.
         uint256 withdrawn = _tryWithdraw(toBeWithdrawn);
+        uint256 slippageLoss = toBeWithdrawn - withdrawn;
 
-        // Gain shouldn't be used to repay the debt
+        // If there is any slippage on the withdraw, subtract it from the gain.
+        gain = (slippageLoss > gain) ? 0 : gain - slippageLoss;
+        // Do not use gains to repay the debt
         uint256 availableForRepay = withdrawn - gain;
+        
         //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
