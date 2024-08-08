@@ -13,6 +13,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable {
     using SafeERC20 for IERC20;
+    using Math for uint256;
 
     /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
     uint256 constant MAX_SLIPPAGE = 10_000;
@@ -182,7 +183,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         // If this strategy has exceeding debt and wants to repay it
         if(exceedingDebt > 0 && _repayAmount > 0) {
             // Calculate the amount to be withdrawn to repay the exceeding debt at max slippage
-            uint256 exceedingDebtWithSlippage = Math.mulDiv(exceedingDebt, MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
+            uint256 exceedingDebtWithSlippage = exceedingDebt.mulDiv(MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
 
             // Only withdraw up to the amount this strategy manager wants to make available, plus any gains
             return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
@@ -261,7 +262,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         // Check that the strategy was able to withdraw the desired amount
         uint256 currentBalance = IERC20(asset).balanceOf(address(this));
-        uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
+        uint256 desiredBalance = _amount.mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
             revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
