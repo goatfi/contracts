@@ -192,6 +192,30 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return _strategyGain;
     }
 
+    function _calculateGainAndLossAfterSlippage(
+        uint256 _gain, 
+        uint256 _loss, 
+        uint256 _withdrawn, 
+        uint256 _toBeWithdrawn
+        ) internal pure returns (uint256, uint256) {
+
+        uint256 slippageLoss = (_toBeWithdrawn > _withdrawn) ? _toBeWithdrawn - _withdrawn : 0;
+
+        if(slippageLoss == 0) return (_gain, _loss);
+
+        // Deduce the slippage loss from the gain, if we empty the gain, add it to the loss
+        if(slippageLoss > _gain) {
+            slippageLoss -= _gain;
+            _gain = 0;
+        } else {
+            _gain -= slippageLoss;
+            slippageLoss = 0;
+        }
+
+        _loss += slippageLoss;
+        return (_gain, _loss);
+    }
+
     /// @notice Return the amount of `baseAsset` the underlying strategy holds. In the case this strategy
     /// has swapped `baseAsset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
@@ -217,10 +241,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         // Withdraw the desired amount to repay plus the gain.
         uint256 withdrawn = _tryWithdraw(toBeWithdrawn);
-        uint256 slippageLoss = toBeWithdrawn - withdrawn;
+        (gain, loss) = _calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
 
-        // If there is any slippage on the withdraw, subtract it from the gain.
-        gain = (slippageLoss > gain) ? 0 : gain - slippageLoss;
         // Do not use gains to repay the debt
         uint256 availableForRepay = withdrawn - gain;
         

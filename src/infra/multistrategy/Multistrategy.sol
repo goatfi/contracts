@@ -75,6 +75,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Limited by the deposit limit
     function maxDeposit(address) public view override returns (uint256) {
         if(totalAssets() >= depositLimit) {
             return 0;
@@ -84,6 +85,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Limited by the deposit limit
     function maxMint(address _receiver) public view override returns (uint256) {
         return convertToShares(maxDeposit(_receiver));
     }
@@ -152,27 +154,27 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 shares, address receiver) public override whenNotPaused returns (uint256) {
-        uint256 maxShares = maxMint(receiver);
-        if (shares > maxShares) {
-            revert ERC4626ExceededMaxMint(receiver, shares, maxShares);
+    function mint(uint256 _shares, address _receiver) public override whenNotPaused returns (uint256) {
+        uint256 maxShares = maxMint(_receiver);
+        if (_shares > maxShares) {
+            revert ERC4626ExceededMaxMint(_receiver, _shares, maxShares);
         }
 
-        uint256 assets = previewMint(shares);
-        _deposit(_msgSender(), receiver, assets, shares);
+        uint256 assets = previewMint(_shares);
+        _deposit(_msgSender(), _receiver, assets, _shares);
 
         return assets;
     }
 
     /// @inheritdoc IERC4626
-    function withdraw(uint256 assets, address receiver, address owner) public override whenNotPaused returns (uint256) {
-        uint256 maxAssets = maxWithdraw(owner);
-        if (assets > maxAssets) {
-            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
+    function withdraw(uint256 _assets, address _receiver, address _owner) public override whenNotPaused returns (uint256) {
+        uint256 maxAssets = maxWithdraw(_owner);
+        if (_assets > maxAssets) {
+            revert ERC4626ExceededMaxWithdraw(_owner, _assets, maxAssets);
         }
 
-        uint256 maxShares = previewWithdraw(assets);
-        uint256 shares = _withdraw(_msgSender(), receiver, owner, assets);
+        uint256 maxShares = previewWithdraw(_assets);
+        uint256 shares = _withdraw(_msgSender(), _receiver, _owner, _assets);
 
         if(shares > maxShares) {
             revert Errors.SlippageCheckFailed(maxShares, shares);
@@ -182,14 +184,14 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function redeem(uint256 shares, address receiver, address owner) public override whenNotPaused returns (uint256) {
-        uint256 maxShares = maxRedeem(owner);
-        if (shares > maxShares) {
-            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
+    function redeem(uint256 _shares, address _receiver, address _owner) public override whenNotPaused returns (uint256) {
+        uint256 maxShares = maxRedeem(_owner);
+        if (_shares > maxShares) {
+            revert ERC4626ExceededMaxRedeem(_owner, _shares, maxShares);
         }
 
-        uint256 minAssets = previewRedeem(shares);
-        uint256 assets = _redeem(_msgSender(), receiver, owner, shares);
+        uint256 minAssets = previewRedeem(_shares);
+        uint256 assets = _redeem(_msgSender(), _receiver, _owner, _shares);
 
         if(assets < minAssets) {
             revert Errors.SlippageCheckFailed(minAssets, assets);
@@ -504,8 +506,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                 // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
                 IStrategyAdapter(strategy).askReport();
 
-                // Convert the shares to assets again, because the ratio changed after the strategy reported.
-                // Either more assets need to be withdrawn or the liquidity could be enough.
+                // Convert the shares to assets, because if a loss was realized, the liquidity could be
+                // enough as less assets are given for the same amount of shares.
                 assets = _convertToAssets(_shares, Math.Rounding.Floor);
 
                 // If this condition is true, multistrategy now holds enough to cover the withdraw, 
@@ -514,7 +516,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // At this point we don't have enough to cover the withdraw, so
+                // At this point we don't have enough liquidity to cover the withdraw, so
                 // we need to know the amount we need to withdraw.
                 uint256 assetsToWithdraw = assets - _liquidity();
 
@@ -536,6 +538,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 unchecked { ++i; }
             }
+        }
+
+        // If the withdrawal process couldn't withdraw enough assets, revert.
+        if(assets > _liquidity()) {
+            revert Errors.InsufficientLiquidity(assets, _liquidity());
         }
 
         _burn(_owner, _shares);
