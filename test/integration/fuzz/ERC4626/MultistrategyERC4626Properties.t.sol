@@ -1,3 +1,6 @@
+    // SPDX-License-Identifier: AGPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+    
     import {CryticERC4626PropertyTests} from "properties/ERC4626/ERC4626PropertyTests.sol";
     // this token _must_ be the vault's underlying asset
     import {ERC20Mock} from "../../../mocks/erc20/ERC20Mock.sol";
