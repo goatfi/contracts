@@ -1,1 +1,14 @@
 setDepositLimit.t.sol
+├── when the caller is not the manager
+│  └── it should revert
+└── when the caller is the manager
+   ├── when new depositLimit is same as current depositLimit
+   │  ├── it should re-set the depositLimit
+   │  └── it should emit a {depositLimitSet} event
+   └── when new depositLimit is not same as current depositLimit
+      ├── when the new depositLimit is zero
+      │  ├── it should set the depositLimit to zero
+      │  └── it should emit a {DepositLimitSet}
+      └── when the new depositLimit is not zero
+         ├── it should set the new depositLimit to the new depositLimit
+         └── it should emit a {DepositLimitSet}

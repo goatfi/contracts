@@ -6,6 +6,7 @@ import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.so
 
 interface IMultistrategyHarness is IMultistrategy {
     function calculateLockedProfit() external view returns(uint256);
+    function liquidity() external view returns(uint256);
     function freeFunds() external view returns(uint256);
     function reportLoss(address _strategy, uint256 _loss) external;
 }
@@ -30,6 +31,10 @@ contract MultistrategyHarness is IMultistrategyHarness, Multistrategy {
 
     function calculateLockedProfit() external view returns(uint256) {
         return _calculateLockedProfit();
+    }
+
+    function liquidity() external view returns(uint256) {
+        return _liquidity();
     }
 
     function freeFunds() external view returns(uint256) {

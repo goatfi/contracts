@@ -2,7 +2,6 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 
 interface IMultistrategy is IMultistrategyManageable {

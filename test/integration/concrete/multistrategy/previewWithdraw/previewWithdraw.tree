@@ -1,0 +1,11 @@
+previewWithdraw.t.sol
+├── when the withdraw amount is zero
+│   └── it should return zero shares
+└── when the withdraw amount is not zero
+    ├── when the withdraw amount is lower or equal than the liquidity
+    │   └── it should return the withdraw amount converted to shares
+    └── when the withdraw amount is higher than the liquidity
+        ├── when the slippage limit is zero
+        │   └── it should return the withdraw amount converted to shares
+        └── when the slippage limit is not zero
+            └── it should return the withdraw amount converted to shares plus the slippage
