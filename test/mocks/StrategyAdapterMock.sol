@@ -43,6 +43,15 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         return _calculateAmountToBeWithdrawn(_repayAmount, _strategyGain);
     }
 
+    function calculateGainAndLossAfterSlippage(
+        uint256 _gain, 
+        uint256 _loss, 
+        uint256 _withdrawn, 
+        uint256 _toBeWithdrawn
+        ) external pure returns (uint256, uint256) {
+        return _calculateGainAndLossAfterSlippage(_gain, _loss, _withdrawn, _toBeWithdrawn);
+    }
+
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
     }

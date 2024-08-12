@@ -192,6 +192,21 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return _strategyGain;
     }
 
+    /// @notice Internal pure function to calculate the adjusted gain and loss after accounting for slippage.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the slippage loss as the difference between the amount intended to be withdrawn and the actual amount withdrawn.
+    /// - If there is no slippage loss, returns the original gain and loss.
+    /// - If there is slippage loss:
+    ///   - Deducts the slippage loss from the gain.
+    ///   - If the slippage loss exceeds the gain, the remaining slippage loss is added to the loss.
+    /// - Returns the adjusted gain and loss after accounting for slippage.
+    /// 
+    /// @param _gain The initial gain before slippage.
+    /// @param _loss The initial loss before slippage.
+    /// @param _withdrawn The actual amount withdrawn.
+    /// @param _toBeWithdrawn The amount intended to be withdrawn.
+    /// @return The adjusted gain and loss after slippage.
     function _calculateGainAndLossAfterSlippage(
         uint256 _gain, 
         uint256 _loss, 
