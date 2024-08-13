@@ -127,11 +127,11 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     {
         // Deploy a multistrategy with a different baseAsset
         Multistrategy usdtMultistrategy = new Multistrategy({
-            _asset: address(usdt),
+            _asset: address(asset) == address(dai) ? address(usdt) : address(dai),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
-            _name: "Goat USDT",
-            _symbol: "GUSDT"
+            _name: "Multistrategy",
+            _symbol: "MULT"
         });
         
         // Deploy a mock strategy for the usdt multistrategy

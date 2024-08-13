@@ -62,7 +62,7 @@ abstract contract Base_Test is Test, Events {
 
     function deployMultistrategy() internal {
         multistrategy = new Multistrategy({
-            _asset: address(dai),
+            _asset: address(usdt),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat DAI",
