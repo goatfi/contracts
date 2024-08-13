@@ -8,10 +8,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract Deposit_Integration_Concrete_Test is
-    Multistrategy_Integration_Shared_Test
-{
-    uint256 amount;
+contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
+    uint256 shares;
     address recipient;
 
     function test_RevertWhen_ContractIsPaused() external {
@@ -31,19 +29,28 @@ contract Deposit_Integration_Concrete_Test is
         _;
     }
 
+    modifier whenRecipientNotContractAddress() {
+        _;
+    }
+
+    modifier whenAmountIsGreaterThanZero() {
+        _;
+    }
+
+
     /// @dev Deposit limit is 100K tokens
-    function test_RevertWhen_AssetsAboveMaxDeposit()
+    function test_RevertWhen_AssetsAboveMaxMint()
         external
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 150_000 ether;
+        shares = 150_000 ether;
         recipient = users.bob;
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 ether));
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxMint.selector, recipient, shares, 100_000 ether));
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     /// @dev Approve the tokens to be able to deposit
@@ -58,14 +65,14 @@ contract Deposit_Integration_Concrete_Test is
         external
         whenDepositLimitRespected 
     {
-        amount = 0;
+        shares = 0;
         recipient = address(0);
 
         // Expect a revert
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidAddress.selector, address(0))
         );
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     function test_RevertWhen_RecipientIsContractAddress()
@@ -73,7 +80,7 @@ contract Deposit_Integration_Concrete_Test is
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
-        amount = 0;
+        shares = 0;
         recipient = address(multistrategy);
 
         // Expect a revert
@@ -83,11 +90,7 @@ contract Deposit_Integration_Concrete_Test is
                 address(multistrategy)
             )
         );
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
-    }
-
-    modifier whenRecipientNotContractAddress() {
-        _;
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     function test_RevertWhen_AmountIsZero()
@@ -96,16 +99,12 @@ contract Deposit_Integration_Concrete_Test is
         whenDepositLimitRespected
         whenRecipientNotContractAddress
     {
-        amount = 0;
+        shares = 0;
         recipient = users.bob;
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAmount.selector, 0));
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
-    }
-
-    modifier whenAmountIsGreaterThanZero() {
-        _;
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     function test_RevertWhen_CallerHasInsufficientBalance()
@@ -115,7 +114,7 @@ contract Deposit_Integration_Concrete_Test is
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 1000 ether;
+        shares = 1000 ether;
         recipient = users.bob;
 
         // Expect a revert
@@ -128,7 +127,7 @@ contract Deposit_Integration_Concrete_Test is
             )
         );
         swapCaller(users.bob);
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     modifier whenCallerHasEnoughBalance() {
@@ -136,7 +135,7 @@ contract Deposit_Integration_Concrete_Test is
         _;
     }
 
-    function test_Deposit()
+    function test_Mint()
         external
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
@@ -144,29 +143,29 @@ contract Deposit_Integration_Concrete_Test is
         whenAmountIsGreaterThanZero
         whenCallerHasEnoughBalance
     {
-        amount = 1000 ether;
+        shares = 1000 ether;
         recipient = users.bob;
-        uint256 shares = IERC4626(address(multistrategy)).previewDeposit(amount);
+        uint256 assets = IERC4626(address(multistrategy)).previewMint(shares);
 
         vm.expectEmit({emitter: address(multistrategy)});
-        emit Deposit(users.bob, recipient, amount, shares);
+        emit Deposit(users.bob, recipient, assets, shares);
 
         swapCaller(users.bob);
-        IERC4626(address(multistrategy)).deposit(amount, recipient);
+        IERC4626(address(multistrategy)).mint(shares, recipient);
 
         // Assert correct amount of shares have been minted to recipient
-        uint256 actualMintedShares = IERC20(address(multistrategy)).balanceOf(recipient);
-        uint256 expectedMintedShares = shares;
-        assertEq(actualMintedShares, expectedMintedShares, "deposit");
+        uint256 actualAssets = IERC20(address(multistrategy)).balanceOf(recipient);
+        uint256 expectedAssets = assets;
+        assertEq(actualAssets, expectedAssets, "mint");
 
         // Assert the assets have been deducted from the caller
         uint256 actualUserBalance = IERC20(address(dai)).balanceOf(recipient);
         uint256 expectedUserBalance = 0;
-        assertEq(actualUserBalance, expectedUserBalance, "deposit user balance");
+        assertEq(actualUserBalance, expectedUserBalance, "mint user balance");
 
         // Assert the assets have been transferred to the multistrategy
         uint256 actualMultistrategyBalance = IERC20(address(dai)).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = amount;
-        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "deposit multistrategy balance");
+        uint256 expectedMultistrategyBalance = assets;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "mint multistrategy balance");
     }
 }

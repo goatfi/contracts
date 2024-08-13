@@ -394,11 +394,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             revert Errors.ZeroAmount({ amount: _assets });
         }
 
-        // Assert deposit limit is respected
-        if(_assets + totalAssets() > depositLimit) {
-            revert Errors.DepositLimit();
-        }
-
         //Get funds from depositor
         IERC20(asset()).safeTransferFrom(_caller, address(this), _assets);
         //Mint shares
@@ -434,21 +429,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
-                IStrategyAdapter(strategy).askReport();
-
-                // If this condition is true, multistrategy now holds enough to cover the withdraw, 
-                // so we're done withdrawing from strategies.
-                if(_assets <= _liquidity()){
-                    break;
-                }
-
-                // At this point we don't have enough to cover the withdraw, so
-                // we need to know the amount we need to withdraw.
-                uint256 assetsToWithdraw = _assets - _liquidity();
-
-                // We can't withdraw from a strategy more than what it has.
-                assetsToWithdraw = Math.min(assetsToWithdraw, strategies[strategy].totalDebt);
+                // We can't withdraw from a strategy more than what it has asked as credit.
+                uint256 assetsToWithdraw = Math.min(_assets - _liquidity(), strategies[strategy].totalDebt);
 
                 // Check that the strategy actually has something to withdraw
                 if(assetsToWithdraw == 0) {
@@ -463,6 +445,14 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                 strategies[strategy].totalDebt -= withdrawn;
                 totalDebt -= withdrawn;
 
+                // Ask for the strategy to send a report, as it could have an unrealized loss due to slippage.
+                // If the strategy has made a gain, the user withdrawing won't get the gains.
+                IStrategyAdapter(strategy).askReport();
+
+                if(_assets <= _liquidity()){
+                    break;
+                }
+
                 unchecked { ++i; }
             }
         }
@@ -472,9 +462,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             revert Errors.InsufficientLiquidity(_assets, _liquidity());
         }
 
+        // Burn the shares and send the assets to the receiver
         uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
         _burn(_owner, shares);
-
         IERC20(asset()).safeTransfer(_receiver, _assets);
 
         emit Withdraw(_caller, _receiver, _owner, _assets, shares);
@@ -492,6 +482,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             _spendAllowance(_owner, _caller, _shares);
         }
 
+        // Assert something gets withdrawn
+        if(_shares == 0) {
+            revert Errors.ZeroAmount({ amount: _shares });
+        }
+
         uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
 
         if(assets > _liquidity()) {
@@ -503,25 +498,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                     break;
                 }
 
-                // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
-                IStrategyAdapter(strategy).askReport();
-
-                // Convert the shares to assets, because if a loss was realized, the liquidity could be
-                // enough as less assets are given for the same amount of shares.
-                assets = _convertToAssets(_shares, Math.Rounding.Floor);
-
-                // If this condition is true, multistrategy now holds enough to cover the withdraw, 
-                // so we're done withdrawing from strategies.
-                if(assets <= _liquidity()){
-                    break;
-                }
-
-                // At this point we don't have enough liquidity to cover the withdraw, so
-                // we need to know the amount we need to withdraw.
-                uint256 assetsToWithdraw = assets - _liquidity();
-
-                // We can't withdraw from a strategy more than what it has.
-                assetsToWithdraw = Math.min(assetsToWithdraw, strategies[strategy].totalDebt);
+                // We can't withdraw from a strategy more than what it has asked as credit.
+                uint256 assetsToWithdraw = Math.min(assets - _liquidity(), strategies[strategy].totalDebt);
 
                 // Check that the strategy actually has something to withdraw
                 if(assetsToWithdraw == 0) {
@@ -536,15 +514,24 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
                 strategies[strategy].totalDebt -= withdrawn;
                 totalDebt -= withdrawn;
 
+                // Ask for the strategy to send a report, as it could have an unrealized Gain or Loss.
+                IStrategyAdapter(strategy).askReport();
+
+                // Convert the shares to assets, because if a loss was realized, the liquidity could be
+                // enough as less assets are given for the same amount of shares.
+                assets = _convertToAssets(_shares, Math.Rounding.Floor);
+
+                // If this condition is true, multistrategy now holds enough to cover the withdraw, 
+                // so we're done withdrawing from strategies.
+                if(assets <= _liquidity()){
+                    break;
+                }
+
                 unchecked { ++i; }
             }
         }
 
-        // If the withdrawal process couldn't withdraw enough assets, revert.
-        if(assets > _liquidity()) {
-            revert Errors.InsufficientLiquidity(assets, _liquidity());
-        }
-
+        // Burn the shares and send the assets to the receiver
         _burn(_owner, _shares);
         IERC20(asset()).safeTransfer(_receiver, assets);
 
