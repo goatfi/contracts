@@ -148,7 +148,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         }
 
         uint256 shares = previewDeposit(_assets);
-        _deposit(_msgSender(), _receiver, _assets, shares);
+        _deposit(msg.sender, _receiver, _assets, shares);
 
         return shares;
     }
@@ -161,7 +161,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         }
 
         uint256 assets = previewMint(_shares);
-        _deposit(_msgSender(), _receiver, assets, _shares);
+        _deposit(msg.sender, _receiver, assets, _shares);
 
         return assets;
     }
@@ -174,7 +174,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         }
 
         uint256 maxShares = previewWithdraw(_assets);
-        uint256 shares = _withdraw(_msgSender(), _receiver, _owner, _assets);
+        uint256 shares = _withdraw(msg.sender, _receiver, _owner, _assets);
 
         if(shares > maxShares) {
             revert Errors.SlippageCheckFailed(maxShares, shares);
@@ -191,7 +191,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         }
 
         uint256 minAssets = previewRedeem(_shares);
-        uint256 assets = _redeem(_msgSender(), _receiver, _owner, _shares);
+        uint256 assets = _redeem(msg.sender, _receiver, _owner, _shares);
 
         if(assets < minAssets) {
             revert Errors.SlippageCheckFailed(minAssets, assets);
