@@ -5,10 +5,12 @@ import { Base_Test } from "../../Base.t.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IOwnable } from "../../shared/TestInterfaces.sol";
+import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
 
 contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
     IStrategyAdapter strategy;
+    IERC20Mock asset;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -20,14 +22,15 @@ contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
         swapCaller(users.owner);
 
+        asset = IERC20Mock(IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
     }
 
     function requestCredit(uint256 _amount) internal {
-        dai.mint(users.bob, _amount);
+        asset.mint(users.bob, _amount);
         
         swapCaller(users.bob);
-        dai.approve(address(multistrategy), _amount);
+        asset.approve(address(multistrategy), _amount);
         IERC4626(address(multistrategy)).deposit(_amount, users.bob);
 
         // Switch back the caller to the owner, as stated in the setup funciton

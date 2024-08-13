@@ -134,7 +134,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy paid the debt with the balance it made available
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether + repayAmount;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
@@ -184,7 +184,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy didn't pay any debt
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
@@ -212,7 +212,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
     modifier whenThereIsLockedProfit(uint256 _amount) {
         // Report a 100 token gain in order to get some profit locked
         swapCaller(strategy);
-        dai.mint(strategy, _amount);
+        mintAsset(strategy, _amount);
         multistrategy.strategyReport(0, _amount, 0);
         _;
     }
@@ -245,7 +245,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy paid the debt with the balance it made available
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether + profit + repayAmount;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
@@ -297,7 +297,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy paid the debt with the balance it made available
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether + profit;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
@@ -348,7 +348,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         // Report with [100 ether, 100 ether, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
-        uint256 actualFeeRecipientBalance = dai.balanceOf(multistrategy.protocolFeeRecipient());
+        uint256 actualFeeRecipientBalance = asset.balanceOf(multistrategy.protocolFeeRecipient());
         uint256 expectedFeeRecipientBalance = fee;
         assertEq(actualFeeRecipientBalance, expectedFeeRecipientBalance, "strategyReport, fee recipient balance");
 
@@ -358,7 +358,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy paid the debt with the balance it made available
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether + repayAmount + gainAmount - fee;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
@@ -402,7 +402,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         // Report with [100 ether, 100 ether, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
-        uint256 actualFeeRecipientBalance = dai.balanceOf(multistrategy.protocolFeeRecipient());
+        uint256 actualFeeRecipientBalance = asset.balanceOf(multistrategy.protocolFeeRecipient());
         uint256 expectedFeeRecipientBalance = fee;
         assertEq(actualFeeRecipientBalance, expectedFeeRecipientBalance, "strategyReport, fee recipient balance");
 
@@ -412,7 +412,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
 
         // Assert that the strategy paid the debt with the balance it made available
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether + gainAmount - fee;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 

@@ -48,9 +48,7 @@ contract Deposit_Integration_Concrete_Test is
 
     /// @dev Approve the tokens to be able to deposit
     modifier whenDepositLimitRespected() {
-        swapCaller(users.bob);
-        dai.approve(address(multistrategy), 1000 ether);
-        swapCaller(users.owner);
+        triggerApprove(users.bob, address(multistrategy), 1000 ether);
         _;
     }
 
@@ -132,7 +130,7 @@ contract Deposit_Integration_Concrete_Test is
     }
 
     modifier whenCallerHasEnoughBalance() {
-        dai.mint(users.bob, 1000 ether);
+        mintAsset(users.bob, 1000 ether);
         _;
     }
 
@@ -160,12 +158,12 @@ contract Deposit_Integration_Concrete_Test is
         assertEq(actualMintedShares, expectedMintedShares, "deposit");
 
         // Assert the assets have been deducted from the caller
-        uint256 actualUserBalance = IERC20(address(dai)).balanceOf(recipient);
+        uint256 actualUserBalance = IERC20(address(asset)).balanceOf(recipient);
         uint256 expectedUserBalance = 0;
         assertEq(actualUserBalance, expectedUserBalance, "deposit user balance");
 
         // Assert the assets have been transferred to the multistrategy
-        uint256 actualMultistrategyBalance = IERC20(address(dai)).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(address(asset)).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = amount;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "deposit multistrategy balance");
     }

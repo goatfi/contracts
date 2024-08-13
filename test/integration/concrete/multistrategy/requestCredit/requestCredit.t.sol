@@ -51,11 +51,11 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
 
         multistrategy.requestCredit();
 
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 1_000 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "requestCredit, no availableCredit, multistrategy balance");
 
-        uint256 actualStrategyBalance = dai.balanceOf(strategy);
+        uint256 actualStrategyBalance = asset.balanceOf(strategy);
         uint256 expectedStrategyBalance = 0;
         assertEq(actualStrategyBalance, expectedStrategyBalance, "requestCredit, no availableCredit, strategy balance");
     }
@@ -74,11 +74,11 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
 
         multistrategy.requestCredit();
 
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "requestCredit, multistrategy balance");
 
-        uint256 actualStrategyBalance = dai.balanceOf(strategy);
+        uint256 actualStrategyBalance = asset.balanceOf(strategy);
         uint256 expectedStrategyBalance = 500 ether;
         assertEq(actualStrategyBalance, expectedStrategyBalance, "requestCredit, strategy balance");
     }

@@ -154,7 +154,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToWithdraw;
         assertEq(actualUserBalance, expectedUserBalance, "withdraw, user balance");
 
@@ -164,7 +164,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "withdraw, user shares balance");
 
         // Assert multistrategy reserves.
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "withdraw, multistrategy balance");
 
@@ -209,7 +209,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToWithdraw;
         assertEq(actualUserBalance, expectedUserBalance, "withdraw, user balance");
 
@@ -219,7 +219,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "withdraw, user shares balance");
 
         // Assert multistrategy reserves.
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "withdraw, multistrategy balance");
 
@@ -271,7 +271,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToWithdraw;
         assertEq(actualUserBalance, expectedUserBalance, "withdraw, user balance");
 
@@ -281,7 +281,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "withdraw, user shares balance");
 
         // Assert multistrategy reserves
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "withdraw, multistrategy balance");
 

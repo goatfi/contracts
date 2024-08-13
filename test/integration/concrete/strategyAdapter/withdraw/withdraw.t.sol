@@ -85,7 +85,7 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert the multistrategy has the assets in balance
-        uint256 actualMultistrategyAssets = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyAssets = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyAssets = withdrawn;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy balance");
     }

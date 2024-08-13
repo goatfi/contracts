@@ -124,7 +124,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         IERC4626(address(multistrategy)).redeem(amountToRedeem, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToRedeem;
         assertEq(actualUserBalance, expectedUserBalance, "redeem, user balance");
 
@@ -134,7 +134,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "redeem, user shares balance");
 
         // Assert multistrategy reserves.
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
@@ -179,7 +179,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         IERC4626(address(multistrategy)).redeem(amountToRedeem, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToRedeem;
         assertEq(actualUserBalance, expectedUserBalance, "redeem, user balance");
 
@@ -189,7 +189,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "redeem, user shares balance");
 
         // Assert multistrategy reserves.
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
@@ -241,7 +241,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         IERC4626(address(multistrategy)).redeem(amountToRedeem, users.bob, users.bob);
 
         // Assert the user balance
-        uint256 actualUserBalance = dai.balanceOf(users.bob);
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
         uint256 expectedUserBalance = amountToRedeem;
         assertEq(actualUserBalance, expectedUserBalance, "redeem, user balance");
 
@@ -251,7 +251,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualUserSharesBalance, expectedUserSharesBalance, "redeem, user shares balance");
 
         // Assert multistrategy reserves
-        uint256 actualMultistrategyBalance = dai.balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
