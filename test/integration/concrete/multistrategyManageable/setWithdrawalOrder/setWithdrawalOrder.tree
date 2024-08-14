@@ -4,7 +4,7 @@ setWithdrawOrder.t.sol
 │   └── it should revert
 └── when the caller is the manager
     ├── when the order length is incorrect
-    │   └── it should revert with StrategiesLengthMissMatch error
+    │   └── it should revert with StrategiesLengthMismatch error
     └── when the order length is correct
         ├── when there are duplicate strategies
         │   └── it should revert with DuplicateStrategyInArray error

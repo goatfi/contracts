@@ -32,7 +32,7 @@ contract Panic_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_T
 
         // Assert allowance to the staking contract has been revoked
         address stakingContract = IStrategyAdapterMock(address(strategy)).stakingContract();
-        uint256 actualStakingAllowance = IERC20(strategy.baseAsset()).allowance(address(strategy), stakingContract);
+        uint256 actualStakingAllowance = IERC20(strategy.asset()).allowance(address(strategy), stakingContract);
         uint256 expectedStakingAllowance = 0;
         assertEq(actualStakingAllowance, expectedStakingAllowance, "panic, staking allowance");
 

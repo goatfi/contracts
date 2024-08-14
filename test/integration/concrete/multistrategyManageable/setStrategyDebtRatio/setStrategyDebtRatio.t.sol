@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
@@ -36,7 +36,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
 
     /// @dev Add a mock strategy to the multistrategy
     modifier whenStrategyIsActive() {
-        strategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         debtRatio = 5_000;
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
@@ -58,7 +58,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
     }
 
     modifier whenDebtRatioBelowMaximum() {
-        // The mulistrategy only has 1 active strategy, so this will be below minimum
+        // The multistrategy only has 1 active strategy, so this will be below minimum
         debtRatio = 6_000;
         _;
     }

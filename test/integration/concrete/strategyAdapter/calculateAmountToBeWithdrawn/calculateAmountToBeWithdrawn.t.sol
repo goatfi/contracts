@@ -15,7 +15,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
     {
 
         // Assert that it has to withdrawn 0
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = 0;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -30,7 +30,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenGainNotZero
     {
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = gain;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -45,7 +45,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenRepayAmountNotZero
     {
         // Assert that it has to withdrawn 0
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = 0;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -56,7 +56,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenGainNotZero
     {
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = gain;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -72,7 +72,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenExceedingDebtNotZero
     {
         // Assert that it has to withdrawn 0
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = 0;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -83,7 +83,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenGainNotZero
     {
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = gain;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -94,7 +94,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenRepayAmountNotZero
     {
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = repayAmount;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -107,7 +107,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         repayAmount = 600 ether;
 
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = 500 ether;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -119,7 +119,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         whenGainNotZero
     {
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = repayAmount + gain;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }
@@ -133,7 +133,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
         repayAmount = 600 ether;
 
         // Assert that it has to withdrawn the gain
-        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmounToBeWithdrawn(repayAmount, gain);
+        uint256 actualAmountToBeWithdrawn = IStrategyAdapterMock(address(strategy)).calculateAmountToBeWithdrawn(repayAmount, gain);
         uint256 expectedAmountToBeWithdrawn = 500 ether + gain;
         assertEq(actualAmountToBeWithdrawn, expectedAmountToBeWithdrawn);
     }

@@ -19,7 +19,7 @@ contract RevokeGuardian_Integration_Concrete_Test is Multistrategy_Integration_S
         _;
     }
 
-    /// @dev Aready revoked also means that hasn't been enabled
+    /// @dev Already revoked also means that hasn't been enabled
     function test_RevokeGuardian_AlreadyRevokedGuardian() external whenCallerOwner {
         // Expect the relevant event to be emitted.
         vm.expectEmit({ emitter: address(multistrategy) });

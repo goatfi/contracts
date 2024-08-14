@@ -2,9 +2,14 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStrategyAdapterMock } from "../../shared/TestInterfaces.sol";
+import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
 
 contract MultistrategyHarness_Unit_Shared_Test is Base_Test {
+
+    IERC20Mock asset;
+    
     function setUp() public virtual override {
         Base_Test.setUp();
         
@@ -12,6 +17,8 @@ contract MultistrategyHarness_Unit_Shared_Test is Base_Test {
         transferMultistrategyOwnershipToOwner();
 
         swapCaller(users.owner);
+
+        asset = IERC20Mock(IERC4626(address(multistrategyHarness)).asset());
     }
 
     function triggerStrategyGain(address _strategy, uint256 _amount) internal {
@@ -23,11 +30,11 @@ contract MultistrategyHarness_Unit_Shared_Test is Base_Test {
     }
 
     function triggerUserDeposit(address _user, uint256 _amount) internal {
-        dai.mint(_user, _amount);
+        asset.mint(_user, _amount);
         
         swapCaller(_user);
-        dai.approve(address(multistrategyHarness), _amount);
-        multistrategyHarness.deposit(_amount, _user);
+        asset.approve(address(multistrategyHarness), _amount);
+        IERC4626(address(multistrategyHarness)).deposit(_amount, _user);
 
         // Switch back the caller to the owner, as stated in the setup funciton
         swapCaller(users.owner);

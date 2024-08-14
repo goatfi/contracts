@@ -37,10 +37,10 @@ library Errors {
     error StrategyAlreadyActive(address strategy);
 
     /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
-    error StrategiesLengthMissMatch();
+    error StrategiesLengthMismatch();
 
     /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
-    error GainLossMissmatch();
+    error GainLossMismatch();
 
     /// @notice Thrown when there is a duplicate strategy when trying to update the deposit or withdraw order.
     error DuplicateStrategyInArray();
@@ -48,7 +48,7 @@ library Errors {
     /// @notice Thrown when a deposit would exceed the depositLimit
     error DepositLimit();
 
-    /// @notice Thrown when the owner tries to set a fee above the maximum permited fee.
+    /// @notice Thrown when the owner tries to set a fee above the maximum permitted fee.
     error ExcessiveFee(uint256 fee);
 
     /// @notice Thrown when the debtRatio of a strategy or a multistrategy is above 100%.
@@ -73,6 +73,11 @@ library Errors {
     /// @notice Thrown when trying to remove a strategy that has a `debtRatio` greater than 0.
     error StrategyNotRetired();
 
+    /// @notice Thrown when there isn't enough liquidity to cover a withdraw
+    /// @param assets The amount of assets requested.
+    /// @param liquidity The current liquidity available in the contract.
+    error InsufficientLiquidity(uint256 assets, uint256 liquidity);
+
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY ADAPTER
     //////////////////////////////////////////////////////////////////////////*/
@@ -82,7 +87,7 @@ library Errors {
 
     /// @notice Thrown when the `_baseAsset` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
-    error BaseAssetMissmatch(address multBaseAsset, address stratBaseAsset);
+    error AssetMismatch(address multAsset, address stratAsset);
 
     /// @notice Thrown when the requested slippage limit exceeds the maximum permitted value.
     /// @param slippageLimit The slippage limit in basis points (BPS).
@@ -92,4 +97,28 @@ library Errors {
     /// @param amount0 The expected amount after accounting for allowed slippage.
     /// @param amount1 The actual amount obtained.
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    ERC-4626
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev Attempted to deposit more assets than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxDeposit(address receiver, uint256 assets, uint256 max);
+
+    /**
+     * @dev Attempted to mint more shares than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxMint(address receiver, uint256 shares, uint256 max);
+
+    /**
+     * @dev Attempted to withdraw more assets than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxWithdraw(address owner, uint256 assets, uint256 max);
+
+    /**
+     * @dev Attempted to redeem more shares than the max amount for `receiver`.
+     */
+    error ERC4626ExceededMaxRedeem(address owner, uint256 shares, uint256 max);
 }

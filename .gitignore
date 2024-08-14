@@ -11,6 +11,9 @@ notes.txt
 #Ignore Fork deployment tests
 test/local/
 
+#Echidna
+/crytic-export
+
 # Ignores development broadcast logs
 /broadcast
 /broadcast/*/31337/

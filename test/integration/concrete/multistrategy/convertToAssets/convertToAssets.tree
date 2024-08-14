@@ -1,4 +1,4 @@
-shareValue.t.sol
+convertToAssets.t.sol
 ├── when totalSupply is 0
 │   └── it should return the amount of shares
 └── when totalSupply is greater than 0

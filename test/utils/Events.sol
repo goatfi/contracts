@@ -38,9 +38,11 @@ abstract contract Events {
 
     event StrategyRemoved(address indexed strategy);
 
-    event Deposit(uint256 amount, address indexed recipient);
+    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
-    event Withdraw(uint256 amount);
+    event Withdraw(
+        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
+    );
 
     event CreditRequested(address indexed strategy, uint256 amount);
 

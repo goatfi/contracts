@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
@@ -12,7 +12,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
     uint256 maxDebtRatio = 100_000 ether;
 
     function addMockStrategy() internal returns (address) {
-        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
         return mockStrategy;
     }
@@ -32,11 +32,11 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
     }
 
     function test_RevertWhen_LengthDoNotMatch() external whenCallerIsManager {
-        // Multistrategy withdrawOrder is length 10, so we create a length 11 to missmatch.
+        // Multistrategy withdrawOrder is length 10, so we create a length 11 to mismatch.
         strategies = new address[](11);
 
         // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategiesLengthMissMatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategiesLengthMismatch.selector));
         multistrategy.setWithdrawOrder(strategies);
     }
 
@@ -82,7 +82,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         whenNoDuplicates
     {
         // Create the strategy but we don't add it to the multistrategy, so it wont be active
-        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), multistrategy.baseAsset());
+        address mockStrategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         
         // Create an array with an inactive strategy
         strategies = [

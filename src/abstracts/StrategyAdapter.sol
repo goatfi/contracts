@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterAdminable } from "src/abstracts/StrategyAdapterAdminable.sol";
@@ -12,6 +13,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable {
     using SafeERC20 for IERC20;
+    using Math for uint256;
 
     /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
     uint256 constant MAX_SLIPPAGE = 10_000;
@@ -20,7 +22,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     address public immutable multistrategy;
 
     /// @inheritdoc IStrategyAdapter
-    address public immutable baseAsset;
+    address public immutable asset;
 
     /// @inheritdoc IStrategyAdapter
     uint256 public slippageLimit;
@@ -31,24 +33,24 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     
     /// @dev Reverts if `_baseAsset` doesn't match `baseAsset` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
-    /// @param _baseAsset Address of the token used to deposit and withdraw on this strategy.
-    constructor(address _multistrategy, address _baseAsset) StrategyAdapterAdminable(msg.sender) {
-        if(IMultistrategyManageable(_multistrategy).baseAsset() != _baseAsset) {
-            revert Errors.BaseAssetMissmatch({
-                multBaseAsset: IMultistrategyManageable(_multistrategy).baseAsset(),
-                stratBaseAsset: _baseAsset
+    /// @param _asset Address of the token used to deposit and withdraw on this strategy.
+    constructor(address _multistrategy, address _asset) StrategyAdapterAdminable(msg.sender) {
+        if(IERC4626(_multistrategy).asset() != _asset) {
+            revert Errors.AssetMismatch({
+                multAsset: IERC4626(_multistrategy).asset(),
+                stratAsset: _asset
             });
         }
 
         multistrategy = _multistrategy;
-        baseAsset = _baseAsset;
+        asset = _asset;
         slippageLimit = 0;
 
-        IERC20(baseAsset).forceApprove(multistrategy, type(uint256).max);
+        IERC20(asset).forceApprove(multistrategy, type(uint256).max);
     }
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
-    modifier onlyMultistrat() {
+    modifier onlyMultistrategy() {
         if(msg.sender != multistrategy) {
             revert Errors.CallerNotMultistrategy(msg.sender);
         }
@@ -97,7 +99,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function askReport() external onlyMultistrat whenNotPaused {
+    function askReport() external onlyMultistrategy whenNotPaused {
         _sendReport(0);
     }
 
@@ -107,10 +109,12 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
-    function withdraw(uint256 _amount) external onlyMultistrat whenNotPaused {
+    function withdraw(uint256 _amount) external onlyMultistrategy whenNotPaused returns (uint256) {
         uint256 withdrawn = _tryWithdraw(_amount);
 
-        IERC20(baseAsset).safeTransfer(multistrategy, withdrawn);
+        IERC20(asset).safeTransfer(multistrategy, withdrawn);
+
+        return withdrawn;
     }
 
     /// @inheritdoc IStrategyAdapter
@@ -179,13 +183,52 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         // If this strategy has exceeding debt and wants to repay it
         if(exceedingDebt > 0 && _repayAmount > 0) {
             // Calculate the amount to be withdrawn to repay the exceeding debt at max slippage
-            uint256 exceedingDebtWithSlippage = Math.mulDiv(exceedingDebt, MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
+            uint256 exceedingDebtWithSlippage = exceedingDebt.mulDiv(MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
 
             // Only withdraw up to the amount this strategy manager wants to make available, plus any gains
             return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
         } 
 
         return _strategyGain;
+    }
+
+    /// @notice Internal pure function to calculate the adjusted gain and loss after accounting for slippage.
+    /// 
+    /// This function performs the following actions:
+    /// - Calculates the slippage loss as the difference between the amount intended to be withdrawn and the actual amount withdrawn.
+    /// - If there is no slippage loss, returns the original gain and loss.
+    /// - If there is slippage loss:
+    ///   - Deducts the slippage loss from the gain.
+    ///   - If the slippage loss exceeds the gain, the remaining slippage loss is added to the loss.
+    /// - Returns the adjusted gain and loss after accounting for slippage.
+    /// 
+    /// @param _gain The initial gain before slippage.
+    /// @param _loss The initial loss before slippage.
+    /// @param _withdrawn The actual amount withdrawn.
+    /// @param _toBeWithdrawn The amount intended to be withdrawn.
+    /// @return The adjusted gain and loss after slippage.
+    function _calculateGainAndLossAfterSlippage(
+        uint256 _gain, 
+        uint256 _loss, 
+        uint256 _withdrawn, 
+        uint256 _toBeWithdrawn
+        ) internal pure returns (uint256, uint256) {
+
+        uint256 slippageLoss = (_toBeWithdrawn > _withdrawn) ? _toBeWithdrawn - _withdrawn : 0;
+
+        if(slippageLoss == 0) return (_gain, _loss);
+
+        // Deduce the slippage loss from the gain, if we empty the gain, add it to the loss
+        if(slippageLoss > _gain) {
+            slippageLoss -= _gain;
+            _gain = 0;
+        } else {
+            _gain -= slippageLoss;
+            slippageLoss = 0;
+        }
+
+        _loss += slippageLoss;
+        return (_gain, _loss);
     }
 
     /// @notice Return the amount of `baseAsset` the underlying strategy holds. In the case this strategy
@@ -213,9 +256,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         // Withdraw the desired amount to repay plus the gain.
         uint256 withdrawn = _tryWithdraw(toBeWithdrawn);
+        (gain, loss) = _calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
 
-        // Gain shouldn't be used to repay the debt
+        // Do not use gains to repay the debt
         uint256 availableForRepay = withdrawn - gain;
+        
         //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
@@ -229,7 +274,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
     function _sendReportPanicked() internal {
-        uint256 currentAssets = IERC20(baseAsset).balanceOf(address(this));
+        uint256 currentAssets = IERC20(asset).balanceOf(address(this));
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
 
         // Gain shouldn't be used to repay the debt
@@ -253,8 +298,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         _withdraw(_amount);
 
         // Check that the strategy was able to withdraw the desired amount
-        uint256 currentBalance = IERC20(baseAsset).balanceOf(address(this));
-        uint256 desiredBalance = Math.mulDiv(_amount, MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
+        uint256 currentBalance = IERC20(asset).balanceOf(address(this));
+        uint256 desiredBalance = _amount.mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
             // If it hasn't been able, revert.
             revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
@@ -267,7 +312,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @dev Child contract must implement the logic that will put the funds to work.
     function _deposit() internal virtual {}
 
-    /// @notice Withdraws the specified `_amount` of `baseAsset` from the underlyind strategy. 
+    /// @notice Withdraws the specified `_amount` of `baseAsset` from the underlying strategy. 
     /// @dev Child contract must implement the logic that will withdraw the funds.
     /// @param _amount The amount of `baseAsset` to withdraw.
     function _withdraw(uint256 _amount) internal virtual {}

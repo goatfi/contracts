@@ -44,10 +44,10 @@ contract SetProtocolFeeRecipient_Unit_Concrete_Test is Multistrategy_Unit_Shared
         // Set the protocol fee recipient
         multistrategy.setProtocolFeeRecipient(users.feeRecipient);
 
-        // Assert the protocol fee recipeient has been set
+        // Assert the protocol fee recipient has been set
         address actualFeeRecipient = multistrategy.protocolFeeRecipient();
-        address expectedFeeRecipeient = users.feeRecipient;
-        assertEq(actualFeeRecipient, expectedFeeRecipeient, "protocol fee recipient");
+        address expectedFeeRecipient = users.feeRecipient;
+        assertEq(actualFeeRecipient, expectedFeeRecipient, "protocol fee recipient");
     }
 
     function test_SetProtocolFeeRecipient_NewFeeRecipient()
@@ -62,9 +62,9 @@ contract SetProtocolFeeRecipient_Unit_Concrete_Test is Multistrategy_Unit_Shared
         // Set the protocol fee recipient
         multistrategy.setProtocolFeeRecipient(users.bob);
 
-        // Assert the protocol fee recipeient has been set
+        // Assert the protocol fee recipient has been set
         address actualFeeRecipient = multistrategy.protocolFeeRecipient();
-        address expectedFeeRecipeient = users.bob;
-        assertEq(actualFeeRecipient, expectedFeeRecipeient, "protocol fee recipient");
+        address expectedFeeRecipient = users.bob;
+        assertEq(actualFeeRecipient, expectedFeeRecipient, "protocol fee recipient");
     }
 }

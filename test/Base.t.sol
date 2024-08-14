@@ -5,8 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
-import { MultistrategyHarness, IMultistrategyHarness } from "./shared/MultristrategyHarness.sol";
-
+import { MultistrategyHarness, IMultistrategyHarness } from "./shared/MultistrategyHarness.sol";
 import { ERC20Mock } from "./mocks/erc20/ERC20Mock.sol";
 import { ERC20MissingReturn } from "./mocks/erc20/ERC20MissingReturn.sol";
 import { StrategyAdapterMock } from "./mocks/StrategyAdapterMock.sol";
@@ -63,7 +62,7 @@ abstract contract Base_Test is Test, Events {
 
     function deployMultistrategy() internal {
         multistrategy = new Multistrategy({
-            _baseAsset: address(dai),
+            _asset: address(usdt),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat DAI",
@@ -82,7 +81,7 @@ abstract contract Base_Test is Test, Events {
 
     function deployMultistrategyHarness() internal {
         multistrategyHarness = new MultistrategyHarness({
-            _baseAsset: address(dai),
+            _asset: address(dai),
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "Goat DAI",
@@ -99,8 +98,8 @@ abstract contract Base_Test is Test, Events {
         vm.label({ account: address(multistrategyHarness), newLabel: "Multistrategy Harness" });
     }
 
-    function deployMockStrategyAdapter(address _multistrategy, address _baseAsset) internal returns (address) {
-        return address(new StrategyAdapterMock(_multistrategy, _baseAsset));
+    function deployMockStrategyAdapter(address _multistrategy, address _asset) internal returns (address) {
+        return address(new StrategyAdapterMock(_multistrategy, _asset));
     }
 
     function transferMultistrategyOwnershipToOwner() internal {

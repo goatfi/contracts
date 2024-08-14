@@ -82,7 +82,7 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         assertEq(actualUnderlyingStrategyBalance, expectedUnderlyingStrategyBalance, "askReport, underlying strategy balance");
 
         // Assert the gain gets transfered to the multistrategy
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 95 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
@@ -105,7 +105,7 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         strategy.askReport();
 
         // Assert the multistrategy doesn't get any gain
-        uint256 actualMultistrategyBalance = IERC20(strategy.baseAsset()).balanceOf(address(multistrategy));
+        uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 0 ether;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
+import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
 
 contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
     function test_FreeFunds_ZeroTotalAssets() external {
@@ -19,7 +19,7 @@ contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration
         external
         whenTotalAssetsNotZero
     {
-        uint256 totalAssets = multistrategyHarness.totalAssets();
+        uint256 totalAssets = IERC4626(address(multistrategyHarness)).totalAssets();
 
         // Assert that free funds is totalAssets when locked profit is 0
         uint256 actualFreeFunds = multistrategyHarness.freeFunds();
@@ -36,7 +36,7 @@ contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration
         whenTotalAssetsNotZero
         whenLockedProfitNotZero 
     {
-        uint256 totalAssets = multistrategyHarness.totalAssets();
+        uint256 totalAssets = IERC4626(address(multistrategyHarness)).totalAssets();
         uint256 lockedProfit = multistrategyHarness.calculateLockedProfit();
 
         // Assert that free funds is totalAssets minus locked profit

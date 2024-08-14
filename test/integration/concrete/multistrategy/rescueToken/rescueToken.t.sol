@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import { Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
@@ -19,39 +19,39 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_RevertWhen_SameAddressAsBaseAsset()
+    function test_RevertWhen_SameAddressAsset()
         external
         whenCallerIsGuardian
     {
-        address baseAsset = multistrategy.baseAsset();
+        address baseAsset = IERC4626(address(multistrategy)).asset();
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, multistrategy.baseAsset()));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, IERC4626(address(multistrategy)).asset()));
         multistrategy.rescueToken(baseAsset, users.bob);
     }
 
-    modifier whenAddressNotBaseAsset() {
+    modifier whenAddressNotAsset() {
         _;
     }
 
     function test_RevertWhen_ZeroAddress() 
         external
         whenCallerIsGuardian
-        whenAddressNotBaseAsset
+        whenAddressNotAsset
     {
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
         multistrategy.rescueToken(address(weth), address(0));
     }
 
-    modifier whenNotZeroAddres() {
+    modifier whenNotZeroAddress() {
         _;
     }
 
     function test_RescueToken() 
         external
         whenCallerIsGuardian
-        whenAddressNotBaseAsset
-        whenNotZeroAddres
+        whenAddressNotAsset
+        whenNotZeroAddress
     {   
         uint256 externalTokenBalance = 1000 ether;
         weth.mint(address(multistrategy), externalTokenBalance);

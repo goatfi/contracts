@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { MultistrategyHarness_Unit_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
+import { IERC4626, MultistrategyHarness_Unit_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_Shared_Test {
@@ -22,7 +22,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
 
     modifier whenThereIsPriorProfit() {
         // Strategy deployed and added
-        strategy = deployMockStrategyAdapter(address(multistrategyHarness), multistrategyHarness.baseAsset());
+        strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
         multistrategyHarness.addStrategy(strategy, 5_000, 100 ether, 10_000 ether);
 
         //User deposits

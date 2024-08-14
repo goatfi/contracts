@@ -2,13 +2,14 @@
 
 pragma solidity >=0.8.20 <= 0.9.0;
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { MultistrategyAdminable } from "src/abstracts/MultistrategyAdminable.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdminable {
+abstract contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdminable {
 
     /// @dev Maximum amount of different strategies this contract can deposit into
     uint8 constant MAXIMUM_STRATEGIES = 10;
@@ -18,9 +19,6 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
 
     /// @dev Maximum performance fee that the owner can set is 10%
     uint256 constant MAX_PERFORMANCE_FEE = 1_000;
-
-    /// @inheritdoc IMultistrategyManageable
-    address public immutable baseAsset;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;
@@ -38,6 +36,9 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     uint256 public totalDebt;
 
     /// @inheritdoc IMultistrategyManageable
+    uint256 public slippageLimit;
+
+    /// @inheritdoc IMultistrategyManageable
     uint8 public activeStrategies;
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     mapping(address strategyAddress => MStrat.StrategyParams strategyParameters) public strategies;
 
     /// @dev Order that `_withdraw()` uses to determine which strategy pull the funds from
-    //       The first time a zero address is enountered, it stops withdrawing, so it is
+    //       The first time a zero address is encountered, it stops withdrawing, so it is
     //       possible that there isn't enough to withdraw if the amount of strategies in
     //       `withdrawOrder` is smaller than the amount of active strategies.
     address[] public withdrawOrder;
@@ -64,15 +65,13 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     constructor(
         address _owner,
         address _manager,
-        address _baseAsset,
         address _protocolFeeRecipient
     ) 
         MultistrategyAdminable(_owner, _manager) 
     {
-        if(_baseAsset == address(0) || _protocolFeeRecipient == address(0)) {
+        if(_protocolFeeRecipient == address(0)) {
             revert Errors.ZeroAddress();
         }
-        baseAsset = _baseAsset;
         protocolFeeRecipient = _protocolFeeRecipient;
         withdrawOrder = new address[](MAXIMUM_STRATEGIES);
     }
@@ -114,7 +113,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
             revert Errors.ZeroAddress();
         }
         protocolFeeRecipient = _protocolFeeRecipient;
-        emit ProtocolFeeRecipientSet(_protocolFeeRecipient);
+        emit ProtocolFeeRecipientSet(protocolFeeRecipient);
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -123,13 +122,18 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
             revert Errors.ExcessiveFee({ fee: _performanceFee });
         }
         performanceFee = _performanceFee;
-        emit PerformanceFeeSet(_performanceFee);
+        emit PerformanceFeeSet(performanceFee);
     }
 
     /// @inheritdoc IMultistrategyManageable
     function setDepositLimit(uint256 _depositLimit) external onlyManager {
         depositLimit = _depositLimit;
-        emit DepositLimitSet(_depositLimit);
+        emit DepositLimitSet(depositLimit);
+    }
+
+    function setSlippageLimit(uint256 _slippageLimit) external onlyManager {
+        slippageLimit = _slippageLimit;
+        emit SlippageLimitSet(slippageLimit);
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -158,11 +162,11 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         if(strategies[_strategy].activation != 0) {
             revert Errors.StrategyAlreadyActive({ strategy: _strategy });
         }
-        // Assert strategy's `baseAsset` matches this multistrategy's `baseAsset`.
-        if(baseAsset != IStrategyAdapter(_strategy).baseAsset()) {
-            revert Errors.BaseAssetMissmatch({
-                multBaseAsset: baseAsset,
-                stratBaseAsset: IStrategyAdapter(_strategy).baseAsset()
+        // Assert strategy's `asset` matches this multistrategy's `asset`.
+        if(IERC4626(address(this)).asset() != IStrategyAdapter(_strategy).asset()) {
+            revert Errors.AssetMismatch({
+                multAsset: IERC4626(address(this)).asset(),
+                stratAsset: IStrategyAdapter(_strategy).asset()
             });
         }
         // Assert new `debtRatio` will be below or equal 100%.
@@ -209,7 +213,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
         if(strategies[_strategy].debtRatio > 0) {
             revert Errors.StrategyNotRetired();
         }
-        // Check that the startegy being removed doesn't have any outstanding debt.
+        // Check that the strategy being removed doesn't have any outstanding debt.
         if(strategies[_strategy].totalDebt > 0) {
             revert Errors.StrategyWithOutstandingDebt();
         }
@@ -293,7 +297,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
     function _validateStrategyOrder(address[] memory _strategies) internal view {
         // Revert if the strategies order length doesn't have the same length as withdrawOrder
         if(_strategies.length != MAXIMUM_STRATEGIES) {
-            revert Errors.StrategiesLengthMissMatch();
+            revert Errors.StrategiesLengthMismatch();
         }
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             address strategy = _strategies[i];
@@ -303,7 +307,7 @@ contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdmin
                 if(strategies[strategy].activation == 0) {
                     revert Errors.StrategyNotActive(strategy);
                 }
-                // Start to check on the next startegy
+                // Start to check on the next strategy
                 for(uint8 j = 0; j < MAXIMUM_STRATEGIES; ++j) {
                     // Check that the strategy isn't duplicate
                     if(i != j && strategy == _strategies[j]) {

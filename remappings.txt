@@ -13,3 +13,4 @@ test-utils/=test/utils
 @trust-security/trustlessPermit/=lib/trustlessPermit/
 @uniswapV3-periphery/=lib/v3-periphery/contracts/
 @prb/math/=lib/prb-math/
+@properties/=lib/properties/
