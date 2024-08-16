@@ -11,38 +11,48 @@ import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 contract DeployMultistrategy is Script {
 
-    address constant REIKO = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-
     address constant ASSET = AssetsArbitrum.WETH;
     address constant MANAGER = ProtocolArbitrum.TREASURY;
     address constant FEE_RECIPIENT = ProtocolArbitrum.GOAT_FEE_BATCH;
     string constant NAME = "alpha siloWETH";
     string constant SYMBOL = "aSWETH";
+    address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
+    address constant TIMELOCK = ProtocolArbitrum.TIMELOCK;
+
+    uint256 constant INITIAL_DEPOSIT = 0.01 ether;
 
     function run() public { 
-        uint64 nonce;
+
+        if(IERC20(ASSET).balanceOf(msg.sender) < INITIAL_DEPOSIT) {
+            console.log("\u001b[1;31m NOT ENOUGH ASSETS FOR INITIAL DEPOSIT \u001b[0m");
+            return;
+        }
     
         vm.startBroadcast();
-        nonce = vm.getNonce(msg.sender);
 
-        address preComputedMultistrategy = computeCreateAddress(msg.sender, nonce + 1);
-
-        IERC20(ASSET).approve(preComputedMultistrategy, 0.01 ether);
         Multistrategy multistrategy = new Multistrategy(ASSET, MANAGER, FEE_RECIPIENT, NAME, SYMBOL);
 
-        if(address(multistrategy) == preComputedMultistrategy) {
-            // Enable REIKO as guardian
-            multistrategy.enableGuardian(REIKO);
-            // Set the deposit limit to 1 ETH
-            multistrategy.setDepositLimit(1 ether);
-            // Set performance fee to 5%
-            multistrategy.setPerformanceFee(1000);
-            // Transfer ownership to the treasury
-            multistrategy.transferOwnership(MANAGER);
-
-            console.log("Multistrategy:", address(multistrategy));
-        }
+        IERC20(ASSET).approve(address(multistrategy), 0.01 ether);
+        
+        // Set the deposit limit to 1 ETH
+        multistrategy.setDepositLimit(1 ether);
+        // Deposit some assets to prevent inflation attack
+        multistrategy.deposit(INITIAL_DEPOSIT, MANAGER);
+        // Set performance fee to 5%
+        multistrategy.setPerformanceFee(1000);
+        // Enable a Guardian
+        multistrategy.enableGuardian(GUARDIAN);
+        // Transfer ownership to the timelock
+        multistrategy.transferOwnership(TIMELOCK);
 
         vm.stopBroadcast(); 
+
+        console.log("Multistrategy:", address(multistrategy));
+
+        if(multistrategy.totalAssets() == INITIAL_DEPOSIT) {
+            console.log("\u001b[1;32m INITIAL DEPOSIT SUCCESSFUL \u001b[0m");
+        } else {
+            console.log("\u001b[1;31m INITIAL DEPOSIT FRONT-RAN \u001b[0m");
+        }
     }
 }
