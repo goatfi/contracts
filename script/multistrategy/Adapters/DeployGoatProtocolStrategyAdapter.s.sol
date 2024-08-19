@@ -24,6 +24,9 @@ contract DeployGoatProtocolStrategyAdapter is Script {
         // Enable a Guardian
         adapter.enableGuardian(GUARDIAN);
 
+        // Set the slippage limit to 0.01%
+        adapter.setSlippageLimit(1);
+
         // Transfer Ownership to the Treasury
         adapter.transferOwnership(MANAGER);
 

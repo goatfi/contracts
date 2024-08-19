@@ -12,7 +12,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     using SafeERC20 for IERC20;
 
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
-    address immutable goatVault;
+    address public immutable goatVault;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
