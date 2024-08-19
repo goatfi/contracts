@@ -10,6 +10,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract GoatProtocolStrategyAdapter is StrategyAdapter {
     using SafeERC20 for IERC20;
+    using Math for uint256;
 
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
     address public immutable goatVault;
@@ -57,7 +58,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
         uint256 shareBalance = IERC20(goatVault).balanceOf(address(this));
 
-        return Math.mulDiv(shareBalance, pricePerShare, 1 ether);
+        return shareBalance.mulDiv(pricePerShare, 1 ether, Math.Rounding.Floor);
     }
 
     /// @notice Internal view function to convert an amount of assets to shares based on the GoatVault's price per share.
@@ -70,7 +71,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _amount) internal view returns(uint256) {
         uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
-        return Math.mulDiv(_amount, 1 ether, pricePerShare);
+        return _amount.mulDiv(1 ether, pricePerShare, Math.Rounding.Ceil);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
