@@ -114,7 +114,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         // Any surplus on the withdraw won't be sent to the multistrategy.
         // It will be eventually reported back as gain when sendReport is called.
-        uint256 withdrawn = _liquidity() > _amount ? _amount : _liquidity();
+        uint256 withdrawn = Math.min(_amount, _liquidity());
 
         IERC20(asset).safeTransfer(multistrategy, withdrawn);
 
@@ -179,8 +179,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _repayAmount The amount to be repaid.
     /// @param _strategyGain The gain of the strategy.
     /// @return The amount to be withdrawn from the strategy.
-    function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns(uint256) 
-    {   
+    function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns(uint256) {   
         // Get this strategy exceeding debt
         uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
         
@@ -303,7 +302,6 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// 
     /// @param _amount The amount to withdraw from the strategy.
     function _tryWithdraw(uint256 _amount) internal {
-        
         if(_amount == 0) return;
 
         // Withdraw the desired amount subtracting the amount already held in the contract.
