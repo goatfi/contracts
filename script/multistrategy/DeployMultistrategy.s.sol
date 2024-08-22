@@ -14,8 +14,8 @@ contract DeployMultistrategy is Script {
     address constant ASSET = AssetsArbitrum.WETH;
     address constant MANAGER = ProtocolArbitrum.TREASURY;
     address constant FEE_RECIPIENT = ProtocolArbitrum.GOAT_FEE_BATCH;
-    string constant NAME = "alpha siloWETH";
-    string constant SYMBOL = "aSWETH";
+    string constant NAME = "Yield Chasing Silo WETH";
+    string constant SYMBOL = "ycsETH";
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address constant TIMELOCK = ProtocolArbitrum.TIMELOCK;
 
@@ -38,8 +38,6 @@ contract DeployMultistrategy is Script {
         multistrategy.setDepositLimit(1 ether);
         // Deposit some assets to prevent inflation attack
         multistrategy.deposit(INITIAL_DEPOSIT, MANAGER);
-        // Set performance fee to 5%
-        multistrategy.setPerformanceFee(1000);
         // Enable a Guardian
         multistrategy.enableGuardian(GUARDIAN);
         // Transfer ownership to the timelock
