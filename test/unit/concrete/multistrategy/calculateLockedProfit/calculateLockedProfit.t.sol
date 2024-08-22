@@ -10,7 +10,6 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
     
     address strategy;
     uint256 strategyProfit = 100 ether;
-    uint256 constant PROFIT_UNLOCK_TIME = 12 hours;
 
     function test_CalculateLockedProfit_NoPriorLockedProfit() 
         external
@@ -40,7 +39,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         external
         whenThereIsPriorProfit
     {
-        vm.warp(block.timestamp + PROFIT_UNLOCK_TIME + 1);
+        vm.warp(block.timestamp + multistrategy.PROFIT_UNLOCK_TIME() + 1);
 
         // Assert that locked profit is 0
         uint256 actualLockedProfit = multistrategyHarness.calculateLockedProfit();
@@ -63,7 +62,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         assertEq(actualLockedProfit, expectedLockedProfit, "calculateLockedProfit");
 
         // Advance half of the unlock time
-        vm.warp(block.timestamp + PROFIT_UNLOCK_TIME / 2);
+        vm.warp(block.timestamp + multistrategy.PROFIT_UNLOCK_TIME() / 2);
 
         // Assert that locked profit is 47.5% of the gain at t = 6h
         // Due to rounding precision, it will give a margin of 0,001%
