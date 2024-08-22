@@ -6,6 +6,7 @@ documentation/
 
 #Ignored for compilation
 ignoreCompile/
+deployments/
 notes.txt
 
 #Ignore Fork deployment tests
