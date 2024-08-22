@@ -46,19 +46,22 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to calculate the total assets held by the contract in the GoatVault.
+   /// @notice Internal view function to calculate the total assets held by the contract.
     /// 
     /// This function performs the following actions:
-    /// - Retrieves the price per share from the GoatVault.
-    /// - Retrieves the GoatVault share balance of this contract.
-    /// - Calculates the total assets by multiplying the share balance by the price per share, and scaling by 1 ether.
+    /// - Retrieves the current price per share from the GoatVault.
+    /// - Retrieves the balance of GoatVault shares held by the contract.
+    /// - Retrieves the balance of the asset held by the contract.
+    /// - Calculates the value of the GoatVault shares in terms of the asset, using floor rounding.
+    /// - Adds the asset balance to the value of the GoatVault shares to determine the total assets.
     /// 
-    /// @return The total assets held by this contract in the GoatVault.
+    /// @return The total assets held by the contract, including both GoatVault shares and the asset balance.
     function _totalAssets() internal override view returns(uint256) {
         uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
         uint256 sharesBalance = IERC20(goatVault).balanceOf(address(this));
+        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return sharesBalance.mulDiv(pricePerShare, 1 ether, Math.Rounding.Floor);
+        return sharesBalance.mulDiv(pricePerShare, 1 ether, Math.Rounding.Floor) + assetBalance;
     }
 
     /// @notice Internal view function to convert an amount of assets to shares based on the GoatVault's price per share.
