@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import { BaseAllToNativeStrat, IERC20 } from "../common/BaseAllToNativeStrat.sol";
 import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces/silo/ISilo.sol";
 
-contract StrategySilo is BaseAllToNativeStrat {
+contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
     ISiloRewards public constant siloRewards = ISiloRewards(0xCC4933B0405Ae9DDFE05a54d20f56A0447c9EBcF);
     ISiloLens public constant siloLens = ISiloLens(0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536);
 

@@ -12,7 +12,7 @@ import {AssetsArbitrum} from "@addressbook/AssetsArbitrum.sol";
 import {GoatUniswapV3Buyback} from "src/infra/GoatUniswapV3Buyback.sol";
 
 // Strategy to deploy
-import {StrategySilo} from "src/infra/strategies/silo/StrategySilo.sol";
+import {StrategySiloBorrowableDeposit} from "src/infra/strategies/silo/StrategySiloBorrowableDeposit.sol";
 
 contract DeployGoatVaultSilo is Script {
     string name = "Goat Silo WETH-ETH+";
@@ -42,7 +42,7 @@ contract DeployGoatVaultSilo is Script {
         vm.startBroadcast();
 
         GoatVault vault = vaultFactory.cloneVault();
-        StrategySilo strategy = new StrategySilo();
+        StrategySiloBorrowableDeposit strategy = new StrategySiloBorrowableDeposit();
 
         commonAddresses = StratFeeManagerInitializable.CommonAddresses(
             address(vault),
