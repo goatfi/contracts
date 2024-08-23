@@ -68,7 +68,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC4626
-    function totalAssets() public view override returns(uint256) {
+    function totalAssets() public view override returns (uint256) {
         return _liquidity() + totalDebt;
     }
 
@@ -115,22 +115,22 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IMultistrategy
-    function pricePerShare() external view returns(uint256) {
+    function pricePerShare() external view returns (uint256) {
         return convertToAssets(1 ether);
     }
 
     /// @inheritdoc IMultistrategy
-    function creditAvailable(address _strategy) external view returns(uint256) {
+    function creditAvailable(address _strategy) external view returns (uint256) {
         return _creditAvailable(_strategy);
     }
 
     /// @inheritdoc IMultistrategy
-    function debtExcess(address _strategy) external view returns(uint256) {
+    function debtExcess(address _strategy) external view returns (uint256) {
         return _debtExcess(_strategy);
     }
 
     /// @inheritdoc IMultistrategy
-    function strategyTotalDebt(address _strategy) external view returns(uint256) {
+    function strategyTotalDebt(address _strategy) external view returns (uint256) {
         return strategies[_strategy].totalDebt;
     }
 
@@ -227,7 +227,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - Retrieves the balance of the asset held by the contract.
     /// 
     /// @return The current liquidity (balance of the asset) of the contract.
-    function _liquidity() internal view returns(uint256) {
+    function _liquidity() internal view returns (uint256) {
         return IERC20(asset()).balanceOf(address(this));
     }
 
@@ -241,7 +241,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @param _assets The amount of assets to convert to shares.
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The number of shares corresponding to the given amount of assets.
-    function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns(uint256) {
+    function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns (uint256) {
         return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _freeFunds() + 1, rounding);
     }
 
@@ -255,7 +255,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @param _shares The number of shares to convert to assets.
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The amount of assets corresponding to the given number of shares.
-    function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns(uint256) {
+    function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns (uint256) {
         return _shares.mulDiv(_freeFunds() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
     }
 
@@ -272,7 +272,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// 
     /// @param _strategy The address of the strategy for which to determine the available credit.
     /// @return The amount of credit available for the given strategy.
-    function _creditAvailable(address _strategy) internal view returns(uint256) {
+    function _creditAvailable(address _strategy) internal view returns (uint256) {
         uint256 mult_totalAssets = totalAssets();
         uint256 mult_debtLimit = debtRatio.mulDiv(mult_totalAssets, MAX_BPS);
         uint256 mult_totalDebt = totalDebt;
@@ -321,7 +321,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// 
     /// @param _strategy The address of the strategy for which to determine the debt excess.
     /// @return The amount of excess debt for the given strategy.
-    function _debtExcess(address _strategy) internal view returns(uint256) {
+    function _debtExcess(address _strategy) internal view returns (uint256) {
         // If the debtRatio is 0, means the multistrategy doesn't want to offer any credits
         // which means, all debt is excess debt.
         if(debtRatio == 0) {
@@ -347,7 +347,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - Subtracts the current locked profit from the total assets to determine the free funds.
     /// 
     /// @return The amount of free funds available.
-    function _freeFunds() internal view returns(uint256) {
+    function _freeFunds() internal view returns (uint256) {
         return totalAssets() - _calculateLockedProfit();
     }
 
@@ -359,7 +359,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - If the locked funds ratio is greater than or equal to the degradation coefficient, it returns zero indicating no locked profit remains.
     /// 
     /// @return The calculated current locked profit.
-    function _calculateLockedProfit() internal view returns(uint256) {
+    function _calculateLockedProfit() internal view returns (uint256) {
         uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
 
         if(lockedFundsRatio < DEGRADATION_COEFFICIENT) {
@@ -441,9 +441,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             for(uint8 i = 0; i <= withdrawOrder.length;){
                 address strategy = withdrawOrder[i];
 
-                // We reached the end of the withdraw queue
+                // We reached the end of the withdraw queue and assets are still higher than the liquidity
                 if(strategy == address(0)){
-                    break;
+                    revert Errors.InsufficientLiquidity(_assets, _liquidity());
                 }
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
@@ -472,11 +472,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
                 unchecked { ++i; }
             }
-        }
-
-        // If the withdrawal process couldn't withdraw enough assets, revert.
-        if(_assets > _liquidity()) {
-            revert Errors.InsufficientLiquidity(_assets, _liquidity());
         }
 
         // Burn the shares and send the assets to the receiver
@@ -531,9 +526,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             for(uint8 i = 0; i <= withdrawOrder.length;){
                 address strategy = withdrawOrder[i];
 
-                // We reached the end of the withdraw queue
+                // We reached the end of the withdraw queue and assets are still higher than the liquidity
                 if(strategy == address(0)){
-                    break;
+                    revert Errors.InsufficientLiquidity(assets, _liquidity());
                 }
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
@@ -569,11 +564,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             }
         }
 
-        // If the withdrawal process couldn't withdraw enough assets, revert.
-        if(assets > _liquidity()) {
-            revert Errors.InsufficientLiquidity(assets, _liquidity());
-        }
-
         // Burn the shares and send the assets to the receiver
         _burn(_owner, _shares);
         IERC20(asset()).safeTransfer(_receiver, assets);
@@ -593,8 +583,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// Emits a `CreditRequested` event.
     ///
     /// @dev This function should be called only by active strategies when they need to request credit.
-    function _requestCredit() internal returns (uint256 credit){
-        credit = _creditAvailable(msg.sender);
+    function _requestCredit() internal returns (uint256){
+        uint256 credit = _creditAvailable(msg.sender);
 
         // Check that the strategy has some credit available
         if(credit > 0) {
@@ -608,7 +598,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
 
             emit CreditRequested(msg.sender, credit);
         }
-
+        
         return credit;
     }
 

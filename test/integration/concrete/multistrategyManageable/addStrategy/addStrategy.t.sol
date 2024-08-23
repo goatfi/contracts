@@ -117,7 +117,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     ///      We need to deploy a need multistrategy with a different token and create a strategy for
     ///      that multistrategy. Revert will happen when we try to add that strategy to the multistrategy
     ///      We're testing here.
-    function test_RevertWhen_baseAssetDoNotMatch() 
+    function test_RevertWhen_assetDoNotMatch() 
         external
         whenCallerIsManager
         whenActiveStrategiesBelowMaximum
@@ -125,7 +125,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotMultistrategyAddress
         whenStrategyIsInactive
     {
-        // Deploy a multistrategy with a different baseAsset
+        // Deploy a multistrategy with a different asset
         Multistrategy usdtMultistrategy = new Multistrategy({
             _asset: address(asset) == address(dai) ? address(usdt) : address(dai),
             _manager: users.keeper,
@@ -146,7 +146,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    modifier whenBaseAssetMatch() {
+    modifier whenAssetMatch() {
         _;
     }
 
@@ -157,7 +157,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenBaseAssetMatch
+        whenAssetMatch
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         minDebtDelta = 200_000 ether;
@@ -180,7 +180,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenBaseAssetMatch
+        whenAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
@@ -204,7 +204,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
         whenStrategyIsInactive
-        whenBaseAssetMatch
+        whenAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());

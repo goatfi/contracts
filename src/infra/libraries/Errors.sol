@@ -85,7 +85,7 @@ library Errors {
     /// @notice Thrown when the caller is not the Multistrategy.
     error CallerNotMultistrategy(address caller);
 
-    /// @notice Thrown when the `_baseAsset` parameter on the constructor doesn't match 
+    /// @notice Thrown when the `_asset` parameter on the constructor doesn't match 
     /// the `deposit` token on Multistrategy.
     error AssetMismatch(address multAsset, address stratAsset);
 

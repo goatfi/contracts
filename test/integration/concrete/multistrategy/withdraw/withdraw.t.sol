@@ -194,6 +194,72 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "withdraw, strategy two debt");
     }
 
+    /// @dev Test case where a strategy with priority in the withdraw order has no debt
+    /// so the withdraw process has to jump to the next strategy.
+    function test_Withdraw_StrategyWithNoFundsIncludedInOrder()
+        external
+        whenContractNotPaused
+        whenHasCallerEnoughSharesToCoverWithdraw
+        whenAmountGreaterThanZero
+        whenMultistrategyBalanceLowerThanWithdrawAmount
+    {
+        // Trigger a withdraw so it empties the first strategy in the order.
+        amountToWithdraw = 800 ether;
+
+        swapCaller(users.bob);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
+
+        // Assert strategy one has no debt
+        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        uint256 expectedStrategyOneDebt = 0;
+        assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "withdraw, strategy one debt");
+
+        // Trigger a second withdraw
+        amountToWithdraw = 100 ether;
+        swapCaller(users.bob);
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
+
+        // Assert the user balance
+        uint256 actualUserBalance = asset.balanceOf(users.bob);
+        uint256 expectedUserBalance = 900 ether;
+        assertEq(actualUserBalance, expectedUserBalance, "withdraw, user balance");
+
+        // Assert the user shares balance
+        uint256 actualUserSharesBalance = IERC20(address(multistrategy)).balanceOf(users.bob);
+        uint256 expectedUserSharesBalance = depositAmount - 900 ether;
+        assertEq(actualUserSharesBalance, expectedUserSharesBalance, "withdraw, user shares balance");
+
+        // Assert multistrategy reserves.
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
+        uint256 expectedMultistrategyBalance = 0;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "withdraw, multistrategy balance");
+
+        // Assert strategy_one assets.
+        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
+        uint256 expectedStrategyOneAssets = 0;
+        assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "withdraw, strategy one assets");
+
+        // Assert strategy_two assets.
+        uint256 actualStrategyTwoAssets = IStrategyAdapter(strategy_two).totalAssets();
+        uint256 expectedStrategyTwoAssets = 100 ether;
+        assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "withdraw, strategy two assets");
+
+        // Assert multistrategy totalDebt
+        uint256 actualMultistrategyDebt = multistrategy.totalDebt();
+        uint256 expectedMultistrategyDebt = 100 ether;
+        assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "withdraw, multistrategy total debt");
+
+        // Assert strategy_one totalDebt
+        actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        expectedStrategyOneDebt = 0;
+        assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "withdraw, strategy one debt");
+
+        // Assert strategy_two totalDebt
+        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(strategy_two).totalDebt;
+        uint256 expectedStrategyTwoDebt = 100 ether;
+        assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "withdraw, strategy two debt");
+    }
+
     /// @dev Test case where the withdraw process is started and it gets
     // enough funds to cover the withdraw without reaching the queue end
     function test_Withdraw_NotReachQueueEnd()

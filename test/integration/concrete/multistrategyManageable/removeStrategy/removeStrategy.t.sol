@@ -8,6 +8,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
     address strategy;
+    address strategy_two;
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
@@ -132,6 +133,54 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(isInWithdrawOrder, expectedInWithdrawOrder, "removeStrategy");
 
         address actualAddressAtWithdrawOrderPos0 = multistrategy.getWithdrawOrder()[0];
+        address expectedAddressAtWithdrawOrderPos0 = address(0);
+        // Assert that the strategy has been ordered
+        assertEq(actualAddressAtWithdrawOrderPos0, expectedAddressAtWithdrawOrderPos0, "removeStrategy withdraw order");
+    }
+
+    /// @dev Add a mock strategy to the multistrategy
+    modifier whenTwoActiveStrategies() {
+        strategy_two = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        uint256 debtRatio = 5_000;
+        uint256 minDebtDelta = 100 ether;
+        uint256 maxDebtDelta = 100_000 ether;
+
+        multistrategy.addStrategy(strategy_two, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.retireStrategy(strategy_two);
+        _;
+    }
+
+    function test_RemoveStrategy_RemoveStrategyNotFirstInQueue()
+        external
+        whenCallerIsManager
+        whenStrategyIsActive
+        whenTwoActiveStrategies
+        whenDebtRatioIsZero
+        whenStrategyHasNoDebt
+        whenStrategyIsInWithdrawOrder
+    {
+        // Expect the relevant event
+        vm.expectEmit({ emitter: address(multistrategy)});
+        emit StrategyRemoved(strategy_two);
+
+        // Remove the strategy from withdraw order
+        multistrategy.removeStrategy(strategy_two);
+    
+        bool isInWithdrawOrder;
+        bool expectedInWithdrawOrder = false;
+
+        // Check if the strategy is in the withdraw order array
+        address[] memory actualWithdrawOrder = multistrategy.getWithdrawOrder();
+        for(uint256 i = 0; i < actualWithdrawOrder.length; ++i) {
+            if(actualWithdrawOrder[i] == strategy_two) {
+                isInWithdrawOrder = true;
+            }
+        }
+        
+        // Assert it has been removed
+        assertEq(isInWithdrawOrder, expectedInWithdrawOrder, "removeStrategy");
+
+        address actualAddressAtWithdrawOrderPos0 = multistrategy.getWithdrawOrder()[1];
         address expectedAddressAtWithdrawOrderPos0 = address(0);
         // Assert that the strategy has been ordered
         assertEq(actualAddressAtWithdrawOrderPos0, expectedAddressAtWithdrawOrderPos0, "removeStrategy withdraw order");

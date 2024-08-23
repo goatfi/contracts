@@ -8,11 +8,11 @@ interface IStrategyAdapter {
     event SlippageLimitSet(uint256 slippageLimit);
 
     /// @notice Returns the address of the multistrategy this Strategy belongs to.
-    function multistrategy() external view returns(address);
+    function multistrategy() external view returns (address);
 
     /// @notice Returns the address of the token used tby this strategy.
     /// @dev it should be the same as the token used by the multistrategy.
-    function asset() external view returns(address);
+    function asset() external view returns (address);
 
     /// @notice Returns the current slippage limit in basis points (BPS).
     /// @dev The slippage limit is expressed in BPS, where 10,000 BPS equals 100%.
@@ -38,7 +38,7 @@ interface IStrategyAdapter {
     function sendReport(uint256 _amountToWithdraw) external;
 
     /// @notice Sends a report to the Multistrategy of any gain or loss this strategy has made.
-    /// @dev This report wont withdraw any funds to reapay debt to the Multistrategy.
+    /// @dev This report wont withdraw any funds to repay debt to the Multistrategy.
     /// Only the multistrategy can call it
     function askReport() external;
 
@@ -47,13 +47,13 @@ interface IStrategyAdapter {
     /// @dev This function should only be called after a strategy has been retired.
     function sendReportPanicked() external;
 
-    /// @notice Withdraws `baseAsset` from the strategy.
+    /// @notice Withdraws `asset` from the strategy.
     /// @dev Only callable by the multistrategy.
     /// @param _amount Amount of tokens to withdraw from the strategy.
     function withdraw(uint256 _amount) external returns (uint256);
 
-    /// @notice Returns the amount of `baseAsset` this strategy holds.
-    function totalAssets() external view returns(uint256);
+    /// @notice Returns the amount of `asset` this strategy holds.
+    function totalAssets() external view returns (uint256);
 
     /// @notice Starts the panic process for this strategy.
     /// The panic process consists of:

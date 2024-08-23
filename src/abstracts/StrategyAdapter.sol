@@ -31,7 +31,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
     
-    /// @dev Reverts if `_baseAsset` doesn't match `baseAsset` on the Multistrategy.
+    /// @dev Reverts if `_asset` doesn't match `asset` on the Multistrategy.
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
     /// @param _asset Address of the token used to deposit and withdraw on this strategy.
     constructor(address _multistrategy, address _asset) StrategyAdapterAdminable(msg.sender) {
@@ -62,7 +62,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IStrategyAdapter
-    function totalAssets() external view returns(uint256) {
+    function totalAssets() external view returns (uint256) {
         return _totalAssets();
     }
 
@@ -153,8 +153,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _currentAssets The current assets held by the strategy.
     /// @return gain The calculated gain.
     /// @return loss The calculated loss.
-    function _calculateGainAndLoss(uint256 _currentAssets) internal view returns(uint256 gain, uint256 loss) {
+    function _calculateGainAndLoss(uint256 _currentAssets) internal view returns (uint256, uint256) {
         uint256 totalDebt = IMultistrategy(multistrategy).strategyTotalDebt(address(this));
+        uint256 gain;
+        uint256 loss;
 
         // Check if the strategy has made a gain or a loss
         if(_currentAssets >= totalDebt) {
@@ -179,7 +181,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _repayAmount The amount to be repaid.
     /// @param _strategyGain The gain of the strategy.
     /// @return The amount to be withdrawn from the strategy.
-    function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns(uint256) {   
+    function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns (uint256) {   
         // Get this strategy exceeding debt
         uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
         
@@ -235,14 +237,14 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @notice Returns the current balance of asset in this contract.
-    function _liquidity() internal view returns(uint256) {
+    function _liquidity() internal view returns (uint256) {
         return IERC20(asset).balanceOf(address(this));
     }
 
-    /// @notice Return the amount of `baseAsset` the underlying strategy holds. In the case this strategy
-    /// has swapped `baseAsset` for another asset, it should return the most approximate value.
+    /// @notice Return the amount of `asset` the underlying strategy holds. In the case this strategy
+    /// has swapped `asset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
-    function _totalAssets() internal virtual view returns(uint256) {}
+    function _totalAssets() internal virtual view returns (uint256) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
@@ -278,7 +280,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     ///         has been panicked.
     /// 
     /// This function performs the following actions:
-    /// - Retrieves the current balance of the base asset held by the contract.
+    /// - Retrieves the current balance of the asset held by the contract.
     /// - Calculates the gain and loss based on the current assets.
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.

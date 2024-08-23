@@ -23,10 +23,10 @@ contract RescueToken_Integration_Concrete_Test is Multistrategy_Integration_Shar
         external
         whenCallerIsGuardian
     {
-        address baseAsset = IERC4626(address(multistrategy)).asset();
+        address assetAddress = IERC4626(address(multistrategy)).asset();
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, IERC4626(address(multistrategy)).asset()));
-        multistrategy.rescueToken(baseAsset, users.bob);
+        multistrategy.rescueToken(assetAddress, users.bob);
     }
 
     modifier whenAddressNotAsset() {

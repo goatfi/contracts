@@ -49,7 +49,10 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
         multistrategy.setStrategyDebtRatio(strategy, 0);
         swapCaller(strategy);
 
-        multistrategy.requestCredit();
+        uint256 actualCredit = multistrategy.requestCredit();
+
+        uint256 expectedCredit = 0;
+        assertEq(actualCredit, expectedCredit, "requestCredit, credit");
 
         uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 1_000 ether;
@@ -72,7 +75,10 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
     {
         swapCaller(strategy);
 
-        multistrategy.requestCredit();
+        uint256 actualCredit = multistrategy.requestCredit();
+
+        uint256 expectedCredit = 500 ether;
+        assertEq(actualCredit, expectedCredit, "requestCredit, credit");
 
         uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
         uint256 expectedMultistrategyBalance = 500 ether;

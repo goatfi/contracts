@@ -94,12 +94,12 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IMultistrategyManageable
-    function getWithdrawOrder() external view returns(address[] memory) {
+    function getWithdrawOrder() external view returns (address[] memory) {
         return withdrawOrder;
     }
 
     /// @inheritdoc IMultistrategyManageable
-    function getStrategyParameters(address _strategy) external view returns(MStrat.StrategyParams memory) {
+    function getStrategyParameters(address _strategy) external view returns (MStrat.StrategyParams memory) {
         return strategies[_strategy];
     }
 

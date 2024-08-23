@@ -54,8 +54,8 @@ contract Unpause_Integration_Concrete_Test is StrategyAdapter_Integration_Shared
 
         // Assert contract allowances are set
         address stakingContract = IStrategyAdapterMock(address(strategy)).stakingContract();
-        uint256 actualBaseAssetAllowances = IERC20(strategy.asset()).allowance(address(strategy), stakingContract);
-        uint256 expectedBaseAssetAllowance = type(uint256).max;
-        assertEq(actualBaseAssetAllowances, expectedBaseAssetAllowance, "unpause");
+        uint256 actualAssetAllowances = IERC20(strategy.asset()).allowance(address(strategy), stakingContract);
+        uint256 expectedAssetAllowance = type(uint256).max;
+        assertEq(actualAssetAllowances, expectedAssetAllowance, "unpause");
     }
 }
