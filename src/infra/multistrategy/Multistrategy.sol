@@ -21,9 +21,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     using Math for uint256;
     
     /// @dev Used for locked profit calculations. Must be 10 ** asset decimals.
-    uint256 immutable DEGRADATION_COEFFICIENT;
+    uint256 immutable DEGRADATION_COEFFICIENT = 1 ether;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
-    uint256 constant PROFIT_UNLOCK_TIME = 12 hours;
+    uint256 public constant PROFIT_UNLOCK_TIME = 1 days;
 
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
@@ -55,12 +55,10 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {   
-        // Set performance fee to 4% of yield generated
-        performanceFee = 400;
+        // Set performance fee to 10% of yield generated
+        performanceFee = 1000;
         // Set the initial lastReport to the timestamp when creating the multistrategy
         lastReport = block.timestamp;
-        // Set the degradation coefficient to 1 whole unit of asset.
-        DEGRADATION_COEFFICIENT = 10 ** IERC20Metadata(_asset).decimals();
         // How much profit is unlocked each second. This sets the unlock time to 12h
         lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
     }
@@ -206,12 +204,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IMultistrategy
-    function strategyReport(uint256 _debtRepayment, uint256 _profit, uint256 _loss) 
+    function strategyReport(uint256 _debtRepayment, uint256 _gain, uint256 _loss) 
         external 
         whenNotPaused 
         onlyActiveStrategy(msg.sender)
     {
-        _report(_debtRepayment, _profit, _loss);
+        _report(_debtRepayment, _gain, _loss);
     }
 
     /// @inheritdoc IMultistrategy
@@ -233,27 +231,30 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         return IERC20(asset()).balanceOf(address(this));
     }
 
-    /// @notice Internal view function to calculate the number of shares corresponding to a given amount.
+    /// @notice Internal view function to convert a given amount of assets to shares, with specified rounding.
     /// 
     /// This function performs the following actions:
-    /// - Retrieves the free funds available in the contract.
-    /// - If there are free funds, calculates the shares as a proportion of the total supply to the free funds.
-    /// - If there are no free funds, returns zero.
+    /// - Calculates the number of shares corresponding to the given amount of assets.
+    /// - The calculation is based on the current total supply of shares, adjusted by a decimal offset, and the available free funds.
+    /// - The rounding mode is specified and applied in the calculation.
     /// 
-    /// @param _assets The amount for which to calculate the corresponding shares.
-    /// @return The number of shares corresponding to the given amount.
+    /// @param _assets The amount of assets to convert to shares.
+    /// @param rounding The rounding direction to apply during the conversion.
+    /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns(uint256) {
         return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _freeFunds() + 1, rounding);
     }
 
-    /// @notice Internal view function to calculate the value of a given number of shares.
+    /// @notice Internal view function to convert a given number of shares to assets, with specified rounding.
     /// 
     /// This function performs the following actions:
-    /// - If the total supply of shares is zero, returns the number of shares as the value.
-    /// - Otherwise, calculates the value of the shares as a proportion of the free funds to the total supply.
+    /// - Calculates the amount of assets corresponding to the given number of shares.
+    /// - The calculation is based on the available free funds and the current total supply of shares, adjusted by a decimal offset.
+    /// - The rounding mode is specified and applied in the calculation.
     /// 
-    /// @param _shares The number of shares to calculate the value for.
-    /// @return The value corresponding to the given number of shares.
+    /// @param _shares The number of shares to convert to assets.
+    /// @param rounding The rounding direction to apply during the conversion.
+    /// @return The amount of assets corresponding to the given number of shares.
     function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns(uint256) {
         return _shares.mulDiv(_freeFunds() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
     }
@@ -376,7 +377,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// This function performs the following actions:
     /// - Validates that the receiver address is not zero or the contract address itself.
     /// - Ensures that the deposited amount is greater than zero.
-    /// - Checks that the deposit does not exceed the deposit limit.
     /// - Transfers the assets from the caller to the contract.
     /// - Mints the corresponding shares for the receiver.
     /// - Emits a `Deposit` event with the caller, receiver, amount of assets, and number of shares.
@@ -402,7 +402,24 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         emit Deposit(_caller, _receiver, _assets, _shares);
     }
 
-    
+    /// @notice Internal function to handle withdrawals from the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - If the caller is not the owner, it checks and spends the allowance for the withdrawal.
+    /// - Ensures that the amount to be withdrawn is greater than zero.
+    /// - If the requested withdrawal amount exceeds the available liquidity, it withdraws the necessary amount from the strategies in the withdrawal order.
+    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the liquidity requirement is met or the queue is exhausted.
+    ///   - Updates the total debt of both the strategy and the contract as assets are withdrawn.
+    ///   - Requests the strategy to report, accounting for potential gains or losses.
+    /// - Reverts if the withdrawal process does not result in sufficient liquidity.
+    /// - Burns the corresponding shares and transfers the requested assets to the receiver.
+    /// - Emits a `Withdraw` event with the caller, receiver, owner, amount of assets withdrawn, and shares burned.
+    /// 
+    /// @param _caller The address of the entity initiating the withdrawal.
+    /// @param _receiver The address of the recipient to receive the withdrawn assets.
+    /// @param _owner The address of the owner of the shares being withdrawn.
+    /// @param _assets The amount of assets to withdraw.
+    /// @return The number of shares burned as a result of the withdrawal.
     function _withdraw(
         address _caller,
         address _receiver,
@@ -472,6 +489,27 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         return shares;
     }
 
+    /// @notice Internal function to handle redeeming shares for assets.
+    /// 
+    /// This function performs the following actions:
+    /// - If the caller is not the owner, it checks and spends the allowance for the specified shares.
+    /// - Ensures that the number of shares to redeem is greater than zero.
+    /// - Converts the shares to assets based on the current share price.
+    /// - If the requested assets exceed the available liquidity:
+    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the liquidity requirement is met or the queue is exhausted.
+    ///   - Limits withdrawals from each strategy to the lesser of the remaining required assets or the strategy's total debt.
+    ///   - Updates the total debt of both the strategy and the contract as assets are withdrawn.
+    ///   - Requests the strategy to report, as gains or losses might adjust the available liquidity.
+    ///   - Recalculates the asset value of the shares and stops withdrawals once sufficient liquidity is available.
+    /// - Reverts if the withdrawal process does not result in sufficient liquidity.
+    /// - Burns the corresponding shares and transfers the redeemed assets to the receiver.
+    /// - Emits a `Withdraw` event with the caller, receiver, owner, amount of assets withdrawn, and shares burned.
+    /// 
+    /// @param _caller The address of the entity initiating the redemption.
+    /// @param _receiver The address of the recipient to receive the redeemed assets.
+    /// @param _owner The address of the owner of the shares being redeemed.
+    /// @param _shares The number of shares to redeem.
+    /// @return The amount of assets corresponding to the redeemed shares.
     function _redeem(
         address _caller,
         address _receiver,
@@ -531,6 +569,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
             }
         }
 
+        // If the withdrawal process couldn't withdraw enough assets, revert.
+        if(assets > _liquidity()) {
+            revert Errors.InsufficientLiquidity(assets, _liquidity());
+        }
+
         // Burn the shares and send the assets to the receiver
         _burn(_owner, _shares);
         IERC20(asset()).safeTransfer(_receiver, assets);
@@ -546,10 +589,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - Calculates the available credit for the strategy using `_creditAvailable`.
     /// - If credit is available, it updates the total debt for the strategy and the multistrategy contract.
     /// - Transfers the calculated credit amount to the strategy.
-    ///
-    /// Requirements:
-    /// - The contract must not be paused.
-    /// - The caller must be an active strategy.
     ///
     /// Emits a `CreditRequested` event.
     ///
@@ -585,12 +624,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - Adjusts the strategy's and contract's total debt accordingly.
     /// - Calculates and updates the new locked profit after accounting for any losses.
     /// - Updates the reporting timestamps for the strategy and the contract.
-    ///
-    /// Requirements:
-    /// - The contract must not be paused.
-    /// - The function must be called by an active strategy.
-    /// - The strategy must not report both gain and loss simultaneously.
-    /// - The strategy must have enough balance to cover the gain and debt repayment.
     ///
     /// Emits a `StrategyReported` event.
     ///
@@ -670,9 +703,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// - Updates the strategy's total loss by adding the reported loss.
     /// - Reduces the strategy's total debt by the reported loss.
     /// - Adjusts the contract's total debt by reducing it with the reported loss.
-    /// 
-    /// Requirements:
-    /// - The reported loss must not exceed the strategy's total debt.
     ///
     /// @param _strategy The address of the strategy reporting the loss.
     /// @param _loss The amount of loss reported by the strategy.
@@ -694,10 +724,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// This function performs the following actions:
     /// - Retrieves the balance of the specified token in the contract.
     /// - Transfers the entire balance of the specified token to the recipient address.
-    ///
-    /// Requirements:
-    /// - The caller must be the guardian.
-    /// - The specified token must not be the base asset to prevent unauthorized withdrawals.
     ///
     /// @param _token The address of the token to be rescued.
     /// @param _recipient The address to receive the rescued tokens.

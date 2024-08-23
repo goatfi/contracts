@@ -52,7 +52,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         uint256 expectedPricePerShare = 1 ether;
         assertEq(actualPricePerShare, expectedPricePerShare, "pricePerShare");
 
-        vm.warp(block.timestamp + 1 days);
+        vm.warp(block.timestamp + multistrategy.PROFIT_UNLOCK_TIME() + 1);
 
         // At this point, all profit is unlocked, so price per share should be higher
         actualPricePerShare = multistrategy.pricePerShare();

@@ -30,8 +30,8 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
         IERC20Mock(asset).burn(address(staking), _amount);
     }
 
-    function tryWithdraw(uint256 _amount) external returns(uint256) {
-        return _tryWithdraw(_amount);
+    function tryWithdraw(uint256 _amount) external {
+        _tryWithdraw(_amount);
     }
 
     function calculateGainAndLoss(uint256 _currentAssets) external view returns(uint256 gain, uint256 loss) {

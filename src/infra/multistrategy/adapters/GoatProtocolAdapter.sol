@@ -10,9 +10,10 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract GoatProtocolStrategyAdapter is StrategyAdapter {
     using SafeERC20 for IERC20;
+    using Math for uint256;
 
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
-    address immutable goatVault;
+    address public immutable goatVault;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -45,19 +46,22 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to calculate the total assets held by the contract in the GoatVault.
+   /// @notice Internal view function to calculate the total assets held by the contract.
     /// 
     /// This function performs the following actions:
-    /// - Retrieves the price per share from the GoatVault.
-    /// - Retrieves the GoatVault share balance of this contract.
-    /// - Calculates the total assets by multiplying the share balance by the price per share, and scaling by 1 ether.
+    /// - Retrieves the current price per share from the GoatVault.
+    /// - Retrieves the balance of GoatVault shares held by the contract.
+    /// - Retrieves the balance of the asset held by the contract.
+    /// - Calculates the value of the GoatVault shares in terms of the asset, using floor rounding.
+    /// - Adds the asset balance to the value of the GoatVault shares to determine the total assets.
     /// 
-    /// @return The total assets held by this contract in the GoatVault.
+    /// @return The total assets held by the contract, including both GoatVault shares and the asset balance.
     function _totalAssets() internal override view returns(uint256) {
         uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
-        uint256 shareBalance = IERC20(goatVault).balanceOf(address(this));
+        uint256 sharesBalance = IERC20(goatVault).balanceOf(address(this));
+        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return Math.mulDiv(shareBalance, pricePerShare, 1 ether);
+        return sharesBalance.mulDiv(pricePerShare, 1 ether, Math.Rounding.Floor) + assetBalance;
     }
 
     /// @notice Internal view function to convert an amount of assets to shares based on the GoatVault's price per share.
@@ -70,7 +74,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _amount) internal view returns(uint256) {
         uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
-        return Math.mulDiv(_amount, 1 ether, pricePerShare);
+        return _amount.mulDiv(1 ether, pricePerShare, Math.Rounding.Ceil);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -96,6 +100,10 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @param _amount The amount of assets to withdraw from the GoatVault.
     function _withdraw(uint256 _amount) internal override {
         uint256 shares = _convertToShares(_amount);
+        uint256 sharesBalance = IERC20(goatVault).balanceOf(address(this));
+
+        // Withdraw up to the shares held.
+        shares = Math.min(shares, sharesBalance);
         IGoatVault(goatVault).withdraw(shares);
     }
 
