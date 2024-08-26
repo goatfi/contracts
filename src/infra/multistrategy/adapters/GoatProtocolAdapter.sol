@@ -15,6 +15,9 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
     address public immutable goatVault;
 
+    /// @notice Identifier of this Strategy Adapter
+    string public constant id = "GP";
+
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/

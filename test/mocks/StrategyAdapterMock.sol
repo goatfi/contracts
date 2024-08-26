@@ -12,6 +12,8 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
 
     StakingMock staking;
 
+    string public constant id = "MOCK";
+
     constructor(
         address _multistrategy,
         address _asset
