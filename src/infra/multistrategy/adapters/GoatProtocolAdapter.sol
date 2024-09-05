@@ -18,6 +18,9 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @notice Identifier of this Strategy Adapter
     string public constant id = "GP";
 
+    /// @notice Name of this Strategy Adapter
+    string public name;
+
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -34,7 +37,8 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     constructor(
         address _multistrategy,
         address _asset,
-        address _goatVault
+        address _goatVault,
+        string memory _name
     ) 
         StrategyAdapter(_multistrategy, _asset)
     {   
@@ -42,6 +46,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
             revert Errors.ZeroAddress();
         }
         goatVault = _goatVault;
+        name = _name;
         _giveAllowances();
     }
 

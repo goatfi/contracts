@@ -23,7 +23,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @dev Used for locked profit calculations. Must be 10 ** asset decimals.
     uint256 immutable DEGRADATION_COEFFICIENT = 1 ether;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
-    uint256 public constant PROFIT_UNLOCK_TIME = 1 days;
+    uint256 public constant PROFIT_UNLOCK_TIME = 7 days;
 
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
@@ -48,7 +48,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
         address _asset,
         address _manager,
         address _protocolFeeRecipient,
-        string memory _name, 
+        string memory _name,
         string memory _symbol
     ) 
         MultistrategyManageable(msg.sender, _manager, _protocolFeeRecipient)

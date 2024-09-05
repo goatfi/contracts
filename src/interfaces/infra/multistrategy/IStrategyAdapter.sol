@@ -14,8 +14,11 @@ interface IStrategyAdapter {
     /// @dev it should be the same as the token used by the multistrategy.
     function asset() external view returns (address);
 
-    /// @notice Returns the identifier of this Strategy Adapter
+    /// @notice Returns the identifier of this Strategy Adapter.
     function id() external view returns (string memory);
+
+    /// @notice Returns the name of this Strategy Adapter.
+    function name() external view returns (string memory);
 
     /// @notice Returns the current slippage limit in basis points (BPS).
     /// @dev The slippage limit is expressed in BPS, where 10,000 BPS equals 100%.
