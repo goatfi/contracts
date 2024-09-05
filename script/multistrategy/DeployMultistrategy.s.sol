@@ -11,10 +11,12 @@ import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 contract DeployMultistrategy is Script {
 
+    address TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
+
     address constant ASSET = AssetsArbitrum.WETH;
     address constant MANAGER = ProtocolArbitrum.TREASURY;
     address constant FEE_RECIPIENT = ProtocolArbitrum.GOAT_FEE_BATCH;
-    string constant NAME = "Yield Chasing Silo WETH";
+    string constant NAME = "Yield Chasing Silo ETH";
     string constant SYMBOL = "ycsETH";
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address constant TIMELOCK = ProtocolArbitrum.TIMELOCK;
@@ -30,18 +32,18 @@ contract DeployMultistrategy is Script {
     
         vm.startBroadcast();
 
-        Multistrategy multistrategy = new Multistrategy(ASSET, MANAGER, FEE_RECIPIENT, NAME, SYMBOL);
+        Multistrategy multistrategy = new Multistrategy(ASSET, TESTING_CUSTODIAN, FEE_RECIPIENT, NAME, SYMBOL);
 
         IERC20(ASSET).approve(address(multistrategy), 0.01 ether);
         
         // Set the deposit limit to 1 ETH
         multistrategy.setDepositLimit(1 ether);
         // Deposit some assets to prevent inflation attack
-        multistrategy.deposit(INITIAL_DEPOSIT, MANAGER);
+        multistrategy.deposit(INITIAL_DEPOSIT, TESTING_CUSTODIAN);
         // Enable a Guardian
         multistrategy.enableGuardian(GUARDIAN);
         // Transfer ownership to the timelock
-        multistrategy.transferOwnership(TIMELOCK);
+        multistrategy.transferOwnership(TESTING_CUSTODIAN);
 
         vm.stopBroadcast(); 
 
