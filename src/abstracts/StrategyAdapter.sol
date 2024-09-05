@@ -8,7 +8,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterAdminable } from "src/abstracts/StrategyAdapterAdminable.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
-import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable {
@@ -72,10 +71,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function requestCredit() external onlyOwner whenNotPaused {
-        // Ask the Multistrategy for a credit
         uint256 credit = IMultistrategy(multistrategy).requestCredit();
-
-        // If the credit is greater than 0, deposit into the underlying strategy.
         if(credit > 0) {
             _deposit();
         }
@@ -83,11 +79,9 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-        // Revert if the slippage limit is higher than 100%
         if(_slippageLimit > MAX_SLIPPAGE) {
             revert Errors.SlippageLimitExceeded(_slippageLimit);
         }
-
         slippageLimit = _slippageLimit;
 
         emit SlippageLimitSet(_slippageLimit);
@@ -109,13 +103,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @inheritdoc IStrategyAdapter
+    /// @dev Any surplus on the withdraw won't be sent to the multistrategy.
+    /// It will be eventually reported back as gain when sendReport is called.
     function withdraw(uint256 _amount) external onlyMultistrategy whenNotPaused returns (uint256) {
         _tryWithdraw(_amount);
-
-        // Any surplus on the withdraw won't be sent to the multistrategy.
-        // It will be eventually reported back as gain when sendReport is called.
         uint256 withdrawn = Math.min(_amount, _liquidity());
-
         IERC20(asset).safeTransfer(multistrategy, withdrawn);
 
         return withdrawn;
@@ -143,7 +135,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to calculate the gain and loss based on current assets.
+    /// @notice Calculates the gain and loss based on current assets.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the total debt of the strategy from the multi-strategy contract.
@@ -155,10 +147,9 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @return loss The calculated loss.
     function _calculateGainAndLoss(uint256 _currentAssets) internal view returns (uint256, uint256) {
         uint256 totalDebt = IMultistrategy(multistrategy).strategyTotalDebt(address(this));
-        uint256 gain;
-        uint256 loss;
+        uint256 gain = 0;
+        uint256 loss = 0;
 
-        // Check if the strategy has made a gain or a loss
         if(_currentAssets >= totalDebt) {
             gain = _currentAssets - totalDebt;
         } else {
@@ -168,7 +159,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return (gain, loss);
     }
 
-    /// @notice Internal view function to calculate the amount to be withdrawn from the strategy.
+    /// @notice Calculates the amount to be withdrawn from the strategy.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the exceeding debt of the strategy from the multi-strategy contract.
@@ -182,22 +173,16 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _strategyGain The gain of the strategy.
     /// @return The amount to be withdrawn from the strategy.
     function _calculateAmountToBeWithdrawn(uint256 _repayAmount, uint256 _strategyGain) internal view returns (uint256) {   
-        // Get this strategy exceeding debt
         uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
-        
-        // If this strategy has exceeding debt and wants to repay it
         if(exceedingDebt > 0 && _repayAmount > 0) {
-            // Calculate the amount to be withdrawn to repay the exceeding debt at max slippage
             uint256 exceedingDebtWithSlippage = exceedingDebt.mulDiv(MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
-
-            // Only withdraw up to the amount this strategy manager wants to make available, plus any gains
             return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
         } 
 
         return _strategyGain;
     }
 
-    /// @notice Internal pure function to calculate the adjusted gain and loss after accounting for slippage.
+    /// @notice Calculates the adjusted gain and loss after accounting for slippage.
     /// 
     /// This function performs the following actions:
     /// - Calculates the slippage loss as the difference between the amount intended to be withdrawn and the actual amount withdrawn.
@@ -220,10 +205,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         ) internal pure returns (uint256, uint256) {
 
         uint256 slippageLoss = (_toBeWithdrawn > _currentBalance) ? _toBeWithdrawn - _currentBalance : 0;
-
         if(slippageLoss == 0) return (_gain, _loss);
-
-        // Deduce the slippage loss from the gain, if we empty the gain, add it to the loss
         if(slippageLoss > _gain) {
             slippageLoss -= _gain;
             _gain = 0;
@@ -241,7 +223,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return IERC20(asset).balanceOf(address(this));
     }
 
-    /// @notice Return the amount of `asset` the underlying strategy holds. In the case this strategy
+    /// @notice Returns the amount of `asset` the underlying strategy holds. In the case this strategy
     /// has swapped `asset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
     function _totalAssets() internal virtual view returns (uint256) {}
@@ -250,7 +232,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal function to send a report on the strategy's performance.
+    /// @notice Sends a report on the strategy's performance.
     /// 
     /// This function performs the following actions:
     /// - Calculates the current assets of the strategy.
@@ -264,20 +246,14 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
         uint256 toBeWithdrawn = _calculateAmountToBeWithdrawn(_repayAmount, gain);
 
-        // Withdraw the desired amount to repay plus the gain.
         _tryWithdraw(toBeWithdrawn);
-        uint256 currentBalance = _liquidity();
-        (gain, loss) = _calculateGainAndLossAfterSlippage(gain, loss, currentBalance, toBeWithdrawn);
-
-        // Do not use gains to repay the debt
-        uint256 availableForRepay = currentBalance - gain;
+        (gain, loss) = _calculateGainAndLossAfterSlippage(gain, loss, _liquidity(), toBeWithdrawn);
+        uint256 availableForRepay = _liquidity() - gain;
         
-        //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
 
-    /// @notice Internal function to send a report on the strategy's performance after the strategy
-    ///         has been panicked.
+    /// @notice Sends a report on the strategy's performance after the strategy has been panicked.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the current balance of the asset held by the contract.
@@ -288,14 +264,12 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         uint256 currentAssets = _liquidity();
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
 
-        // Gain shouldn't be used to repay the debt
         uint256 availableForRepay = currentAssets - gain;
 
-        //Report to the strategy
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
     }
 
-    /// @notice Internal function to attempt to withdraw a specified amount from the strategy.
+    /// @notice Attempts to withdraw a specified amount from the strategy.
     /// 
     /// This function performs the following actions:
     /// - Calls the internal `_withdraw` function to withdraw the desired amount.
@@ -306,19 +280,18 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     function _tryWithdraw(uint256 _amount) internal {
         if(_amount == 0) return;
 
-        // Withdraw the desired amount subtracting the amount already held in the contract.
+        // Liquidity is considered as amount already withdrawn, this amount doesn't need
+        // to be withdrawn.
         _withdraw(_amount - _liquidity());
 
-        // Check that the strategy was able to withdraw the desired amount
         uint256 currentBalance = _liquidity();
         uint256 desiredBalance = _amount.mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         if(currentBalance < desiredBalance) {
-            // If it hasn't been able, revert.
             revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
         }
     }
 
-    /// @notice Deposit the entire balance of `asset` this contract holds into the underlying strategy. 
+    /// @notice Deposits the entire balance of `asset` this contract holds into the underlying strategy. 
     /// @dev Child contract must implement the logic that will put the funds to work.
     function _deposit() internal virtual {}
 
@@ -332,11 +305,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// The withdraw process shouldn't have a slippage check, as it is in an emergency situation.
     function _emergencyWithdraw() internal virtual {}
 
-    /// @dev Internal function to grant allowance for `asset` to the contracts used by the strategy adapter.
+    /// @dev Grants allowance for `asset` to the contracts used by the strategy adapter.
     /// It should be overridden by derived contracts to specify the exact contracts and amounts for the allowances.
     function _giveAllowances() internal virtual {}
 
-    /// @dev Internal function to revoke all previously granted allowances for `asset`.
+    /// @dev Revokes all previously granted allowances for `asset`.
     /// It should be overridden by derived contracts to specify the exact contracts from which allowances are revoked.
     function _revokeAllowances() internal virtual {}
 }

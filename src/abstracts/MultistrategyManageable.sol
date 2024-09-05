@@ -119,7 +119,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @inheritdoc IMultistrategyManageable
     function setPerformanceFee(uint256 _performanceFee) external onlyOwner {
         if(_performanceFee > MAX_PERFORMANCE_FEE) {
-            revert Errors.ExcessiveFee({ fee: _performanceFee });
+            revert Errors.ExcessiveFee(_performanceFee);
         }
         performanceFee = _performanceFee;
         emit PerformanceFeeSet(performanceFee);
@@ -150,30 +150,21 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         uint256 _minDebtDelta,
         uint256 _maxDebtDelta
     ) external onlyManager {
-        // Assert limit of maximum strategies is respected.
         if(activeStrategies >= MAXIMUM_STRATEGIES) {
             revert Errors.MaximumAmountStrategies();
         }
-        // Assert is not Zero Address or the address of the multistrategy.
         if(_strategy == address(0) || _strategy == address(this)) {
-            revert Errors.InvalidAddress({ addr: _strategy });
+            revert Errors.InvalidAddress(_strategy);
         }
-        // Assert we're not adding an already active strategy.
         if(strategies[_strategy].activation != 0) {
-            revert Errors.StrategyAlreadyActive({ strategy: _strategy });
+            revert Errors.StrategyAlreadyActive(_strategy);
         }
-        // Assert strategy's `asset` matches this multistrategy's `asset`.
         if(IERC4626(address(this)).asset() != IStrategyAdapter(_strategy).asset()) {
-            revert Errors.AssetMismatch({
-                multAsset: IERC4626(address(this)).asset(),
-                stratAsset: IStrategyAdapter(_strategy).asset()
-            });
+            revert Errors.AssetMismatch(IERC4626(address(this)).asset(), IStrategyAdapter(_strategy).asset());
         }
-        // Assert new `debtRatio` will be below or equal 100%.
         if(debtRatio + _debtRatio > MAX_BPS) {
-            revert Errors.DebtRatioAboveMaximum({ debtRatio: debtRatio + _debtRatio});
+            revert Errors.DebtRatioAboveMaximum(debtRatio + _debtRatio);
         }
-        // Assert `minDebtDelta` is lower or equal than `maxDebtDelta`.
         if(_minDebtDelta > _maxDebtDelta) {
             revert Errors.InvalidDebtDelta();
         }
@@ -193,7 +184,6 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         withdrawOrder[MAXIMUM_STRATEGIES - 1] = _strategy;
         ++activeStrategies;
 
-        // Organize the withdraw order
         _organizeWithdrawOrder();
 
         emit StrategyAdded(_strategy);
@@ -209,18 +199,15 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function removeStrategy(address _strategy) external onlyManager onlyActiveStrategy(_strategy) {
-        // Check that the strategy being removed has been retired.
         if(strategies[_strategy].debtRatio > 0) {
             revert Errors.StrategyNotRetired();
         }
-        // Check that the strategy being removed doesn't have any outstanding debt.
         if(strategies[_strategy].totalDebt > 0) {
             revert Errors.StrategyWithOutstandingDebt();
         }
 
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
             if(withdrawOrder[i] == _strategy) {
-                // Remove the strategy from the withdraw order and organize it.
                 withdrawOrder[i] = address(0);
                 strategies[_strategy].activation = 0;
                 --activeStrategies;
@@ -235,14 +222,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function setStrategyDebtRatio(address _strategy, uint256 _debtRatio) external onlyManager onlyActiveStrategy(_strategy) {
-        // Reduce the debtRatio of the multistrategy by the "old" debtRatio of the strategy.
         debtRatio -= strategies[_strategy].debtRatio;
-        // Assign the new debtRatio.
         strategies[_strategy].debtRatio = _debtRatio;
-        // Increase the debtRatio of the multistrategy with the "new" debtRatio of the strategy.
         debtRatio += strategies[_strategy].debtRatio;
-
-        // Assert that debtRatio <= 100%
         if(debtRatio > MAX_BPS) {
             revert Errors.DebtRatioAboveMaximum(debtRatio);
         }
@@ -255,11 +237,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         onlyManager  
         onlyActiveStrategy(_strategy) 
     {
-        // Check that maxDebtDelta isn't lower than minDebtDelta
         if(strategies[_strategy].maxDebtDelta < _minDebtDelta) {
             revert Errors.InvalidDebtDelta();
         }
-
         strategies[_strategy].minDebtDelta = _minDebtDelta;
 
         emit StrategyMinDebtDeltaSet(_strategy, _minDebtDelta);
@@ -270,11 +250,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         onlyManager 
         onlyActiveStrategy(_strategy) 
     {
-        // Check that minDebtDelta isn't higher than maxDebtDelta
         if(strategies[_strategy].minDebtDelta > _maxDebtDelta) {
             revert Errors.InvalidDebtDelta();
         }
-
         strategies[_strategy].maxDebtDelta = _maxDebtDelta;
 
         emit StrategyMaxDebtDeltaSet(_strategy, _maxDebtDelta);
@@ -284,7 +262,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to validate the order of strategies for withdrawals.
+    /// @notice Validates the order of strategies for withdrawals.
     /// 
     /// This function performs the following actions:
     /// - Ensures the length of the provided strategies array matches the maximum number of strategies.
@@ -303,7 +281,6 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
             address strategy = _strategies[i];
 
             if(strategy != address(0)) {
-                //Strategy needs to be active
                 if(strategies[strategy].activation == 0) {
                     revert Errors.StrategyNotActive(strategy);
                 }
@@ -321,13 +298,12 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
                         revert Errors.InvalidWithdrawOrder();
                     }
                 }
-                // Exit the loop and function, as we reached an address(0) and all following addresses are address(0)
                 return;
             }
         }
     }
 
-    /// @notice Internal function to organize the withdraw order by removing gaps and shifting strategies.
+    /// @notice Organizes the withdraw order by removing gaps and shifting strategies.
     /// 
     /// This function performs the following actions:
     /// - Iterates through the withdraw order array.
