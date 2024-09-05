@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import { StrategyAdapter_Unit_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterAdminable } from "interfaces/infra/multistrategy/IStrategyAdapterAdminable.sol";
