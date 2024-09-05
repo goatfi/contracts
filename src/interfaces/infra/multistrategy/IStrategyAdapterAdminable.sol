@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 
-pragma solidity >=0.8.20 <= 0.9.0;
+pragma solidity ^0.8.27;
 
 interface IStrategyAdapterAdminable {
     /// @notice Emitted when a new guardian has been granted access.

@@ -24,8 +24,8 @@ jobs:
 
       - uses: PaulRBerg/foundry-multibuild@v1
         with:
-          min: "0.8.20"
-          max: "0.8.20"
+          min: "0.8.27"
+          max: "0.8.27"
           skip-test: "false"
 
       - name: "Run Goat Protocol Tests"

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 
-pragma solidity >=0.8.20 <= 0.9.0;
+pragma solidity ^0.8.27;
 
 /// @title IMultistrategyAdminable
 /// @notice Contract module that provides a 3 level access control mechanism, with an owner, a manager

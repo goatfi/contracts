@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
 
-pragma solidity >=0.8.20 <= 0.9.0;
+pragma solidity 0.8.27;
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { MultistrategyAdminable } from "src/abstracts/MultistrategyAdminable.sol";
