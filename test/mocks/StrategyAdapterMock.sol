@@ -12,15 +12,11 @@ contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
 
     StakingMock staking;
 
-    string public constant id = "MOCK";
-
-    string public name = "Mock Adapter";
-
     constructor(
         address _multistrategy,
         address _asset
     ) 
-        StrategyAdapter(_multistrategy, _asset) 
+        StrategyAdapter(_multistrategy, _asset, "Mock", "MOCK") 
     {
         staking = new StakingMock(_asset);
         IERC20(_asset).forceApprove(address(staking), type(uint256).max);

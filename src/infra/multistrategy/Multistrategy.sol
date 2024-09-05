@@ -8,6 +8,7 @@ import {
     ERC20,
     ERC4626
 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -16,7 +17,7 @@ import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.so
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
+contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Math for uint256;
     
@@ -132,7 +133,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) public override whenNotPaused returns (uint256) {
+    function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxAssets = maxDeposit(_receiver);
         if (_assets > maxAssets) {
             revert ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets);
@@ -145,7 +146,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) public override whenNotPaused returns (uint256) {
+    function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxShares = maxMint(_receiver);
         if (_shares > maxShares) {
             revert ERC4626ExceededMaxMint(_receiver, _shares, maxShares);
@@ -158,7 +159,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function withdraw(uint256 _assets, address _receiver, address _owner) public override whenNotPaused returns (uint256) {
+    function withdraw(uint256 _assets, address _receiver, address _owner) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxAssets = maxWithdraw(_owner);
         if (_assets > maxAssets) {
             revert ERC4626ExceededMaxWithdraw(_owner, _assets, maxAssets);
@@ -175,7 +176,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     }
 
     /// @inheritdoc IERC4626
-    function redeem(uint256 _shares, address _receiver, address _owner) public override whenNotPaused returns (uint256) {
+    function redeem(uint256 _shares, address _receiver, address _owner) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxShares = maxRedeem(_owner);
         if (_shares > maxShares) {
             revert ERC4626ExceededMaxRedeem(_owner, _shares, maxShares);
@@ -199,7 +200,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626 {
     /// @inheritdoc IMultistrategy
     function strategyReport(uint256 _debtRepayment, uint256 _gain, uint256 _loss) 
         external 
-        whenNotPaused 
+        whenNotPaused
         onlyActiveStrategy(msg.sender)
     {
         _report(_debtRepayment, _gain, _loss);

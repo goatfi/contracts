@@ -15,12 +15,6 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     /// @notice Address of the GoatVault this strategy adapter will deposit into.
     address public immutable goatVault;
 
-    /// @notice Identifier of this Strategy Adapter
-    string public constant id = "GP";
-
-    /// @notice Name of this Strategy Adapter
-    string public name;
-
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -38,15 +32,15 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         address _multistrategy,
         address _asset,
         address _goatVault,
-        string memory _name
+        string memory _name,
+        string memory _id
     ) 
-        StrategyAdapter(_multistrategy, _asset)
+        StrategyAdapter(_multistrategy, _asset, _name, _id)
     {   
         if(_goatVault == address(0)) {
             revert Errors.ZeroAddress();
         }
         goatVault = _goatVault;
-        name = _name;
         _giveAllowances();
     }
 
@@ -54,7 +48,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-   /// @notice Internal view function to calculate the total assets held by the contract.
+   /// @notice Calculates the total assets held by the contract.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the current price per share from the GoatVault.
@@ -72,7 +66,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         return sharesBalance.mulDiv(pricePerShare, 1 ether, Math.Rounding.Floor) + assetBalance;
     }
 
-    /// @notice Internal view function to convert an amount of assets to shares based on the GoatVault's price per share.
+    /// @notice Converts an amount of assets to shares based on the GoatVault's price per share.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the price per share from the GoatVault.
@@ -89,7 +83,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal function to deposit into into the GoatVault.
+    /// @notice Deposits into into the GoatVault.
     /// 
     /// This function performs the following actions:
     /// - Retrieves the current balance of the base asset held by the contract.
@@ -99,7 +93,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         IGoatVault(goatVault).deposit(assetBalance);
     }
 
-    /// @notice Internal function to withdraw a specified amount of assets from the GoatVault.
+    /// @notice Withdraws a specified amount of assets from the GoatVault.
     /// 
     /// This function performs the following actions:
     /// - Converts the given amount of assets to the equivalent number of shares.
@@ -110,12 +104,11 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         uint256 shares = _convertToShares(_amount);
         uint256 sharesBalance = IERC20(goatVault).balanceOf(address(this));
 
-        // Withdraw up to the shares held.
         shares = Math.min(shares, sharesBalance);
         IGoatVault(goatVault).withdraw(shares);
     }
 
-    /// @notice Internal function to set the maximum allowance of the base asset for the GoatVault.
+    /// @notice Sets the maximum allowance of the base asset for the GoatVault.
     /// 
     /// This function performs the following actions:
     /// - Grants the GoatVault an unlimited allowance to spend the base asset held by the contract.
@@ -123,7 +116,7 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         IERC20(asset).forceApprove(goatVault, type(uint256).max);
     }
 
-    /// @notice Internal function to revoke the allowance of the base asset for the GoatVault.
+    /// @notice Revokes the allowance of the base asset for the GoatVault.
     /// 
     /// This function performs the following actions:
     /// - Sets the allowance of the base asset for the GoatVault to zero, effectively revoking any previous allowances.

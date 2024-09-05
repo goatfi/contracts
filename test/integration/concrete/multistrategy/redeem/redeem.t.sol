@@ -185,7 +185,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
 
     /// @dev Test case where a strategy with priority in the withdraw order has no debt
     /// so the withdraw process has to jump to the next strategy.
-    function test_Withdraw_StrategyWithNoFundsIncludedInOrder()
+    function test_Redeem_StrategyWithNoFundsIncludedInOrder()
         external
         whenContractNotPaused
         whenHasCallerEnoughSharesToCoverRedeem
