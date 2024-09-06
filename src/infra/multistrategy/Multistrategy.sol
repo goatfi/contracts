@@ -387,7 +387,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         }
 
         if(_assets > _liquidity()) {
-            for(uint8 i = 0; i <= withdrawOrder.length;){
+            for(uint8 i = 0; i <= withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
@@ -397,10 +397,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
                 uint256 assetsToWithdraw = Math.min(_assets - _liquidity(), strategies[strategy].totalDebt);
-                if(assetsToWithdraw == 0) {
-                    unchecked { ++i; }
-                    continue;
-                }
+                if(assetsToWithdraw == 0) continue;
 
                 uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
                 strategies[strategy].totalDebt -= withdrawn;
@@ -408,10 +405,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
                 IStrategyAdapter(strategy).askReport();
 
-                if(_assets <= _liquidity()){
-                    break;
-                }
-                unchecked { ++i; }
+                if(_assets <= _liquidity()) break;
             }
         }
 
@@ -460,7 +454,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
         uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
         if(assets > _liquidity()) {
-            for(uint8 i = 0; i <= withdrawOrder.length;){
+            for(uint8 i = 0; i <= withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
@@ -470,10 +464,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
                 uint256 assetsToWithdraw = Math.min(assets - _liquidity(), strategies[strategy].totalDebt);
-                if(assetsToWithdraw == 0) {
-                    unchecked { ++i; }
-                    continue;
-                }
+                if(assetsToWithdraw == 0) continue;
 
                 uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
                 strategies[strategy].totalDebt -= withdrawn;
@@ -484,14 +475,10 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                 // Convert the shares to assets, because if a loss was realized, the liquidity could be
                 // enough as less assets are given for the same amount of shares.
                 assets = _convertToAssets(_shares, Math.Rounding.Floor);
-                if(assets <= _liquidity()){
-                    break;
-                }
-                unchecked { ++i; }
+                if(assets <= _liquidity()) break;
             }
         }
 
-        // Burn the shares and send the assets to the receiver
         _burn(_owner, _shares);
         IERC20(asset()).safeTransfer(_receiver, assets);
 

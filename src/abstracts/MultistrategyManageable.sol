@@ -206,7 +206,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
             revert Errors.StrategyWithOutstandingDebt();
         }
 
-        for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
+        for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             if(withdrawOrder[i] == _strategy) {
                 withdrawOrder[i] = address(0);
                 strategies[_strategy].activation = 0;
@@ -216,7 +216,6 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
                 emit StrategyRemoved(_strategy);
                 return;
             }
-            unchecked { ++i; }
         }
     }
 
@@ -311,7 +310,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// - Ensures that any empty slots are moved to the end of the array.
     function _organizeWithdrawOrder() internal {
         uint8 position = 0;
-        for(uint8 i = 0; i < MAXIMUM_STRATEGIES;) {
+        for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             address strategy = withdrawOrder[i];
             if(strategy == address(0)) {
                 ++position;
@@ -319,7 +318,6 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
                 withdrawOrder[i - position] = strategy;
                 withdrawOrder[i] = address(0);
             }
-            unchecked { ++i; }
         }
     }
 }

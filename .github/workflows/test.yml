@@ -22,11 +22,5 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: PaulRBerg/foundry-multibuild@v1
-        with:
-          min: "0.8.27"
-          max: "0.8.27"
-          skip-test: "false"
-
       - name: "Run Goat Protocol Tests"
         run: 'forge test'
