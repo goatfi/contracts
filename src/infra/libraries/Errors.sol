@@ -36,14 +36,8 @@ library Errors {
     /// @notice Thrown when performing an action on an active strategy.
     error StrategyAlreadyActive(address strategy);
 
-    /// @notice Thrown when strategies array length doesn't match MAXIMUM_STRATEGIES.
-    error StrategiesLengthMismatch();
-
     /// @notice Thrown when a strategy is reporting a gain and a loss simultaneously.
     error GainLossMismatch();
-
-    /// @notice Thrown when there is a duplicate strategy when trying to update the deposit or withdraw order.
-    error DuplicateStrategyInArray();
 
     /// @notice Thrown when a deposit would exceed the depositLimit
     error DepositLimit();

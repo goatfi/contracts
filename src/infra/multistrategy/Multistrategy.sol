@@ -135,9 +135,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxAssets = maxDeposit(_receiver);
-        if (_assets > maxAssets) {
-            revert ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets);
-        }
+        require(_assets <= maxAssets, ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets));
 
         uint256 shares = previewDeposit(_assets);
         _deposit(msg.sender, _receiver, _assets, shares);
@@ -148,9 +146,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxShares = maxMint(_receiver);
-        if (_shares > maxShares) {
-            revert ERC4626ExceededMaxMint(_receiver, _shares, maxShares);
-        }
+        require(_shares <= maxShares, ERC4626ExceededMaxMint(_receiver, _shares, maxShares));
 
         uint256 assets = previewMint(_shares);
         _deposit(msg.sender, _receiver, assets, _shares);
@@ -161,16 +157,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function withdraw(uint256 _assets, address _receiver, address _owner) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxAssets = maxWithdraw(_owner);
-        if (_assets > maxAssets) {
-            revert ERC4626ExceededMaxWithdraw(_owner, _assets, maxAssets);
-        }
+        require(_assets <= maxAssets, ERC4626ExceededMaxWithdraw(_owner, _assets, maxAssets));
 
         uint256 maxShares = previewWithdraw(_assets);
         uint256 shares = _withdraw(msg.sender, _receiver, _owner, _assets);
 
-        if(shares > maxShares) {
-            revert Errors.SlippageCheckFailed(maxShares, shares);
-        }
+        require(shares <= maxShares, Errors.SlippageCheckFailed(maxShares, shares));
 
         return shares;
     }
@@ -178,16 +170,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function redeem(uint256 _shares, address _receiver, address _owner) public override whenNotPaused nonReentrant returns (uint256) {
         uint256 maxShares = maxRedeem(_owner);
-        if (_shares > maxShares) {
-            revert ERC4626ExceededMaxRedeem(_owner, _shares, maxShares);
-        }
+        require(_shares <= maxShares, ERC4626ExceededMaxRedeem(_owner, _shares, maxShares));
 
         uint256 minAssets = previewRedeem(_shares);
         uint256 assets = _redeem(msg.sender, _receiver, _owner, _shares);
 
-        if(assets < minAssets) {
-            revert Errors.SlippageCheckFailed(minAssets, assets);
-        }
+        require(assets >= minAssets, Errors.SlippageCheckFailed(minAssets, assets));
 
         return assets;
     }
@@ -342,12 +330,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param _assets The amount of assets being deposited.
     /// @param _shares The number of shares to be minted for the receiver.
     function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal override {
-        if(_receiver == address(0) || _receiver == address(this)) {
-            revert Errors.InvalidAddress(_receiver);
-        }
-        if(_assets == 0) {
-            revert Errors.ZeroAmount(_assets);
-        }
+        require(_receiver != address(0) && _receiver != address(this), Errors.InvalidAddress(_receiver));
+        require(_assets > 0, Errors.ZeroAmount(_assets));
 
         IERC20(asset()).safeTransferFrom(_caller, address(this), _assets);
         _mint(_receiver, _shares);
@@ -379,11 +363,10 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         address _owner,
         uint256 _assets
     ) internal returns (uint256) {
+        require(_assets > 0, Errors.ZeroAmount(_assets));
+
         if (_caller != _owner) {
             _spendAllowance(_owner, _caller, previewWithdraw(_assets));
-        }
-        if(_assets == 0) {
-            revert Errors.ZeroAmount(_assets);
         }
 
         if(_assets > _liquidity()) {
@@ -391,9 +374,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
-                if(strategy == address(0)) {
-                    revert Errors.InsufficientLiquidity(_assets, _liquidity());
-                }
+                require(strategy != address(0), Errors.InsufficientLiquidity(_assets, _liquidity()));
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
                 uint256 assetsToWithdraw = Math.min(_assets - _liquidity(), strategies[strategy].totalDebt);
@@ -445,11 +426,10 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         address _owner,
         uint256 _shares 
     ) internal returns (uint256) {
+        require(_shares > 0, Errors.ZeroAmount(_shares));
+        
         if (_caller != _owner) {
             _spendAllowance(_owner, _caller, _shares);
-        }
-        if(_shares == 0) {
-            revert Errors.ZeroAmount(_shares);
         }
 
         uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
@@ -458,9 +438,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
-                if(strategy == address(0)) {
-                    revert Errors.InsufficientLiquidity(assets, _liquidity());
-                }
+                require(strategy != address(0), Errors.InsufficientLiquidity(assets, _liquidity()));
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
                 uint256 assetsToWithdraw = Math.min(assets - _liquidity(), strategies[strategy].totalDebt);
@@ -529,12 +507,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param _gain The amount of profit reported by the strategy.
     /// @param _loss The amount of loss reported by the strategy.
     function _report(uint256 _debtRepayment, uint256 _gain, uint256 _loss) internal {
-        if(_gain > 0 && _loss > 0) {
-            revert Errors.GainLossMismatch();
-        }
-        if(IERC20(asset()).balanceOf(msg.sender) < _debtRepayment + _gain) {
-            revert Errors.InsufficientBalance(IERC20(asset()).balanceOf(msg.sender), _debtRepayment + _gain);
-        }
+        uint256 strategyBalance = IERC20(asset()).balanceOf(msg.sender);
+        require(!(_gain > 0 && _loss > 0), Errors.GainLossMismatch());
+        require(strategyBalance >= _debtRepayment + _gain, Errors.InsufficientBalance(strategyBalance, _debtRepayment + _gain));
 
         uint256 profit = 0;
         uint256 feesCollected = 0;
@@ -577,10 +552,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param _strategy The address of the strategy reporting the loss.
     /// @param _loss The amount of loss reported by the strategy.
     function _reportLoss(address _strategy, uint256 _loss) internal {
-        uint256 strat_totalDebt = strategies[_strategy].totalDebt;
-        if(_loss > strat_totalDebt) {
-            revert Errors.InvalidStrategyLoss();
-        }
+        require(_loss <= strategies[_strategy].totalDebt, Errors.InvalidStrategyLoss());
 
         strategies[_strategy].totalLoss += _loss;
         strategies[_strategy].totalDebt -= _loss;
@@ -596,9 +568,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param _token The address of the token to be rescued.
     /// @param _recipient The address to receive the rescued tokens.
     function _rescueToken(address _token, address _recipient) internal {
-        if(_token == asset()) {
-            revert Errors.InvalidAddress(_token);
-        }
+        require(_token != asset(), Errors.InvalidAddress(_token));
 
         uint256 amount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(_recipient, amount);

@@ -69,9 +69,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     ) 
         MultistrategyAdminable(_owner, _manager) 
     {
-        if(_protocolFeeRecipient == address(0)) {
-            revert Errors.ZeroAddress();
-        }
+        require(_protocolFeeRecipient != address(0), Errors.ZeroAddress());
+
         protocolFeeRecipient = _protocolFeeRecipient;
         withdrawOrder = new address[](MAXIMUM_STRATEGIES);
     }
@@ -83,9 +82,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @dev Reverts if `_strategy` is not active.
     /// @param _strategy Address of the strategy to check if it is active. 
     modifier onlyActiveStrategy(address _strategy) {
-        if(strategies[_strategy].activation == 0) {
-            revert Errors.StrategyNotActive(_strategy);
-        }
+        require(strategies[_strategy].activation > 0, Errors.StrategyNotActive(_strategy));
         _;
     }
 
@@ -109,18 +106,16 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function setProtocolFeeRecipient(address _protocolFeeRecipient) external onlyOwner {
-        if(_protocolFeeRecipient == address(0)) {
-            revert Errors.ZeroAddress();
-        }
+        require(_protocolFeeRecipient != address(0), Errors.ZeroAddress());
+
         protocolFeeRecipient = _protocolFeeRecipient;
         emit ProtocolFeeRecipientSet(protocolFeeRecipient);
     }
 
     /// @inheritdoc IMultistrategyManageable
     function setPerformanceFee(uint256 _performanceFee) external onlyOwner {
-        if(_performanceFee > MAX_PERFORMANCE_FEE) {
-            revert Errors.ExcessiveFee(_performanceFee);
-        }
+        require(_performanceFee <= MAX_PERFORMANCE_FEE, Errors.ExcessiveFee(_performanceFee));
+
         performanceFee = _performanceFee;
         emit PerformanceFeeSet(performanceFee);
     }
@@ -138,7 +133,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function setWithdrawOrder(address[] memory _strategies) external onlyManager {
-        _validateStrategyOrder(_strategies);
+        require(_validateStrategyOrder(_strategies), Errors.InvalidWithdrawOrder());
+
         withdrawOrder = _strategies;
         emit WithdrawOrderSet();
     }
@@ -150,24 +146,13 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         uint256 _minDebtDelta,
         uint256 _maxDebtDelta
     ) external onlyManager {
-        if(activeStrategies >= MAXIMUM_STRATEGIES) {
-            revert Errors.MaximumAmountStrategies();
-        }
-        if(_strategy == address(0) || _strategy == address(this)) {
-            revert Errors.InvalidAddress(_strategy);
-        }
-        if(strategies[_strategy].activation != 0) {
-            revert Errors.StrategyAlreadyActive(_strategy);
-        }
-        if(IERC4626(address(this)).asset() != IStrategyAdapter(_strategy).asset()) {
-            revert Errors.AssetMismatch(IERC4626(address(this)).asset(), IStrategyAdapter(_strategy).asset());
-        }
-        if(debtRatio + _debtRatio > MAX_BPS) {
-            revert Errors.DebtRatioAboveMaximum(debtRatio + _debtRatio);
-        }
-        if(_minDebtDelta > _maxDebtDelta) {
-            revert Errors.InvalidDebtDelta();
-        }
+        require(activeStrategies < MAXIMUM_STRATEGIES, Errors.MaximumAmountStrategies());
+        require(_strategy != address(0) && _strategy != address(this), Errors.InvalidAddress(_strategy));
+        require(strategies[_strategy].activation == 0, Errors.StrategyAlreadyActive(_strategy));
+        require(IERC4626(address(this)).asset() == IStrategyAdapter(_strategy).asset(), 
+            Errors.AssetMismatch(IERC4626(address(this)).asset(), IStrategyAdapter(_strategy).asset()));
+        require(debtRatio + _debtRatio <=  MAX_BPS, Errors.DebtRatioAboveMaximum(debtRatio + _debtRatio));
+        require(_minDebtDelta <= _maxDebtDelta, Errors.InvalidDebtDelta());
 
         strategies[_strategy] = MStrat.StrategyParams({
             activation: block.timestamp,
@@ -199,12 +184,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function removeStrategy(address _strategy) external onlyManager onlyActiveStrategy(_strategy) {
-        if(strategies[_strategy].debtRatio > 0) {
-            revert Errors.StrategyNotRetired();
-        }
-        if(strategies[_strategy].totalDebt > 0) {
-            revert Errors.StrategyWithOutstandingDebt();
-        }
+        require(strategies[_strategy].debtRatio == 0, Errors.StrategyNotRetired());
+        require(strategies[_strategy].totalDebt == 0, Errors.StrategyWithOutstandingDebt());
 
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             if(withdrawOrder[i] == _strategy) {
@@ -221,14 +202,13 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     function setStrategyDebtRatio(address _strategy, uint256 _debtRatio) external onlyManager onlyActiveStrategy(_strategy) {
-        debtRatio -= strategies[_strategy].debtRatio;
-        strategies[_strategy].debtRatio = _debtRatio;
-        debtRatio += strategies[_strategy].debtRatio;
-        if(debtRatio > MAX_BPS) {
-            revert Errors.DebtRatioAboveMaximum(debtRatio);
-        }
+        uint256 newDebtRatio = debtRatio - strategies[_strategy].debtRatio + _debtRatio;
+        require(newDebtRatio <= MAX_BPS, Errors.DebtRatioAboveMaximum(newDebtRatio));
 
-        emit StrategyDebtRatioSet(_strategy, _debtRatio );
+        debtRatio = newDebtRatio;
+        strategies[_strategy].debtRatio = _debtRatio;
+
+        emit StrategyDebtRatioSet(_strategy, _debtRatio);
     }
 
     /// @inheritdoc IMultistrategyManageable
@@ -236,9 +216,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         onlyManager  
         onlyActiveStrategy(_strategy) 
     {
-        if(strategies[_strategy].maxDebtDelta < _minDebtDelta) {
-            revert Errors.InvalidDebtDelta();
-        }
+        require(strategies[_strategy].maxDebtDelta >= _minDebtDelta, Errors.InvalidDebtDelta());
+
         strategies[_strategy].minDebtDelta = _minDebtDelta;
 
         emit StrategyMinDebtDeltaSet(_strategy, _minDebtDelta);
@@ -249,9 +228,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         onlyManager 
         onlyActiveStrategy(_strategy) 
     {
-        if(strategies[_strategy].minDebtDelta > _maxDebtDelta) {
-            revert Errors.InvalidDebtDelta();
-        }
+        require(strategies[_strategy].minDebtDelta <= _maxDebtDelta, Errors.InvalidDebtDelta());
+
         strategies[_strategy].maxDebtDelta = _maxDebtDelta;
 
         emit StrategyMaxDebtDeltaSet(_strategy, _maxDebtDelta);
@@ -271,35 +249,29 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// - If an address in the provided array is zero, it checks that all subsequent addresses are also zero.
     /// 
     /// @param _strategies The array of strategy addresses to validate.
-    function _validateStrategyOrder(address[] memory _strategies) internal view {
-        // Revert if the strategies order length doesn't have the same length as withdrawOrder
-        if(_strategies.length != MAXIMUM_STRATEGIES) {
-            revert Errors.StrategiesLengthMismatch();
-        }
+    /// @return True if the order is valid. False if not valid.
+    function _validateStrategyOrder(address[] memory _strategies) internal view returns (bool) {
+        if(_strategies.length != MAXIMUM_STRATEGIES) return false;
+
         for(uint8 i = 0; i < MAXIMUM_STRATEGIES; ++i) {
             address strategy = _strategies[i];
 
             if(strategy != address(0)) {
-                if(strategies[strategy].activation == 0) {
-                    revert Errors.StrategyNotActive(strategy);
-                }
+                if(strategies[strategy].activation == 0) return false;
                 // Start to check on the next strategy
                 for(uint8 j = 0; j < MAXIMUM_STRATEGIES; ++j) {
                     // Check that the strategy isn't duplicate
-                    if(i != j && strategy == _strategies[j]) {
-                        revert Errors.DuplicateStrategyInArray();
-                    }
+                    if(i != j && strategy == _strategies[j]) return false;
                 }
             } else {
                 // Check that the rest of the addresses are address(0)
                 for(uint8 j = i + 1; j < MAXIMUM_STRATEGIES; ++j) {
-                    if(_strategies[j] != address(0)) {
-                        revert Errors.InvalidWithdrawOrder();
-                    }
+                    if(_strategies[j] != address(0)) return false;
                 }
-                return;
+                return true;
             }
         }
+        return true;
     }
 
     /// @notice Organizes the withdraw order by removing gaps and shifting strategies.

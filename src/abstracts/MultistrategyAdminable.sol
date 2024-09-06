@@ -31,17 +31,22 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pa
 
     /// @notice Reverts if called by any account other than the owner or the manager.
     modifier onlyManager() {
-        if(msg.sender != owner() && msg.sender != manager) {
-            revert Errors.CallerNotManager({ caller: msg.sender });
-        }
+        require(
+            msg.sender == owner() || 
+            msg.sender == manager, 
+            Errors.CallerNotManager(msg.sender)
+        );
         _;
     }
 
     /// @notice Reverts if called by any account other than the owner, the manager, or a guardian.
     modifier onlyGuardian() {
-        if(msg.sender != owner() && msg.sender != manager && !guardians[msg.sender]) {
-            revert Errors.CallerNotGuardian({ caller: msg.sender });
-        }
+        require(
+            msg.sender == owner() || 
+            msg.sender == manager || 
+            guardians[msg.sender], 
+            Errors.CallerNotGuardian(msg.sender)
+        );
         _;
     }
 
@@ -51,9 +56,8 @@ abstract contract MultistrategyAdminable is IMultistrategyAdminable, Ownable, Pa
 
     /// @inheritdoc IMultistrategyAdminable
     function setManager(address _manager) external onlyOwner {
-        if(_manager == address(0)) {
-            revert Errors.ZeroAddress();
-        }
+        require(_manager != address(0), Errors.ZeroAddress());
+
         manager = _manager;
         emit ManagerSet(_manager);
     }

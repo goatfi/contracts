@@ -40,12 +40,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @param _multistrategy Address of the multistrategy this strategy will belongs to.
     /// @param _asset Address of the token used to deposit and withdraw on this strategy.
     constructor(address _multistrategy, address _asset, string memory _name, string memory _id) StrategyAdapterAdminable(msg.sender) {
-        if(IERC4626(_multistrategy).asset() != _asset) {
-            revert Errors.AssetMismatch({
-                multAsset: IERC4626(_multistrategy).asset(),
-                stratAsset: _asset
-            });
-        }
+        require(_asset == IERC4626(_multistrategy).asset(), Errors.AssetMismatch(IERC4626(_multistrategy).asset(), _asset));
 
         multistrategy = _multistrategy;
         asset = _asset;
@@ -58,9 +53,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @dev Reverts if called by any account other than the Multistrategy this strategy belongs to.
     modifier onlyMultistrategy() {
-        if(msg.sender != multistrategy) {
-            revert Errors.CallerNotMultistrategy(msg.sender);
-        }
+        require(msg.sender == multistrategy, Errors.CallerNotMultistrategy(msg.sender));
         _;
     }
 
@@ -87,9 +80,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-        if(_slippageLimit > MAX_SLIPPAGE) {
-            revert Errors.SlippageLimitExceeded(_slippageLimit);
-        }
+        require(_slippageLimit <= MAX_SLIPPAGE, Errors.SlippageLimitExceeded(_slippageLimit));
+        
         slippageLimit = _slippageLimit;
 
         emit SlippageLimitSet(_slippageLimit);
@@ -294,9 +286,8 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         uint256 currentBalance = _liquidity();
         uint256 desiredBalance = _amount.mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
-        if(currentBalance < desiredBalance) {
-            revert Errors.SlippageCheckFailed(desiredBalance, currentBalance);
-        }
+        
+        require(currentBalance >= desiredBalance, Errors.SlippageCheckFailed(desiredBalance, currentBalance));
     }
 
     /// @notice Deposits the entire balance of `asset` this contract holds into the underlying strategy. 

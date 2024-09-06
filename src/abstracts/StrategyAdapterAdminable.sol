@@ -23,9 +23,7 @@ contract StrategyAdapterAdminable is IStrategyAdapterAdminable, Ownable, Pausabl
 
     /// @notice Reverts if called by any account other than the owner, the manager, or a guardian.
     modifier onlyGuardian() {
-        if(msg.sender != owner() && !guardians[msg.sender]) {
-            revert Errors.CallerNotGuardian({ caller: msg.sender });
-        }
+        require(msg.sender == owner() || guardians[msg.sender], Errors.CallerNotGuardian(msg.sender));
         _;
     }
 

@@ -36,7 +36,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         strategies = new address[](11);
 
         // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategiesLengthMismatch.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawOrder.selector));
         multistrategy.setWithdrawOrder(strategies);
     }
 
@@ -67,7 +67,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         ];
 
         // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.DuplicateStrategyInArray.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawOrder.selector));
         multistrategy.setWithdrawOrder(strategies);
     }
 
@@ -99,7 +99,7 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
         ];
 
         // Expect it to revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, mockStrategy));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawOrder.selector));
         multistrategy.setWithdrawOrder(strategies);
     }
 

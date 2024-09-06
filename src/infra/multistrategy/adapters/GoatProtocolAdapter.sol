@@ -37,9 +37,8 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     ) 
         StrategyAdapter(_multistrategy, _asset, _name, _id)
     {   
-        if(_goatVault == address(0)) {
-            revert Errors.ZeroAddress();
-        }
+        require(_goatVault != address(0), Errors.ZeroAddress());
+        
         goatVault = _goatVault;
         _giveAllowances();
     }
