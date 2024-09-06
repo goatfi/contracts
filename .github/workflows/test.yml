@@ -22,5 +22,8 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
       - name: "Run Goat Protocol Tests"
         run: 'forge test'
