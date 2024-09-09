@@ -21,8 +21,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     using SafeERC20 for IERC20;
     using Math for uint256;
     
-    /// @dev Used for locked profit calculations. Must be 10 ** asset decimals.
-    uint256 immutable DEGRADATION_COEFFICIENT = 1 ether;
+    /// @dev Used for locked profit calculations.
+    uint256 constant DEGRADATION_COEFFICIENT = 1 ether;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
     uint256 public constant PROFIT_UNLOCK_TIME = 7 days;
 
@@ -160,7 +160,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         require(_assets <= maxAssets, ERC4626ExceededMaxWithdraw(_owner, _assets, maxAssets));
 
         uint256 maxShares = previewWithdraw(_assets);
-        uint256 shares = _withdraw(msg.sender, _receiver, _owner, _assets);
+        (, uint256 shares) = _withdraw(msg.sender, _receiver, _owner, _assets, maxShares, false);
 
         require(shares <= maxShares, Errors.SlippageCheckFailed(maxShares, shares));
 
@@ -173,7 +173,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         require(_shares <= maxShares, ERC4626ExceededMaxRedeem(_owner, _shares, maxShares));
 
         uint256 minAssets = previewRedeem(_shares);
-        uint256 assets = _redeem(msg.sender, _receiver, _owner, _shares);
+        (uint256 assets, ) = _withdraw(msg.sender, _receiver, _owner, minAssets, _shares, true);
 
         require(assets >= minAssets, Errors.SlippageCheckFailed(minAssets, assets));
 
@@ -356,83 +356,25 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param _receiver The address of the recipient to receive the withdrawn assets.
     /// @param _owner The address of the owner of the shares being withdrawn.
     /// @param _assets The amount of assets to withdraw.
-    /// @return The number of shares burned as a result of the withdrawal.
+    /// @param _shares The amount of shares to burn.
+    /// @param _consumeAllShares True if all `_shares` should be used to withdraw. False if it should withdraw just `_assets`.
+    /// @return The number of assets withdrawn and the shares burned as a result of the withdrawal.
     function _withdraw(
         address _caller,
         address _receiver,
         address _owner,
-        uint256 _assets
-    ) internal returns (uint256) {
-        require(_assets > 0, Errors.ZeroAmount(_assets));
-
-        if (_caller != _owner) {
-            _spendAllowance(_owner, _caller, previewWithdraw(_assets));
-        }
-
-        if(_assets > _liquidity()) {
-            for(uint8 i = 0; i <= withdrawOrder.length; ++i){
-                address strategy = withdrawOrder[i];
-
-                // We reached the end of the withdraw queue and assets are still higher than the liquidity
-                require(strategy != address(0), Errors.InsufficientLiquidity(_assets, _liquidity()));
-
-                // We can't withdraw from a strategy more than what it has asked as credit.
-                uint256 assetsToWithdraw = Math.min(_assets - _liquidity(), strategies[strategy].totalDebt);
-                if(assetsToWithdraw == 0) continue;
-
-                uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
-                strategies[strategy].totalDebt -= withdrawn;
-                totalDebt -= withdrawn;
-
-                IStrategyAdapter(strategy).askReport();
-
-                if(_assets <= _liquidity()) break;
-            }
-        }
-
-        uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
-        _burn(_owner, shares);
-        IERC20(asset()).safeTransfer(_receiver, _assets);
-
-        emit Withdraw(_caller, _receiver, _owner, _assets, shares);
-
-        return shares;
-    }
-
-    /// @notice Handles redeeming shares for assets.
-    /// 
-    /// This function performs the following actions:
-    /// - If the caller is not the owner, it checks and spends the allowance for the specified shares.
-    /// - Ensures that the number of shares to redeem is greater than zero.
-    /// - Converts the shares to assets based on the current share price.
-    /// - If the requested assets exceed the available liquidity:
-    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the liquidity requirement is met or the queue is exhausted.
-    ///   - Limits withdrawals from each strategy to the lesser of the remaining required assets or the strategy's total debt.
-    ///   - Updates the total debt of both the strategy and the contract as assets are withdrawn.
-    ///   - Requests the strategy to report, as gains or losses might adjust the available liquidity.
-    ///   - Recalculates the asset value of the shares and stops withdrawals once sufficient liquidity is available.
-    /// - Reverts if the withdrawal process does not result in sufficient liquidity.
-    /// - Burns the corresponding shares and transfers the redeemed assets to the receiver.
-    /// - Emits a `Withdraw` event with the caller, receiver, owner, amount of assets withdrawn, and shares burned.
-    /// 
-    /// @param _caller The address of the entity initiating the redemption.
-    /// @param _receiver The address of the recipient to receive the redeemed assets.
-    /// @param _owner The address of the owner of the shares being redeemed.
-    /// @param _shares The number of shares to redeem.
-    /// @return The amount of assets corresponding to the redeemed shares.
-    function _redeem(
-        address _caller,
-        address _receiver,
-        address _owner,
-        uint256 _shares 
-    ) internal returns (uint256) {
+        uint256 _assets,
+        uint256 _shares,
+        bool _consumeAllShares
+    ) internal returns (uint256, uint256) {
         require(_shares > 0, Errors.ZeroAmount(_shares));
-        
+
         if (_caller != _owner) {
             _spendAllowance(_owner, _caller, _shares);
         }
 
-        uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
+        uint256 assets = _consumeAllShares ? _convertToAssets(_shares, Math.Rounding.Floor) : _assets;
+
         if(assets > _liquidity()) {
             for(uint8 i = 0; i <= withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
@@ -450,19 +392,20 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
                 IStrategyAdapter(strategy).askReport();
 
-                // Convert the shares to assets, because if a loss was realized, the liquidity could be
-                // enough as less assets are given for the same amount of shares.
-                assets = _convertToAssets(_shares, Math.Rounding.Floor);
+                // Update assets, as a loss could have been reported and user should get less assets for
+                // the same amount of shares.
+                if(_consumeAllShares) assets = _convertToAssets(_shares, Math.Rounding.Floor);
                 if(assets <= _liquidity()) break;
             }
         }
 
-        _burn(_owner, _shares);
+        uint256 shares = _consumeAllShares ? _shares : _convertToShares(assets, Math.Rounding.Ceil);
+        _burn(_owner, shares);
         IERC20(asset()).safeTransfer(_receiver, assets);
 
-        emit Withdraw(_caller, _receiver, _owner, assets, _shares);
+        emit Withdraw(_caller, _receiver, _owner, assets, shares);
 
-        return assets;
+        return (assets, shares);
     }
 
     /// @notice Requests credit for an active strategy.
