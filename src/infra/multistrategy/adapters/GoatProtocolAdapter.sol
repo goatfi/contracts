@@ -20,14 +20,11 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Constructor for the strategy adapter.
-    /// 
-    /// This constructor performs the following actions:
-    /// - Initializes the StrategyAdapter with the provided multi-strategy and base asset addresses.
-    /// - Sets the GoatVault address.
-    /// 
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
     /// @param _goatVault The address of the GoatVault.
+    /// @param _name The name of this Strategy Adapter.
+    /// @param _id The type identifier of this Strategy Adapter.
     constructor(
         address _multistrategy,
         address _asset,
