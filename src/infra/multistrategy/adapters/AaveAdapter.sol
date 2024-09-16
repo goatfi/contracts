@@ -47,6 +47,13 @@ contract AaveAdapter is StrategyAdapter {
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Calculates the total assets managed by the contract.
+    /// 
+    /// This function performs the following actions:
+    /// - Retrieves the scaled balance of assets supplied to Aave.
+    /// - Retrieves the base asset balance held by the contract.
+    /// 
+    /// @return The total amount of assets managed by the contract.
     function _totalAssets() internal override view returns(uint256) {
         uint256 assetsSupplied = IAToken(aToken).scaledBalanceOf(address(this));
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
@@ -72,6 +79,13 @@ contract AaveAdapter is StrategyAdapter {
     /// @param _amount The amount of assets to withdraw from the Aave.
     function _withdraw(uint256 _amount) internal override {
         IPool(aave).withdraw(asset, _amount, address(this));
+    }
+
+    /// @notice Performs an emergency withdrawal of all assets from Aave.
+    /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
+    function _emergencyWithdraw() internal override {
+        uint256 assetsSupplied = IAToken(aToken).scaledBalanceOf(address(this));
+        IPool(aave).withdraw(asset, assetsSupplied, address(this));
     }
 
     /// @notice Grants Aave an unlimited allowance to spend the base asset held by the contract.

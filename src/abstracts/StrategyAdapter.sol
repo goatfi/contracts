@@ -302,6 +302,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @notice Withdraws as much funds as possible from the underlying strategy.
     /// @dev Child contract must implement the logic to withdraw as much funds as possible.
     /// The withdraw process shouldn't have a slippage check, as it is in an emergency situation.
+    /// 
     function _emergencyWithdraw() internal virtual {}
 
     /// @dev Grants allowance for `asset` to the contracts used by the strategy adapter.

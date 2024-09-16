@@ -104,6 +104,13 @@ contract GoatProtocolStrategyAdapter is StrategyAdapter {
         IGoatVault(goatVault).withdraw(shares);
     }
 
+    /// @notice Performs an emergency withdrawal of all assets from the GoatVault.
+    /// 
+    /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
+    function _emergencyWithdraw() internal override {
+        IGoatVault(goatVault).withdrawAll();
+    }
+
     /// @notice Sets the maximum allowance of the base asset for the GoatVault.
     /// 
     /// This function performs the following actions:
