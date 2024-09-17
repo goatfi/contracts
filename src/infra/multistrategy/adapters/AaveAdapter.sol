@@ -5,7 +5,6 @@ pragma solidity 0.8.27;
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IPool } from "@aave/core/contracts/interfaces/IPool.sol";
-import { IAToken } from "@aave/core/contracts/interfaces/IAToken.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -55,7 +54,7 @@ contract AaveAdapter is StrategyAdapter {
     /// 
     /// @return The total amount of assets managed by the contract.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 assetsSupplied = IAToken(aToken).scaledBalanceOf(address(this));
+        uint256 assetsSupplied = IERC20(aToken).balanceOf(address(this));
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
         return assetsSupplied + assetBalance;
@@ -84,7 +83,7 @@ contract AaveAdapter is StrategyAdapter {
     /// @notice Performs an emergency withdrawal of all assets from Aave.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint256 assetsSupplied = IAToken(aToken).scaledBalanceOf(address(this));
+        uint256 assetsSupplied = IERC20(aToken).balanceOf(address(this));
         IPool(aave).withdraw(asset, assetsSupplied, address(this));
     }
 
