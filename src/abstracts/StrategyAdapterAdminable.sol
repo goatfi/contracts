@@ -7,7 +7,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { IStrategyAdapterAdminable } from "interfaces/infra/multistrategy/IStrategyAdapterAdminable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract StrategyAdapterAdminable is IStrategyAdapterAdminable, Ownable, Pausable {
+abstract contract StrategyAdapterAdminable is IStrategyAdapterAdminable, Ownable, Pausable {
     /*//////////////////////////////////////////////////////////////////////////
                                        STORAGE
     //////////////////////////////////////////////////////////////////////////*/
