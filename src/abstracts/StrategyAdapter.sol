@@ -122,6 +122,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
     /// @inheritdoc IStrategyAdapter
     function pause() external onlyGuardian {
+        _revokeAllowances();
         _pause();
     }
 
