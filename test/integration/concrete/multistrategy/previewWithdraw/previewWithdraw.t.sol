@@ -8,6 +8,8 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     using Math for uint256;
 
+    uint256 slippage = 100;
+
     function test_PreviewWithdraw_ZeroAssets() external {
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(0);
         uint256 expectedShares = 0;
@@ -50,7 +52,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     modifier whenSlippageLimitNotZero() {
-        multistrategy.setSlippageLimit(100);
+        multistrategy.setSlippageLimit(slippage);
         _;
     }
 
@@ -61,9 +63,10 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         whenSlippageLimitNotZero
     {
         uint256 assets = 500 ether;
+        uint256 assetsWithSlippage = assets.mulDiv(10_000, 10_000 - slippage, Math.Rounding.Ceil);
 
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
-        uint256 expectedShares = IERC4626(address(multistrategy)).convertToShares(assets.mulDiv(10_100, 10_000));
+        uint256 expectedShares = IERC4626(address(multistrategy)).convertToShares(assetsWithSlippage);
         assertEq(actualShares, expectedShares, "preview withdraw");
     }
 }
