@@ -8,4 +8,7 @@ previewWithdraw.t.sol
         ├── when the slippage limit is zero
         │   └── it should return the withdraw amount converted to shares
         └── when the slippage limit is not zero
-            └── it should return the withdraw amount converted to shares plus the slippage
+            ├── when the slippage limit is MAX_BPS
+            │   └── it should return type(uint256).max
+            └── when the slippage limit is not MAX_BPS
+                └── it should return the withdraw amount converted to shares plus the slippage

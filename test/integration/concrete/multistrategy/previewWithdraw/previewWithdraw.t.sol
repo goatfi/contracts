@@ -52,6 +52,25 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     modifier whenSlippageLimitNotZero() {
+        multistrategy.setSlippageLimit(10_000);
+        _;
+    }
+
+    function test_PreviewWithdraw_SlippageMAXBPS()
+        external
+        whenAssetsNotZero
+        whenNotEnoughLiquidity
+        whenSlippageLimitNotZero
+    {
+        uint256 assets = 500 ether;
+        multistrategy.setSlippageLimit(10_000);
+
+        uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
+        uint256 expectedShares = type(uint256).max;
+        assertEq(actualShares, expectedShares, "preview withdraw");
+    }
+
+    modifier whenSlippageLimitNotMAXBPS() {
         multistrategy.setSlippageLimit(slippage);
         _;
     }
@@ -61,6 +80,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         whenAssetsNotZero
         whenNotEnoughLiquidity
         whenSlippageLimitNotZero
+        whenSlippageLimitNotMAXBPS
     {
         uint256 assets = 500 ether;
         uint256 assetsWithSlippage = assets.mulDiv(10_000, 10_000 - slippage, Math.Rounding.Ceil);

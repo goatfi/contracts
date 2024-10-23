@@ -92,6 +92,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         if(_assets <= _liquidity()) {
             return shares;
         } else {
+            if(slippageLimit == MAX_BPS) return type(uint256).max;
             // Return the number of shares required at the current rate, accounting for slippage.
             return shares.mulDiv(MAX_BPS, MAX_BPS - slippageLimit, Math.Rounding.Ceil);
         }
