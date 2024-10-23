@@ -127,6 +127,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     }
 
     function setSlippageLimit(uint256 _slippageLimit) external onlyManager {
+        require(_slippageLimit <= MAX_BPS, Errors.SlippageLimitExceeded(_slippageLimit));
+        
         slippageLimit = _slippageLimit;
         emit SlippageLimitSet(slippageLimit);
     }
