@@ -1,0 +1,8 @@
+tryWithdraw.t.sol
+├── when amount is zero
+│   └── it should return 0
+└── when amount is not zero
+    ├── when currentBalance is lower than desiredBalance
+    │   └── it should revert with SlippageCheckFailed error
+    └── when currentBalance is higher or equal than desiredBalance
+        └── it should return the currentBalance

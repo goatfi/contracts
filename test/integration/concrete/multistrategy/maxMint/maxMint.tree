@@ -1,0 +1,8 @@
+maxMint.t.sol
+├── when depositLimit is zero
+│   └── it should return zero
+└── when depositLimit is not zero
+    ├── when totalAssets is zero
+    │   └── it should return the depositLimit converted to shares
+    └── when totalAssets is not zero
+        └── it should return the deposit limit minus totalAssets converted to shares

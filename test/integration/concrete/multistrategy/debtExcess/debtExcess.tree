@@ -1,0 +1,17 @@
+debtExcess.t.sol
+├── when the strategy is the zero address
+│   └── it should return 0
+└── when the strategy is not the zero address
+    ├── when the multistrategy doesn't have any deposits
+    │   └── it should return 0
+    └── when the multistrategy has deposits
+        ├── when the strategy checking the excess credit is not active
+        │   └── it should return 0
+        └── when the strategy checking the excess credit is active
+            ├── when the strategy debt ratio is zero
+            │   └── it should return the total debt of the strategy
+            └── when the strategy debt ratio is above zero
+                ├── when the total debt of the strategy is lower or equal than the strategy debt limit
+                │   └── it should return 0
+                └── when the total debt of the strategy is higher than the strategy debt limit
+                    └── it should return the strategy total debt minus the strategy debt limit

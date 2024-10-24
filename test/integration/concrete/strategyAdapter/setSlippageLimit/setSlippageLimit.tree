@@ -1,0 +1,17 @@
+setSlippageLimit.t.sol
+├── when the caller is not the owner
+│   └── it should revert
+└── when the caller is the owner
+    ├── when `_slippageLimit` is greater than MAX_SLIPPAGE
+    │   └── it should revert with SlippageLimitExceeded error
+    └── when `_slippageLimit` is lower or equal than MAX_SLIPPAGE
+        ├── when `_slippageLimit` is zero
+        │   ├── it should set slippage limit to zero
+        │   └── it should emit a SlippageLimitSet event
+        └── when `_slippageLimit` is not zero
+            ├── when `_slippageLimit` is equal to the previous slippage limit
+            │   ├── it should set slippage limit to the new slippageLimit
+            │   └── it should emit a SlippageLimitSet event
+            └── when `_slippageLimit` is not equal to the previuous slippage limit
+                ├── it should set slippage limit the new slippageLimit
+                └── it should emit a SlippageLimitSet event

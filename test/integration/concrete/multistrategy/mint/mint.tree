@@ -1,0 +1,22 @@
+mint.t.sol
+├── when the contract is paused
+│   └── it should revert with EnforcedPause error
+└── when the contract is not paused
+    ├── when the shares is greater than the maximum mint amount
+    │   └── it should revert with an ERC4626ExeededMaxMint error
+    └── when the shares is smaller or equal than the maximum mint amount
+        ├── when the recipient is the zero address
+        │   └── it should revert with an InvalidAddress error
+        └── when the recipient is not the zero address
+            ├── when the recipient is the contract address
+            │   └── it should revert with an InvalidAddress error
+            └── when the recipient is not the contract address
+                ├── when the shares are zero
+                │   └── it should revert with a ZeroAmount error
+                └── when the shares are greater than zero
+                    ├── when the caller doesn't have enough funds to cover the mint
+                    │   └── it should revert with ERC20InsufficientBalance error
+                    └── when the caller has enough funds to cover the mint
+                        ├── it should issue the shares
+                        ├── it should transfer the asset from the caller to the contract
+                        └── it should emit a Deposit event

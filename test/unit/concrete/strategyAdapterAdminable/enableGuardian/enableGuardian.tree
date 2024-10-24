@@ -1,0 +1,14 @@
+enableGuardian.t.sol
+├── when the caller is not the owner
+│  └── it should revert
+└── when the caller is the owner
+   ├── when the enabled guardian has already been enabled
+   │  ├── it should re-enable the guardian
+   │  └── it should emit a {GuardianEnabled} event
+   └── when the enabled guardian hasn't been enabled before
+      ├── when the enabled guardian is the zero address
+      │  ├── it should enable the zero address as guardian
+      │  └── it should emit a {GuardianEnabled} event
+      └── when the enabled guardian is not the zero address
+         ├── it should enable the address as guardian
+         └── it should emit a {GuardianEnabled} event

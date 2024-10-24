@@ -22,11 +22,8 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: PaulRBerg/foundry-multibuild@v1
-        with:
-          min: "0.8.20"
-          max: "0.8.20"
-          skip-test: "false"
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
 
       - name: "Run Goat Protocol Tests"
         run: 'forge test'
