@@ -1,0 +1,14 @@
+revokeGuardian.t.sol
+├── when the caller is not the owner
+│  └── it should revert
+└── when the caller is the owner
+   ├── when the revoked guardian isn't an enabled guardian
+   │  ├── it should revoke the guardian
+   │  └── it should emit a {GuardianRevoked} event
+   └── when the revoked guardian is an enabled guardian
+      ├── when the revoked guardian is the zero address
+      │  ├── it should revoke the zero address as guardian
+      │  └── it should emit a {GuardianRevoked} event
+      └── when the revoked guardian is not the zero address
+         ├── it should revoke the address as guardian
+         └── it should emit a {GuardianRevoked} event

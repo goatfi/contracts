@@ -1,0 +1,16 @@
+reportLoss.t.sol
+└── when the strategy address is the zero address
+    ├── it should revert with InvalidStrategyLoss
+    └── when the strategy address is not the zero address
+        ├── when the strategy address is not an active strategy
+        │   └── it should revert with InvalidStrategyLoss
+        └── when the strategy address is an active strategy
+            ├── when the reported loss is higher than strategy's total debt
+            │   └── it should revert
+            └── when the reported loss is lower or equal than strategy's total debt
+                ├── when the reported loss is zero
+                │   └── it should not change the multistrategy and strategy's totalDebt
+                └── when the reported loss is greater than zero
+                    ├── it should add the loss to the strategy total loss
+                    ├── it should substract the loss from the strategy totalDebt
+                    └── it should substract the loss from the multistrategy totalDebt

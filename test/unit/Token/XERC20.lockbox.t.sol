@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import { stdError } from "forge-std/StdError.sol";
 import { XERC20TestBase } from "./XERC20Base.t.sol";

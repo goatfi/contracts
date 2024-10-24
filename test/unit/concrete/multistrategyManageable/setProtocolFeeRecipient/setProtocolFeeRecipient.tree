@@ -1,0 +1,14 @@
+setProtocolFeeRecipient.t.sol
+├── when the caller is not the owner
+│  └── it should revert
+└── when the caller is the owner
+   ├── when new fee recipient address is the zero address
+   │  └── it should revert with ZeroAddress error
+   └── when new fee recipient address is not the zero address
+      ├── when new fee recipient address is the same as current fee recipient address
+      │  ├── it should re-set the fee recipient address
+      │  └── it should emit a {ProtocolFeeRecipientSet} event
+      └── when new fee recipient address is not same as current fee recipient address
+         └── when the new fee recipient address is not the zero address
+            ├── it should set the fee recipient address to the new fee recipient address
+            └── it should emit a {ProtocolFeeRecipientSet}

@@ -1,0 +1,14 @@
+setSlippageLimit.t.sol
+├── when the caller is not the manager
+│  └── it should revert
+└── when the caller is the manager
+   ├── when new slippageLimit is same as current slippageLimit
+   │  ├── it should re-set the slippageLimit
+   │  └── it should emit a {SlippageLimitSet} event
+   └── when new slippageLimit is not same as current slippageLimit
+      ├── when the new slippageLimit is zero
+      │  ├── it should set the slippageLimit to zero
+      │  └── it should emit a {SlippageLimitSet}
+      └── when the new slippageLimit is not zero
+         ├── it should set the new slippageLimit to the new slippageLimit
+         └── it should emit a {SlippageLimitSet}

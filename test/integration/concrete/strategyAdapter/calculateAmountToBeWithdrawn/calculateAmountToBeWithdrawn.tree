@@ -1,0 +1,29 @@
+calculateAmountToBeWithdrawn.t.sol
+├── when exceeding debt is zero
+│   ├── when repayAmount is zero
+│   │   ├── when strategyGain is zero
+│   │   │   └── it should return 0
+│   │   └── when strategyGain is not zero
+│   │       └── it should return strategyGain
+│   └── when repayAmount is not zero
+│       ├── when strategyGain is zero
+│       │   └── it should return 0
+│       └── when strategyGain is not zero
+│           └── it should return strastegyGain
+└── when exceeding debt is not zero
+    ├── when repayAmount is zero
+    │   ├── when strategyGain is zero
+    │   │   └── it should return 0
+    │   └── when strategyGain is not zero
+    │       └── it should return strategyGain
+    └── when repayAmount is not zero
+        ├── when strategyGain is zero
+        │   ├── when exceedingDebtWithSlippage is greater than repayAmount
+        │   │   └── it should return repayAmount
+        │   └── when exceedingDebtWithSlippage is lower than repayAmount
+        │       └── it should return exceedingDebtWithSlippage
+        └── when strategyGain is not zero
+            ├── when exceedingDebtWithSlippage is greater than repayAmount
+            │   └── it should return repayAmount plus strategyGain
+            └── when exceedingDebtWithSlippage is lower than repayAmount
+                └── it should return exceedingDebtWithSlippage plus strategyGain

@@ -1,0 +1,34 @@
+redeem.t.sol
+├── when the contract is paused
+│   └── it should revert with EnforcedPause error
+└── when the contract is not paused
+    ├── when the caller doesn't have enough shares to redeem
+    │   └── it should revert with an ERC4626ExceededMaxRedeem error
+    └── when the caller has enough shares to cover the withdraw
+        ├── when shares are zero
+        │   └── it should revert with a Zero Amount error
+        └── when shares are greater than zero
+            ├── when a strategy withdraw has a greater slippage than the slippage limit
+            │   └── it should revert with a SlippageCheckFailed error
+            └── when a strategy withdraw has less slippage than the slippage limit
+                ├── when the liquidity of the multistrategy is lower than the amount to be withdrawn
+                │   ├── when the checked strategy is the zero address
+                │   │   ├── it should burn the amount of shares
+                │   │   ├── it should transfer the assets to the receiver
+                │   │   ├── it should emit a Withdraw event
+                │   │   └── it should reutrn the assets that were redeemed for the shares
+                │   └── when the checked strategy is not the zero address
+                │       ├── when the balance to withdraw is lower or equal than the liquidity of the Multistrategy
+                │       │   ├── it should burn the amount of shares
+                │       │   ├── it should transfer the assets to the receiver
+                │       │   ├── it should emit a Withdraw event
+                │       │   └── it should reutrn the assets that were redeemed for the shares
+                │       └── when the balance to withdraw is greater than the liquidity of the Multistrategy
+                │           ├── it should withraw from the strategy up to the amount needed
+                │           ├── it should reduce the debt of the strategy by the amount withdrawn
+                │           └── it should reduce the debt of the multistrategy by the amount withdrawn
+                └── when the liquidity of the multistrategy is greater than the amount to be withdrawn
+                    ├── it should burn the amount of shares
+                    ├── it should transfer the assets to the receiver
+                    ├── it should emit a Withdraw event
+                    └── it should reutrn the assets that were redeemed for the shares

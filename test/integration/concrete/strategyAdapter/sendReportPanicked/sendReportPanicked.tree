@@ -1,0 +1,23 @@
+sendReportPancked.t.sol
+├── when the caller is not the owner
+│   └── it should revert
+└── when the caller is the owner
+    ├── when currentAssets are zero
+    │   ├── it should repay zero tokens
+    │   ├── it should report a zero gain
+    │   └── it should report a loss of this strategy total debt
+    └── when currentAssets is greater than zero
+        ├── when the strategy hasn't been retired
+        │   ├── when the strategy realised a gain
+        │   │   └── it should inform the multistrategy about the gain
+        │   └── when the strategy realised a loss
+        │       └── it should inform the multistrategy about the loss
+        └── when the strategy has been retired
+            ├── when the strategy realised a gain
+            │   ├── it should inform the multistrategy about the gain
+            │   ├── it should repay all strategy's debt
+            │   └── it should set strategy's totalAssets to zero
+            └── when the strategy realised a loss
+                ├── it should inform the multistrategy about the loss
+                ├── it should repay all strategy's debt
+                └── it should set strategy's totalAssets to zero

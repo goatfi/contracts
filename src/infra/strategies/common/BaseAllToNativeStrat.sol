@@ -147,7 +147,9 @@ abstract contract BaseAllToNativeStrat is StratFeeManagerInitializable {
 
     function _swapNativeToWant() internal virtual {
         if (depositToken == address(0)) {
-            _swap(native, want);
+            if(native != want) {
+                _swap(native, want);
+            }
         } else {
             if (depositToken != native) {
                 _swap(native, depositToken);

@@ -1,5 +1,5 @@
 [profile.default]
-solc = "0.8.20"
+solc = "0.8.27"
 src = "src"
 test = 'test'
 out = "out"
@@ -7,7 +7,7 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
 evm_version = "shanghai"
-gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter"]
+gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter", "StrategyAdapter", "Multistrategy"]
 build_info = false
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "./"}]
@@ -15,6 +15,9 @@ fs_permissions = [{ access = "read", path = "./"}]
 # Remappings in remappings.txt
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[fuzz]
+runs = 2048
 
 [invariant]
 runs = 256
@@ -30,3 +33,7 @@ quote_style = "double"
 [etherscan]
 goerli = { key = "${ETHERSCAN_API_KEY}" }
 arbitrum = { key = "${ARBISCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
+base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
+
+[doc]
+out = "documentation"

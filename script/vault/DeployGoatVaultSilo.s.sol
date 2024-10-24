@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
@@ -12,21 +12,21 @@ import {AssetsArbitrum} from "@addressbook/AssetsArbitrum.sol";
 import {GoatUniswapV3Buyback} from "src/infra/GoatUniswapV3Buyback.sol";
 
 // Strategy to deploy
-import {StrategySilo} from "src/infra/strategies/silo/StrategySilo.sol";
+import {StrategySiloBorrowableDeposit} from "src/infra/strategies/silo/StrategySiloBorrowableDeposit.sol";
 
 contract DeployGoatVaultSilo is Script {
-    string name = "Goat Silo USDCe-WBTC";
-    string symbol = "gSiloUSDCe-WBTC";
+    string name = "Goat Silo WETH-ETH+";
+    string symbol = "gSiloWETH-ETH+";
     uint256 stratApprovalDelay = 21600;
 
     address native = AssetsArbitrum.WETH;
-    address want = AssetsArbitrum.USDCe; // USDC
-    address collateral = 0xFb6DE7D8Ca3Ec3396bB1Cc53adDEf1F26468055B; // sUSDC-WBTC
-    address silo = 0x69eC552BE56E6505703f0C861c40039e5702037A;
+    address want = AssetsArbitrum.WETH;
+    address collateral = 0x95633979ae07b857a5A03BbA349EAE891E27fB5E;
+    address silo = 0x1182559e5cf2247e4DdB7a38e28a88ec3825f2BA;
 
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
 
-    address[] rewards = [AssetsArbitrum.SILO];
+    address[] rewards = [AssetsArbitrum.ARB];
 
     address unirouter = ProtocolArbitrum.GOAT_SWAPPER;
     address keeper = ProtocolArbitrum.TREASURY;
@@ -35,18 +35,14 @@ contract DeployGoatVaultSilo is Script {
     address feeConfig = ProtocolArbitrum.FEE_CONFIG;
 
     function run() public {
-        uint deployer_privateKey = vm.envUint("DEPLOY_PK");
-        address deployer = vm.addr(deployer_privateKey);
         IGoatVaultFactory vaultFactory = IGoatVaultFactory(
             ProtocolArbitrum.GOAT_VAULT_FACTORY
         );
 
-        console.log("Deployer", deployer);
-
-        vm.startBroadcast(deployer_privateKey);
+        vm.startBroadcast();
 
         GoatVault vault = vaultFactory.cloneVault();
-        StrategySilo strategy = new StrategySilo();
+        StrategySiloBorrowableDeposit strategy = new StrategySiloBorrowableDeposit();
 
         commonAddresses = StratFeeManagerInitializable.CommonAddresses(
             address(vault),
@@ -63,7 +59,13 @@ contract DeployGoatVaultSilo is Script {
             symbol,
             stratApprovalDelay
         );
-        strategy.initialize(native, collateral, silo, rewards, commonAddresses);
+
+        strategy.initialize(
+            native, 
+            collateral, 
+            silo, 
+            rewards, 
+            commonAddresses);
 
         vm.stopBroadcast();
 

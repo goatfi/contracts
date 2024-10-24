@@ -1,0 +1,9 @@
+pause.t.sol
+├── when the caller is not a guardian
+│   └── it should revert
+└── when the caller is a guardian
+    ├── when the contract is already paused
+    │   └── it should revert with EnforcedPause error
+    └── when the contract is not paused
+        ├── it should pause the contract
+        └── it should emit a Paused event

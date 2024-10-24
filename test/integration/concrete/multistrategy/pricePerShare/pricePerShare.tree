@@ -1,0 +1,8 @@
+pricePerShare.t.sol
+├── when total supply is 0
+│   └── return 1e18
+└── when total supply is higher than 0
+    ├── when there is no locked profit
+    │   └── it should return totalAssets divided by totalSupply
+    └── when there is locked profit
+        └── it should return totalAssets minus the locked profit, divided by totalSupply

@@ -1,0 +1,12 @@
+requestCredit.t.sol
+├── when the caller is not the owner
+│   └── it should revert
+└── when the caller is the owner
+    ├── when the contract is paused
+    │   └── it should revert with EnforcedPause error
+    └── when the contract is not paused
+        ├── when the credit is zero
+        │   └── it should maintain the same amount of assets
+        └── when the credit is greater than zero
+            ├── it should increase the totalAssets by the credit given
+            └── it should deposit into the underlying strategy

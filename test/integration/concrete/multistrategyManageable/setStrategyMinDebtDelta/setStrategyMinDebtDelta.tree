@@ -1,0 +1,12 @@
+setStrategyMinDebtDelta.t.sol
+├── when the caller is not the manager
+│   └── it should revert
+└── when the caller is the manager
+    ├── when the strategy is not active
+    │   └── it should revert
+    └── when the strategy is active
+        ├── when the new min debt delta is higher than the strategy's max debt delta
+        │   └── it should revert with InvalidDebtDelta error
+        └── when the new min debt delta is lower than the strategy's max debt delta
+            ├── it should update the strategy's min debt delta
+            └── it should emit the StrategyMinDebtDeltaSet event

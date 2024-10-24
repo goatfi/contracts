@@ -1,0 +1,5 @@
+totalAssets.t.sol
+├── when the strategy has not requested a credit
+│   └── it should return 0
+└── when the strategy has requested a credit
+    └── it should return the amount of assets the strategy holds
