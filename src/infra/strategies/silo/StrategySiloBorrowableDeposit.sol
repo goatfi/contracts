@@ -6,9 +6,8 @@ import { BaseAllToNativeStrat, IERC20 } from "../common/BaseAllToNativeStrat.sol
 import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces/silo/ISilo.sol";
 
 contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
-    ISiloRewards public constant siloRewards = ISiloRewards(0xCC4933B0405Ae9DDFE05a54d20f56A0447c9EBcF);
-    ISiloLens public constant siloLens = ISiloLens(0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536);
-
+    ISiloLens siloLens;
+    ISiloRewards siloRewards;
     address public silo;
     address public collateral;
     address[] public rewardsClaim;
@@ -17,11 +16,15 @@ contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
         address _native,
         address _collateral,
         address _silo,
+        address _siloLens,
+        address _siloRewards,
         address[] calldata _rewards,
         CommonAddresses calldata _commonAddresses
     ) public initializer {
-        silo = _silo;
         collateral = _collateral;
+        silo = _silo;
+        siloLens = ISiloLens(_siloLens);
+        siloRewards = ISiloRewards(_siloRewards);
         address _want = ISiloCollateralToken(collateral).asset();
 
         __BaseStrategy_init(_want, _native, _rewards, _commonAddresses);

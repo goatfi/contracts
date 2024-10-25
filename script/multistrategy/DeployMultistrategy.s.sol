@@ -10,7 +10,6 @@ import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 contract DeployMultistrategy is Script {
-
     address TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
 
     address constant ASSET = AssetsArbitrum.WETH;
@@ -34,10 +33,10 @@ contract DeployMultistrategy is Script {
 
         Multistrategy multistrategy = new Multistrategy(ASSET, TESTING_CUSTODIAN, FEE_RECIPIENT, NAME, SYMBOL);
 
-        IERC20(ASSET).approve(address(multistrategy), 0.01 ether);
+        IERC20(ASSET).approve(address(multistrategy), INITIAL_DEPOSIT);
         
         // Set the deposit limit to 1 ETH
-        multistrategy.setDepositLimit(1 ether);
+        multistrategy.setDepositLimit(100 ether);
         // Deposit some assets to prevent inflation attack
         multistrategy.deposit(INITIAL_DEPOSIT, TESTING_CUSTODIAN);
         // Enable a Guardian
