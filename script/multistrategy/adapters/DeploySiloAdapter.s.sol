@@ -24,6 +24,8 @@ contract DeploySiloAdapter is Script {
     address silo = 0x4a2bd8dcc2539e19cb97DF98EF5afC4d069d9e4C;          //FIXME:
     address siloLens = 0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536;      //FIXME:
     address siloRewards = 0xbDBBf747402653A5aD6F6B8c49F2e8dCeC37fAcF;   //FIXME:
+    address merklDistributor = 0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae;
+    address merklOperator = 0x1017417B0EE0a96Ee7230e534A83d35d28613B78;
 
     uint256 constant INITIAL_DEPOSIT = 0.001 ether;
 
@@ -88,7 +90,8 @@ contract DeploySiloAdapter is Script {
             silo,
             siloLens,
             siloRewards,
-            rewards, 
+            merklDistributor,
+            rewards,
             commonAddresses
         );
 
@@ -102,6 +105,7 @@ contract DeploySiloAdapter is Script {
         strategy.panic();
         strategy.unpause();
         strategy.harvest();
+        strategy.toggleMerklOperator(merklOperator);
 
         vault.transferOwnership(timelock);
         strategy.transferOwnership(timelock);

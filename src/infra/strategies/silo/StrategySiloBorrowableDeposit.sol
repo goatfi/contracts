@@ -4,10 +4,12 @@ pragma solidity ^0.8.20;
 
 import { BaseAllToNativeStrat, IERC20 } from "../common/BaseAllToNativeStrat.sol";
 import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces/silo/ISilo.sol";
+import { IMerklDistributor } from "interfaces/merkl/IDistributor.sol";
 
 contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
     ISiloLens siloLens;
     ISiloRewards siloRewards;
+    IMerklDistributor merklDistributor;
     address public silo;
     address public collateral;
     address[] public rewardsClaim;
@@ -18,6 +20,7 @@ contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
         address _silo,
         address _siloLens,
         address _siloRewards,
+        address _merklDistributor,
         address[] calldata _rewards,
         CommonAddresses calldata _commonAddresses
     ) public initializer {
@@ -25,6 +28,7 @@ contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
         silo = _silo;
         siloLens = ISiloLens(_siloLens);
         siloRewards = ISiloRewards(_siloRewards);
+        merklDistributor = IMerklDistributor(_merklDistributor);
         address _want = ISiloCollateralToken(collateral).asset();
 
         __BaseStrategy_init(_want, _native, _rewards, _commonAddresses);
@@ -41,6 +45,10 @@ contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
                 collateral, 
                 address(this)
             );
+    }
+
+    function toggleMerklOperator(address _operator) external onlyManager {
+        merklDistributor.toggleOperator(address(this), _operator);
     }
 
     function _deposit(uint amount) internal override {
