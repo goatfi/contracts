@@ -30,6 +30,8 @@ contract DeploySiloAdapter is Script {
     uint256 constant INITIAL_DEPOSIT = 0.001 ether;
 
     StratFeeManagerInitializable.CommonAddresses commonAddresses;
+    StrategySiloBorrowableDeposit.SiloAddresses siloAddresses;
+
     address[] rewards = [AssetsArbitrum.SILO];
 
     address unirouter = ProtocolArbitrum.GOAT_SWAPPER;
@@ -77,6 +79,13 @@ contract DeploySiloAdapter is Script {
             feeConfig
         );
 
+        siloAddresses = StrategySiloBorrowableDeposit.SiloAddresses({
+            collateral: collateral,
+            silo: silo,
+            siloLens: siloLens,
+            siloRewards: siloRewards
+        });
+
         vault.initialize(
             IStrategy(address(strategy)),
             name,
@@ -86,10 +95,7 @@ contract DeploySiloAdapter is Script {
 
         strategy.initialize(
             ASSET, 
-            collateral, 
-            silo,
-            siloLens,
-            siloRewards,
+            siloAddresses,
             merklDistributor,
             rewards,
             commonAddresses

@@ -7,6 +7,13 @@ import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces
 import { IMerklDistributor } from "interfaces/merkl/IDistributor.sol";
 
 contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
+    struct SiloAddresses {
+        address silo;
+        address collateral;
+        address siloLens;
+        address siloRewards;
+    }
+
     ISiloLens siloLens;
     ISiloRewards siloRewards;
     IMerklDistributor merklDistributor;
@@ -16,18 +23,15 @@ contract StrategySiloBorrowableDeposit is BaseAllToNativeStrat {
 
     function initialize(
         address _native,
-        address _collateral,
-        address _silo,
-        address _siloLens,
-        address _siloRewards,
+        SiloAddresses memory _siloAddresses,
         address _merklDistributor,
         address[] calldata _rewards,
         CommonAddresses calldata _commonAddresses
     ) public initializer {
-        collateral = _collateral;
-        silo = _silo;
-        siloLens = ISiloLens(_siloLens);
-        siloRewards = ISiloRewards(_siloRewards);
+        collateral = _siloAddresses.collateral;
+        silo = _siloAddresses.silo;
+        siloLens = ISiloLens(_siloAddresses.siloLens);
+        siloRewards = ISiloRewards(_siloAddresses.siloRewards);
         merklDistributor = IMerklDistributor(_merklDistributor);
         address _want = ISiloCollateralToken(collateral).asset();
 
