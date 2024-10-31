@@ -36,6 +36,13 @@ interface IRewardPool {
     function earned(address user, address reward) external view returns (uint256);
 }
 
+interface IMultistrategy {
+    function totalAssets() external view returns (uint256);
+    function convertToAssets(uint256) external view returns (uint256);
+    function paused() external view returns (bool);
+    function decimals() external view returns (uint8);
+}
+
 struct BoostInfo {
     uint256 totalSupply;
     uint256 rewardRate;
@@ -52,6 +59,12 @@ struct VaultInfo {
 
 struct GovVaultInfo {
     uint256 totalSupply;
+}
+
+struct MultistrategyInfo {
+    uint256 totalAssets;
+    uint256 pricePerFullShare;
+    bool paused;
 }
 
 struct GovVaultBalanceInfo {
@@ -96,6 +109,21 @@ contract GoatAppMulticall {
                 address(strat),
                 paused
             );
+        }
+
+        return results;
+    }
+
+    function getMultistrategyInfo(address[] calldata multistrategies) external view returns (MultistrategyInfo[] memory) {
+        MultistrategyInfo[] memory results = new MultistrategyInfo[](multistrategies.length);
+
+        for (uint i = 0; i < multistrategies.length; i++) {
+            IMultistrategy multistrategy = IMultistrategy(multistrategies[i]);
+            results[i] = MultistrategyInfo({
+                totalAssets: multistrategy.totalAssets(),
+                pricePerFullShare: multistrategy.convertToAssets(10**multistrategy.decimals()),
+                paused: multistrategy.paused()
+            });
         }
 
         return results;
