@@ -20,20 +20,9 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Math for uint256;
-    
-    /// @dev Used for locked profit calculations.
-    uint256 constant DEGRADATION_COEFFICIENT = 1 ether;
-    /// @dev How much time it takes for the profit of a strategy to be unlocked.
-    uint256 public constant PROFIT_UNLOCK_TIME = 7 days;
 
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
-    
-    /// @inheritdoc IMultistrategy
-    uint256 public lockedProfit;
-
-    /// @inheritdoc IMultistrategy
-    uint256 public immutable lockedProfitDegradation;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -58,7 +47,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     {   
         performanceFee = 1000;
         lastReport = block.timestamp;
-        lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -135,6 +123,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+        _preDeposit();
+
         uint256 maxAssets = maxDeposit(_receiver);
         require(_assets <= maxAssets, ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets));
 
@@ -146,6 +136,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+        _preDeposit();
+
         uint256 maxShares = maxMint(_receiver);
         require(_shares <= maxShares, ERC4626ExceededMaxMint(_receiver, _shares, maxShares));
 
@@ -215,7 +207,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns (uint256) {
-        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _freeFunds() + 1, rounding);
+        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
     }
 
     /// @notice Convert a given amount of shares to assets, with specified rounding.
@@ -223,7 +215,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The amount of assets corresponding to the given number of shares.
     function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns (uint256) {
-        return _shares.mulDiv(_freeFunds() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
+        return _shares.mulDiv(totalAssets() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
     }
 
     /// @notice Calculates the available credit for a strategy.
@@ -289,33 +281,21 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
             return strat_totalDebt - strat_debtLimit;
         }
     }
-    
-    /// @notice Calculates the free funds available in the contract.
-    /// @return The amount of free funds available.
-    function _freeFunds() internal view returns (uint256) {
-        return totalAssets() - _calculateLockedProfit();
-    }
-
-    /// @notice Calculate the current locked profit.
-    /// 
-    /// This function performs the following actions:
-    /// - Calculates the locked funds ratio based on the time elapsed since the last report and the locked profit degradation rate.
-    /// - If the locked funds ratio is less than the degradation coefficient, it computes the remaining locked profit by reducing it proportionally.
-    /// - If the locked funds ratio is greater than or equal to the degradation coefficient, it returns zero indicating no locked profit remains.
-    /// 
-    /// @return The calculated current locked profit.
-    function _calculateLockedProfit() internal view returns (uint256) {
-        uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
-
-        if(lockedFundsRatio < DEGRADATION_COEFFICIENT) {
-            return lockedProfit - lockedFundsRatio.mulDiv(lockedProfit, DEGRADATION_COEFFICIENT);
-        }
-        return 0;
-    }
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
+
+    function _preDeposit() internal {
+        if (activeStrategies == 0) return;
+
+        for(uint8 i = 0; i <= withdrawOrder.length; ++i){
+            address strategy = withdrawOrder[i];
+            if(strategy == address(0)) return;
+            if(strategies[strategy].totalDebt == 0) continue;
+            IStrategyAdapter(strategy).askReport();
+        }
+    }
 
     /// @notice Handles deposits into the contract.
     /// 
@@ -461,19 +441,13 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         if(_gain > 0) {
             feesCollected = _gain.mulDiv(performanceFee, MAX_BPS);
             profit = _gain - feesCollected;
+            strategies[msg.sender].totalGain += _gain;
         } 
 
         uint256 debtToRepay = Math.min(_debtRepayment, _debtExcess(msg.sender));
         if(debtToRepay > 0) {
             strategies[msg.sender].totalDebt -= debtToRepay;
             totalDebt -= debtToRepay;
-        }
-        
-        uint256 newLockedProfit = _calculateLockedProfit() + profit;
-        if(newLockedProfit > _loss) {
-            lockedProfit = newLockedProfit - _loss;
-        } else {
-            lockedProfit = 0;
         }
 
         strategies[msg.sender].lastReport = block.timestamp;
