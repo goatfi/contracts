@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
+import { console } from "forge-std/Console.sol";
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -101,6 +103,33 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 800 ether, 804020100502512562815));
+        IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
+    }
+
+    function test_Withdraw_WithdrawOrderFull() 
+        external
+        whenContractNotPaused
+        whenHasCallerEnoughSharesToCoverWithdraw
+        whenAmountGreaterThanZero
+        whenMultistrategyBalanceLowerThanWithdrawAmount 
+    {   
+        IMultistrategyManageable(address(multistrategy)).setStrategyDebtRatio(strategy_one, 1_000);
+        IMultistrategyManageable(address(multistrategy)).setStrategyDebtRatio(strategy_two, 1_000);
+        IStrategyAdapter(strategy_one).sendReport(type(uint256).max);
+        IStrategyAdapter(strategy_two).sendReport(type(uint256).max);
+        for(uint i = 0; i < 8; ++i) {
+            address newAdapter = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+            IMultistrategyManageable(address(multistrategy)).addStrategy(newAdapter, 1_000, 0, 1000 ether);
+            IStrategyAdapter(newAdapter).requestCredit();
+        }
+        amountToWithdraw = 1000 ether;
+
+        address[] memory adapters = multistrategy.getWithdrawOrder();
+        for(uint i = 0; i < 10; ++i) {
+            console.log(adapters[i], IStrategyAdapter(adapters[i]).totalAssets());
+        }
+
+        swapCaller(users.bob);
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 

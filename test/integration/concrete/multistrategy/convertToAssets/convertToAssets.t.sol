@@ -2,14 +2,14 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
+import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
+contract ConvertToAssets_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     uint256 shares = 100 ether;
     function test_ConvertToAssets_ZeroTotalSupply() external {
         // Assert share value is zero when totalSupply is 0
-        uint256 actualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(shares);
+        uint256 actualAssets = IERC4626(address(multistrategy)).convertToAssets(shares);
         uint256 expectedAssets = shares;
         assertEq(actualAssets, expectedAssets, "convertToAssets");
     }
@@ -24,7 +24,7 @@ contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integ
         whenTotalSupplyNotZero
     {
         // Assert share value is zero when amount of shares is 0
-        uint256 actualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(0);
+        uint256 actualAssets = IERC4626(address(multistrategy)).convertToAssets(0);
         uint256 expectedAssets = 0;
         assertEq(actualAssets, expectedAssets, "convertToAssets");
     }
@@ -38,12 +38,12 @@ contract ConvertToAssets_Integration_Concrete_Test is MultistrategyHarness_Integ
         whenTotalSupplyNotZero
         whenSharesAmountNotZero
     {
-        uint256 freeFunds = multistrategyHarness.freeFunds();
-        uint256 totalSupply = IERC20(address(multistrategyHarness)).totalSupply();
+        uint256 totalAssets = IERC4626(address(multistrategy)).totalAssets();
+        uint256 totalSupply = IERC20(address(multistrategy)).totalSupply();
 
         // Assert share value is the amount of shares multiplied by freeFunds, divided by totalSupply
-        uint256 actualAssets = IERC4626(address(multistrategyHarness)).convertToAssets(shares);
-        uint256 expectedAssets = Math.mulDiv(shares, freeFunds + 1, totalSupply + 1, Math.Rounding.Floor);
+        uint256 actualAssets = IERC4626(address(multistrategy)).convertToAssets(shares);
+        uint256 expectedAssets = Math.mulDiv(shares, totalAssets + 1, totalSupply + 1, Math.Rounding.Floor);
         assertEq(actualAssets, expectedAssets, "convertToAssets");
     }
 }

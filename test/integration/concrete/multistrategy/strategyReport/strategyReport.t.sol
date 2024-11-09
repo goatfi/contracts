@@ -143,11 +143,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 expectedStrategyTotalAssets = 500 ether - repayAmount - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
-        // Assert that locked profit is zero
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = 0;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
-
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
         uint256 expectedMultistrategyLastReport = block.timestamp;
@@ -192,11 +187,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
         uint256 expectedStrategyTotalAssets = 500 ether - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
-
-        // Assert that locked profit is zero
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = 0;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
 
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
@@ -254,11 +244,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 expectedStrategyTotalAssets = 500 ether - repayAmount - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
-        // Assert that locked profit is the profit minus the loss
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = profit - loseAmount;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
-
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
         uint256 expectedMultistrategyLastReport = block.timestamp;
@@ -305,11 +290,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
         uint256 expectedStrategyTotalAssets = 500 ether - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
-
-        // Assert that locked profit is the profit minus the loss
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = profit - loseAmount;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
 
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
@@ -367,11 +347,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 expectedStrategyTotalAssets = 500 ether - repayAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
-        // Assert that locked profit is the profit minus the loss
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = gainAmount - fee;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
-
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
         uint256 expectedMultistrategyLastReport = block.timestamp;
@@ -420,11 +395,6 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
         uint256 expectedStrategyTotalAssets = 500 ether;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
-
-        // Assert that locked profit is the profit minus the loss
-        uint256 actualLockedProfit = multistrategy.lockedProfit();
-        uint256 expectedLockedProfit = gainAmount - fee;
-        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
 
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();

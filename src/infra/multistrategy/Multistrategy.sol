@@ -286,10 +286,21 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Prepares the contract for a deposit by requesting reports from active strategies.
+    /// 
+    /// This function performs the following actions:
+    /// - If there are no active strategies, it returns immediately.
+    /// - Iterates through the `withdrawOrder` array, which defines the order in which strategies are withdrawn from.
+    /// - For each strategy in the `withdrawOrder`:
+    ///   - If the strategy address is zero, it returns, indicating the end of the list.
+    ///   - If the strategy has no debt, it skips to the next strategy.
+    ///   - Otherwise, it requests the strategy to report its current state by calling `askReport`.
+    ///
+    /// @dev This function is called before a deposit to ensure that the strategies are up-to-date with their reports.
     function _preDeposit() internal {
         if (activeStrategies == 0) return;
 
-        for(uint8 i = 0; i <= withdrawOrder.length; ++i){
+        for(uint8 i = 0; i < activeStrategies; ++i){
             address strategy = withdrawOrder[i];
             if(strategy == address(0)) return;
             if(strategies[strategy].totalDebt == 0) continue;
@@ -357,7 +368,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         uint256 assets = _consumeAllShares ? _convertToAssets(_shares, Math.Rounding.Floor) : _assets;
 
         if(assets > _liquidity()) {
-            for(uint8 i = 0; i <= withdrawOrder.length; ++i){
+            for(uint8 i = 0; i < withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
