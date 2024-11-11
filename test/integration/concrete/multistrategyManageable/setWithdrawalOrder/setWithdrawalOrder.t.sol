@@ -13,7 +13,8 @@ contract SetWithdrawOrder_Integration_Concrete_Test is Multistrategy_Integration
 
     function addMockStrategy() internal returns (address) {
         address mockStrategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        swapCaller(users.owner); multistrategy.addStrategy(mockStrategy, debtRatio, minDebtRatio, maxDebtRatio);
+        swapCaller(users.keeper);
         return mockStrategy;
     }
 

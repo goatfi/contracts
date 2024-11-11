@@ -6,6 +6,7 @@ import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
@@ -13,19 +14,19 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     uint256 minDebtDelta = 100 ether;
     uint256 maxDebtDelta = 100_000 ether;
 
-    function test_RevertWhen_CallerNotManager() external {
+    function test_RevertWhen_CallerNotOwner() external {
         // Change caller to bob
         swapCaller(users.bob);
 
         address strategy = makeAddr("strategy");
         
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, users.bob));
         multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
     }
 
-    modifier whenCallerIsManager() {
-        swapCaller(users.keeper);
+    modifier whenCallerIsOwner() {
+        swapCaller(users.owner);
         _;
     }
 
@@ -44,7 +45,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_RevertWhen_ActiveStrategiesAboveMaximum() 
         external 
-        whenCallerIsManager 
+        whenCallerIsOwner
         whenActiveStrategiesAtMaximum
     {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
@@ -60,7 +61,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_RevertWhen_StrategyIsZeroAddress() 
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
     {
         address strategy = address(0);
@@ -76,7 +77,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_RevertWhen_StrategyIsMultistrategyAddress()
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
     {
@@ -94,7 +95,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     /// @dev Only way to activate a strategy is to add it to the multistrategy
     function test_RevertWhen_StrategyIsActive() 
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
         whenNotMultistrategyAddress
@@ -119,7 +120,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
     ///      We're testing here.
     function test_RevertWhen_assetDoNotMatch() 
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
         whenNotMultistrategyAddress
@@ -152,7 +153,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_RevertWhen_MinDebtDeltaIsHigherThanMaxDebtDelta()
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
         whenNotMultistrategyAddress
@@ -175,7 +176,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_RevertWhen_DebtRatioSumIsAboveMax()
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
         whenNotMultistrategyAddress
@@ -199,7 +200,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     function test_AddStrategy_NewStrategy()
         external
-        whenCallerIsManager
+        whenCallerIsOwner
         whenActiveStrategiesBelowMaximum
         whenNotZeroAddress
         whenNotMultistrategyAddress

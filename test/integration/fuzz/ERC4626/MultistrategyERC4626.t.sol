@@ -10,6 +10,10 @@ import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapte
 import { IStrategyAdapterMock } from "../../../shared/TestInterfaces.sol";
 import { StrategyAdapterMock } from "../../../mocks/StrategyAdapterMock.sol";
 
+interface IOwnable {
+  function owner() external view returns (address);
+}
+
 contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
 
     address manager = makeAddr("manager");
@@ -81,7 +85,7 @@ contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
 
     function addStrategy() public returns(address) {
         vm.prank(manager); address strategy = address(new StrategyAdapterMock(_vault_, _underlying_));
-        vm.prank(manager); IMultistrategyManageable(_vault_).addStrategy(strategy, debtRatio, 0, type(uint256).max);
+        vm.prank(IOwnable(_vault_).owner()); IMultistrategyManageable(_vault_).addStrategy(strategy, debtRatio, 0, type(uint256).max);
         return strategy;
     }
 
