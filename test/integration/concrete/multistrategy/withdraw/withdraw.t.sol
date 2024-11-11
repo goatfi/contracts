@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import { console } from "forge-std/Console.sol";
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
@@ -125,9 +124,6 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         amountToWithdraw = 1000 ether;
 
         address[] memory adapters = multistrategy.getWithdrawOrder();
-        for(uint i = 0; i < 10; ++i) {
-            console.log(adapters[i], IStrategyAdapter(adapters[i]).totalAssets());
-        }
 
         swapCaller(users.bob);
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);

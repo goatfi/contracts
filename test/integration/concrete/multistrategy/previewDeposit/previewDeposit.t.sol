@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
-import {console} from "forge-std/console.sol";
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
@@ -79,8 +78,6 @@ contract PreviewDeposit_Integration_Concrete_Test is Multistrategy_Integration_S
 
         // Check if the previewed shares match the actual shares received
         assertGe(actualShares, previewedShares, "preview deposit should match actual shares when profit is made");
-
-        console.log(actualShares, previewedShares);
     }
 
     modifier whenActiveStrategyMadeLoss() {
