@@ -123,8 +123,6 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
         }
         amountToWithdraw = 1000 ether;
 
-        address[] memory adapters = multistrategy.getWithdrawOrder();
-
         swapCaller(users.bob);
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
