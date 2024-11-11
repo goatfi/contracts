@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.20 <0.9.0;
 
+import {console} from "forge-std/console.sol";
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
@@ -54,7 +55,7 @@ contract PreviewDeposit_Integration_Concrete_Test is Multistrategy_Integration_S
         swapCaller(users.bob); asset.approve(address(multistrategy), assets);
         swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).deposit(assets, users.bob);
 
-        assertGe(actualShares, previewedShares, "preview deposit should match actual shares when no profit is made");
+        assertEq(actualShares, previewedShares, "preview deposit should match actual shares when no profit is made");
     }
 
     modifier whenActiveStrategyMadeProfit() {
@@ -77,7 +78,9 @@ contract PreviewDeposit_Integration_Concrete_Test is Multistrategy_Integration_S
         swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).deposit(assets, users.bob);
 
         // Check if the previewed shares match the actual shares received
-        assertGe(actualShares, previewedShares, "preview deposit should match actual shares when profit is made");
+        assertEq(actualShares, previewedShares, "preview deposit should match actual shares when profit is made");
+
+        console.log(actualShares, previewedShares);
     }
 
     modifier whenActiveStrategyMadeLoss() {
@@ -100,6 +103,6 @@ contract PreviewDeposit_Integration_Concrete_Test is Multistrategy_Integration_S
         swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).deposit(assets, users.bob);
 
         // Check if the previewed shares match the actual shares received
-        assertGe(actualShares, previewedShares, "preview deposit should match actual shares when profit is made");
+        assertEq(actualShares, previewedShares, "preview deposit should match actual shares when loss is made");
     }
 }

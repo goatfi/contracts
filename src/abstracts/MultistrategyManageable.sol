@@ -147,7 +147,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         uint256 _debtRatio,
         uint256 _minDebtDelta,
         uint256 _maxDebtDelta
-    ) external onlyManager {
+    ) external onlyOwner {
         require(activeStrategies < MAXIMUM_STRATEGIES, Errors.MaximumAmountStrategies());
         require(_strategy != address(0) && _strategy != address(this), Errors.InvalidAddress(_strategy));
         require(strategies[_strategy].activation == 0, Errors.StrategyAlreadyActive(_strategy));
@@ -185,7 +185,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     }
 
     /// @inheritdoc IMultistrategyManageable
-    function removeStrategy(address _strategy) external onlyManager onlyActiveStrategy(_strategy) {
+    function removeStrategy(address _strategy) external onlyOwner onlyActiveStrategy(_strategy) {
         require(strategies[_strategy].debtRatio == 0, Errors.StrategyNotRetired());
         require(strategies[_strategy].totalDebt == 0, Errors.StrategyWithOutstandingDebt());
 

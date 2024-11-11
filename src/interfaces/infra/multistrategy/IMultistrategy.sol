@@ -43,6 +43,9 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Returns the total debt of `strategy`.
     /// @param strategy Address of the strategy we want to know the `totalDebt`.
     function strategyTotalDebt(address strategy) external view returns (uint256);
+
+    /// @notice Returns the aggregate PnL of all strategies at max slippage.
+    function currentPnL() external view returns (uint256, uint256);
     
     /// @notice Send the available credit of the caller to the caller.
     /// @dev Reverts if the caller is *NOT* an active strategy

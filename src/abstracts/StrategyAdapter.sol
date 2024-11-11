@@ -66,6 +66,14 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return _totalAssets();
     }
 
+    /// @inheritdoc IStrategyAdapter
+    function currentPnL() external view returns (uint256, uint256) {
+        if(slippageLimit == 0) return _calculateGainAndLoss(_totalAssets());
+
+        uint256 assetsWithSlippage = _totalAssets().mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
+        return _calculateGainAndLoss(assetsWithSlippage);
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/

@@ -75,6 +75,24 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Checks the current PnL of all adapters
+    function previewDeposit(uint256 _assets) public view override returns (uint256) {
+        (uint256 profit, uint256 loss) = _currentPnL();
+        uint256 currentAssets = totalAssets() + profit - loss;
+
+        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), currentAssets + 1, Math.Rounding.Floor);
+    }
+
+    /// @inheritdoc IERC4626
+    /// @dev Checks the current PnL of all adapters
+    function previewMint(uint256 _shares) public view override returns (uint256) {
+        (uint256 profit, uint256 loss) = _currentPnL();
+        uint256 currentAssets = totalAssets() + profit - loss;
+
+        return _shares.mulDiv(currentAssets + 1, totalSupply() + 10 ** _decimalsOffset(), Math.Rounding.Ceil);
+    }
+
+    /// @inheritdoc IERC4626
     function previewWithdraw(uint256 _assets) public view override returns (uint256) {
         uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
         if(_assets <= _liquidity()) {
@@ -117,6 +135,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         return strategies[_strategy].totalDebt;
     }
 
+    /// @inheritdoc IMultistrategy
+    function currentPnL() external view returns (uint256, uint256) {
+        return _currentPnL();
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
@@ -128,7 +151,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         uint256 maxAssets = maxDeposit(_receiver);
         require(_assets <= maxAssets, ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets));
 
-        uint256 shares = previewDeposit(_assets);
+        uint256 shares = _convertToShares(_assets, Math.Rounding.Floor);
         _deposit(msg.sender, _receiver, _assets, shares);
 
         return shares;
@@ -280,6 +303,24 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         } else {
             return strat_totalDebt - strat_debtLimit;
         }
+    }
+
+    function _currentPnL() internal view returns (uint256, uint256) {
+        if (activeStrategies == 0) return (0, 0);
+        uint256 totalProfit = 0;
+        uint256 totalLoss = 0;
+
+        for(uint8 i = 0; i < activeStrategies; ++i){
+            address strategy = withdrawOrder[i];
+            if(strategy == address(0)) break;
+            if(strategies[strategy].totalDebt == 0) continue;
+
+            (uint256 gain, uint256 loss) = IStrategyAdapter(strategy).currentPnL();
+            totalProfit += gain.mulDiv(MAX_BPS - performanceFee, MAX_BPS);
+            totalLoss += loss;
+        }
+
+        return (totalProfit, totalLoss);
     }
 
     /*//////////////////////////////////////////////////////////////////////////

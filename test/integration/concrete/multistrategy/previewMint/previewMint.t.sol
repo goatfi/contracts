@@ -41,7 +41,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_PreviewMint_MatchesShares_NoProfit() 
+    function test_PreviewMint_MatchesAssets_NoProfit() 
         external 
         whenSharesNotZero 
         whenThereIsActiveStrategy
@@ -54,7 +54,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
         swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).mint(shares, users.bob);
 
         // Check if the previewed shares match the actual shares received
-        assertGe(actualShares, previewedShares, "preview mint should match actual shares when profit is made");
+        assertEq(actualShares, previewedShares, "preview mint should match actual shares when profit is made");
     }
 
     modifier whenActiveStrategyMadeProfit() {
@@ -62,7 +62,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_PreviewMint_MatchesShares_WithProfit()
+    function test_PreviewMint_MatchesAssets_WithProfit()
         external 
         whenSharesNotZero 
         whenThereIsActiveStrategy
@@ -70,14 +70,14 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     {
         uint256 shares = 500 ether;
-        deal(IERC4626(address(multistrategy)).asset(), users.bob, shares);
+        deal(IERC4626(address(multistrategy)).asset(), users.bob, shares * 2);
 
-        uint256 previewedShares = IERC4626(address(multistrategy)).previewMint(shares);
+        uint256 previewedAssets = IERC4626(address(multistrategy)).previewMint(shares);
         swapCaller(users.bob); asset.approve(address(multistrategy), type(uint256).max);
-        swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).mint(shares, users.bob);
+        swapCaller(users.bob); uint256 actualAssets = IERC4626(address(multistrategy)).mint(shares, users.bob);
 
         // Check if the previewed shares match the actual shares received
-        assertGe(actualShares, previewedShares, "preview mint should match actual shares when profit is made");
+        assertEq(actualAssets, previewedAssets, "preview mint should match actual shares when profit is made");
     }
 
     modifier whenActiveStrategyMadeLoss() {
@@ -85,7 +85,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
         _;
     }
 
-    function test_PreviewMint_MatchesShares_WithLoss()
+    function test_PreviewMint_MatchesAssets_WithLoss()
         external 
         whenSharesNotZero 
         whenThereIsActiveStrategy
@@ -97,9 +97,9 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
         uint256 previewedShares = IERC4626(address(multistrategy)).previewMint(shares);
         swapCaller(users.bob); asset.approve(address(multistrategy), type(uint256).max);
-        swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).deposit(shares, users.bob);
+        swapCaller(users.bob); uint256 actualShares = IERC4626(address(multistrategy)).mint(shares, users.bob);
 
         // Check if the previewed shares match the actual shares received
-        assertGe(actualShares, previewedShares, "preview mint should match actual shares when profit is made");
+        assertEq(actualShares, previewedShares, "preview mint should match actual shares when profit is made");
     }
 }
