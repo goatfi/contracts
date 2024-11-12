@@ -42,7 +42,8 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
 
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.keeper);
         _;
     }
 
@@ -145,7 +146,8 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
 
-        multistrategy.addStrategy(strategy_two, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(strategy_two, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.keeper);
         multistrategy.retireStrategy(strategy_two);
         _;
     }

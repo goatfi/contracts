@@ -19,7 +19,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         _;
     }
 
-    function test_PricePerShare_NoLockedProfit() 
+    function test_PricePerShare_NoProfit() 
         external
         whenTotalSupplyHigherThanZero
     {
@@ -37,8 +37,6 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         IStrategyAdapter(strategy).requestCredit();
         // Strategy makes a gain
         triggerStrategyGain(strategy, 100 ether);
-        // Strategy reports back to the multistrategy. It doesn't repay any debt
-        IStrategyAdapter(strategy).sendReport(0);
         _;
     }
 
@@ -52,7 +50,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         uint256 expectedPricePerShare = 1 ether;
         assertEq(actualPricePerShare, expectedPricePerShare, "pricePerShare");
 
-        vm.warp(block.timestamp + multistrategy.PROFIT_UNLOCK_TIME() + 1);
+        triggerUserDeposit(users.alice, 1_000 ether);
 
         // At this point, all profit is unlocked, so price per share should be higher
         actualPricePerShare = multistrategy.pricePerShare();

@@ -61,6 +61,10 @@ interface IStrategyAdapter {
     /// @notice Returns the amount of `asset` this strategy holds.
     function totalAssets() external view returns (uint256);
 
+    /// @notice Returns the gain or loss this strategy has made since the last report.
+    /// @dev The returned values will account for max slippage.
+    function currentPnL() external view returns (uint256, uint256);
+
     /// @notice Starts the panic process for this strategy.
     /// The panic process consists of:
     ///     - Withdraw as much funds as possible from the underlying strategy.

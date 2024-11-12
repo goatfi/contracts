@@ -26,17 +26,8 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @param loss Amount of loss that the strategy has reported.
     event StrategyReported(address indexed strategy, uint256 debtRepaid, uint256 gain, uint256 loss);
 
-    /// @notice How long it takes to unlock all the profit in seconds.
-    function PROFIT_UNLOCK_TIME() external view returns (uint256);
-
     /// @notice Timestamp of the last report made by a strategy.
     function lastReport() external view returns (uint256);
-
-    /// @notice Amount of tokens that are locked as "locked profit" and can't be withdrawn.
-    function lockedProfit() external view returns (uint256);
-
-    /// @notice Rate at which the locked profit gets unlocked per second.
-    function lockedProfitDegradation() external view returns (uint256);
 
     /// @notice Returns the value of a share in `asset` value.
     function pricePerShare() external view returns (uint256);
@@ -52,6 +43,9 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Returns the total debt of `strategy`.
     /// @param strategy Address of the strategy we want to know the `totalDebt`.
     function strategyTotalDebt(address strategy) external view returns (uint256);
+
+    /// @notice Returns the aggregate PnL of all strategies at max slippage.
+    function currentPnL() external view returns (uint256, uint256);
     
     /// @notice Send the available credit of the caller to the caller.
     /// @dev Reverts if the caller is *NOT* an active strategy

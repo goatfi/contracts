@@ -66,6 +66,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return _totalAssets();
     }
 
+    /// @inheritdoc IStrategyAdapter
+    function currentPnL() external view returns (uint256, uint256) {
+        return _calculateGainAndLoss(_totalAssets());
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/

@@ -20,20 +20,9 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Math for uint256;
-    
-    /// @dev Used for locked profit calculations.
-    uint256 constant DEGRADATION_COEFFICIENT = 1 ether;
-    /// @dev How much time it takes for the profit of a strategy to be unlocked.
-    uint256 public constant PROFIT_UNLOCK_TIME = 7 days;
 
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
-    
-    /// @inheritdoc IMultistrategy
-    uint256 public lockedProfit;
-
-    /// @inheritdoc IMultistrategy
-    uint256 public immutable lockedProfitDegradation;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -58,7 +47,6 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     {   
         performanceFee = 1000;
         lastReport = block.timestamp;
-        lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -84,6 +72,24 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @dev Limited by the deposit limit
     function maxMint(address _receiver) public view override returns (uint256) {
         return convertToShares(maxDeposit(_receiver));
+    }
+
+    /// @inheritdoc IERC4626
+    /// @dev Checks the current PnL of all adapters
+    function previewDeposit(uint256 _assets) public view override returns (uint256) {
+        (uint256 profit, uint256 loss) = _currentPnL();
+        uint256 currentAssets = totalAssets() + profit - loss;
+
+        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), currentAssets + 1, Math.Rounding.Floor);
+    }
+
+    /// @inheritdoc IERC4626
+    /// @dev Checks the current PnL of all adapters
+    function previewMint(uint256 _shares) public view override returns (uint256) {
+        (uint256 profit, uint256 loss) = _currentPnL();
+        uint256 currentAssets = totalAssets() + profit - loss;
+
+        return _shares.mulDiv(currentAssets + 1, totalSupply() + 10 ** _decimalsOffset(), Math.Rounding.Ceil);
     }
 
     /// @inheritdoc IERC4626
@@ -129,16 +135,23 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         return strategies[_strategy].totalDebt;
     }
 
+    /// @inheritdoc IMultistrategy
+    function currentPnL() external view returns (uint256, uint256) {
+        return _currentPnL();
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC4626
     function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+        _preDeposit();
+
         uint256 maxAssets = maxDeposit(_receiver);
         require(_assets <= maxAssets, ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets));
 
-        uint256 shares = previewDeposit(_assets);
+        uint256 shares = _convertToShares(_assets, Math.Rounding.Floor);
         _deposit(msg.sender, _receiver, _assets, shares);
 
         return shares;
@@ -146,10 +159,12 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
     /// @inheritdoc IERC4626
     function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+        _preDeposit();
+
         uint256 maxShares = maxMint(_receiver);
         require(_shares <= maxShares, ERC4626ExceededMaxMint(_receiver, _shares, maxShares));
 
-        uint256 assets = previewMint(_shares);
+        uint256 assets = _convertToAssets(_shares, Math.Rounding.Ceil);
         _deposit(msg.sender, _receiver, assets, _shares);
 
         return assets;
@@ -215,7 +230,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _assets, Math.Rounding rounding) internal view override returns (uint256) {
-        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _freeFunds() + 1, rounding);
+        return _assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
     }
 
     /// @notice Convert a given amount of shares to assets, with specified rounding.
@@ -223,7 +238,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @param rounding The rounding direction to apply during the conversion.
     /// @return The amount of assets corresponding to the given number of shares.
     function _convertToAssets(uint256 _shares, Math.Rounding rounding) internal view override returns (uint256) {
-        return _shares.mulDiv(_freeFunds() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
+        return _shares.mulDiv(totalAssets() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
     }
 
     /// @notice Calculates the available credit for a strategy.
@@ -289,33 +304,66 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
             return strat_totalDebt - strat_debtLimit;
         }
     }
-    
-    /// @notice Calculates the free funds available in the contract.
-    /// @return The amount of free funds available.
-    function _freeFunds() internal view returns (uint256) {
-        return totalAssets() - _calculateLockedProfit();
-    }
 
-    /// @notice Calculate the current locked profit.
-    /// 
-    /// This function performs the following actions:
-    /// - Calculates the locked funds ratio based on the time elapsed since the last report and the locked profit degradation rate.
-    /// - If the locked funds ratio is less than the degradation coefficient, it computes the remaining locked profit by reducing it proportionally.
-    /// - If the locked funds ratio is greater than or equal to the degradation coefficient, it returns zero indicating no locked profit remains.
-    /// 
-    /// @return The calculated current locked profit.
-    function _calculateLockedProfit() internal view returns (uint256) {
-        uint256 lockedFundsRatio = (block.timestamp - lastReport) * lockedProfitDegradation;
+    /**
+     * @notice Calculates the current profit and loss (PnL) across all active strategies.
+     * 
+     * This function performs the following actions:
+     * - Iterates through the `withdrawOrder` array, which defines the order in which strategies are withdrawn from.
+     * - For each strategy in the `withdrawOrder`:
+     *   - If the strategy address is zero, it breaks the loop, indicating the end of the list.
+     *   - If the strategy has no debt, it skips to the next strategy.
+     *   - Otherwise, it retrieves the current profit and loss (PnL) from the strategy by calling `currentPnL`.
+     *   - Adds the strategy's profit to the total profit, after deducting the performance fee.
+     *   - Adds the strategy's loss to the total loss.
+     * - Returns the total profit and total loss across all active strategies.
+     * 
+     * @return totalProfit The total profit across all active strategies, after deducting the performance fee.
+     * @return totalLoss The total loss across all active strategies.
+     */
+    function _currentPnL() internal view returns (uint256, uint256) {
+        if (activeStrategies == 0) return (0, 0);
+        uint256 totalProfit = 0;
+        uint256 totalLoss = 0;
 
-        if(lockedFundsRatio < DEGRADATION_COEFFICIENT) {
-            return lockedProfit - lockedFundsRatio.mulDiv(lockedProfit, DEGRADATION_COEFFICIENT);
+        for(uint8 i = 0; i < activeStrategies; ++i){
+            address strategy = withdrawOrder[i];
+            if(strategy == address(0)) break;
+            if(strategies[strategy].totalDebt == 0) continue;
+
+            (uint256 gain, uint256 loss) = IStrategyAdapter(strategy).currentPnL();
+            totalProfit += gain.mulDiv(MAX_BPS - performanceFee, MAX_BPS);
+            totalLoss += loss;
         }
-        return 0;
+
+        return (totalProfit, totalLoss);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Prepares the contract for a deposit by requesting reports from active strategies.
+    /// 
+    /// This function performs the following actions:
+    /// - If there are no active strategies, it returns immediately.
+    /// - Iterates through the `withdrawOrder` array, which defines the order in which strategies are withdrawn from.
+    /// - For each strategy in the `withdrawOrder`:
+    ///   - If the strategy address is zero, it returns, indicating the end of the list.
+    ///   - If the strategy has no debt, it skips to the next strategy.
+    ///   - Otherwise, it requests the strategy to report its current state by calling `askReport`.
+    ///
+    /// @dev This function is called before a deposit to ensure that the strategies are up-to-date with their reports.
+    function _preDeposit() internal {
+        if (activeStrategies == 0) return;
+
+        for(uint8 i = 0; i < activeStrategies; ++i){
+            address strategy = withdrawOrder[i];
+            if(strategy == address(0)) return;
+            if(strategies[strategy].totalDebt == 0) continue;
+            IStrategyAdapter(strategy).askReport();
+        }
+    }
 
     /// @notice Handles deposits into the contract.
     /// 
@@ -377,7 +425,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         uint256 assets = _consumeAllShares ? _convertToAssets(_shares, Math.Rounding.Floor) : _assets;
 
         if(assets > _liquidity()) {
-            for(uint8 i = 0; i <= withdrawOrder.length; ++i){
+            for(uint8 i = 0; i < withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
                 // We reached the end of the withdraw queue and assets are still higher than the liquidity
@@ -461,19 +509,13 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         if(_gain > 0) {
             feesCollected = _gain.mulDiv(performanceFee, MAX_BPS);
             profit = _gain - feesCollected;
+            strategies[msg.sender].totalGain += _gain;
         } 
 
         uint256 debtToRepay = Math.min(_debtRepayment, _debtExcess(msg.sender));
         if(debtToRepay > 0) {
             strategies[msg.sender].totalDebt -= debtToRepay;
             totalDebt -= debtToRepay;
-        }
-        
-        uint256 newLockedProfit = _calculateLockedProfit() + profit;
-        if(newLockedProfit > _loss) {
-            lockedProfit = newLockedProfit - _loss;
-        } else {
-            lockedProfit = 0;
         }
 
         strategies[msg.sender].lastReport = block.timestamp;

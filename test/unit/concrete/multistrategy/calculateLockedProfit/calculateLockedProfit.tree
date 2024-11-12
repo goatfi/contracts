@@ -1,8 +1,0 @@
-calculateLockedProfit.t.sol
-├── when there is no prior locked profit
-│   └── it should return 0
-└── when there is prior locked profit
-    ├── when the time since the last report is higher than PROFIT_UNLOCK_TIME
-    │   └── it should return 0
-    └── when the time since the last report is lower than PROFIT_UNLOCK_TIME
-        └── it should return the prior locked profit minus the proportional degradation amount from the locked profit
