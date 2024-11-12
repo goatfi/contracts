@@ -24,6 +24,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
 
+    /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
+    /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
+    /// precision between shares and assets.
+    uint8 public immutable DECIMALS_OFFSET;
+
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -45,6 +50,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {   
+        DECIMALS_OFFSET = uint8(Math.max(0, uint256(18) - IERC20Metadata(_asset).decimals()));
         performanceFee = 1000;
         lastReport = block.timestamp;
     }
@@ -337,6 +343,10 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         }
 
         return (totalProfit, totalLoss);
+    }
+
+    function _decimalsOffset() internal view override returns (uint8) {
+        return DECIMALS_OFFSET;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
