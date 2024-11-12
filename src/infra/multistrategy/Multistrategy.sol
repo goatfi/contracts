@@ -164,7 +164,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         uint256 maxShares = maxMint(_receiver);
         require(_shares <= maxShares, ERC4626ExceededMaxMint(_receiver, _shares, maxShares));
 
-        uint256 assets = previewMint(_shares);
+        uint256 assets = _convertToAssets(_shares, Math.Rounding.Ceil);
         _deposit(msg.sender, _receiver, assets, _shares);
 
         return assets;
