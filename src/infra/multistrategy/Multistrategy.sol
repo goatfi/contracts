@@ -305,6 +305,22 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         }
     }
 
+    /**
+     * @notice Calculates the current profit and loss (PnL) across all active strategies.
+     * 
+     * This function performs the following actions:
+     * - Iterates through the `withdrawOrder` array, which defines the order in which strategies are withdrawn from.
+     * - For each strategy in the `withdrawOrder`:
+     *   - If the strategy address is zero, it breaks the loop, indicating the end of the list.
+     *   - If the strategy has no debt, it skips to the next strategy.
+     *   - Otherwise, it retrieves the current profit and loss (PnL) from the strategy by calling `currentPnL`.
+     *   - Adds the strategy's profit to the total profit, after deducting the performance fee.
+     *   - Adds the strategy's loss to the total loss.
+     * - Returns the total profit and total loss across all active strategies.
+     * 
+     * @return totalProfit The total profit across all active strategies, after deducting the performance fee.
+     * @return totalLoss The total loss across all active strategies.
+     */
     function _currentPnL() internal view returns (uint256, uint256) {
         if (activeStrategies == 0) return (0, 0);
         uint256 totalProfit = 0;
