@@ -2,7 +2,8 @@
 
 pragma solidity >=0.8.20 <0.9.0;
 
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -41,7 +42,7 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         whenCallerIsOwner
         whenNotPaused
     {
-        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
+        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 * 10 ** decimals);
         uint256 previousTotalAssets = strategy.totalAssets();
 
         strategy.requestCredit();
@@ -57,19 +58,19 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         whenCallerIsOwner
         whenNotPaused
     {
-        triggerUserDeposit(users.bob, 1000 ether);
-        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 ether);
+        triggerUserDeposit(users.bob, 1000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy), 10_000, 0, 100_000 * 10 ** decimals);
         
         strategy.requestCredit();
 
         // Assert totalAssets has increased
         uint256 actualTotalAssets = strategy.totalAssets();
-        uint256 expectedTotalAssets = 1000 ether;
+        uint256 expectedTotalAssets = 1000 * 10 ** decimals;
         assertEq(actualTotalAssets, expectedTotalAssets, "requestCredit, totalAssets");
 
         // Assert the credit has been deposited into the underlying strategy
         uint256 actualStrategyAssets = IStrategyAdapterMock(address(strategy)).stakingBalance();
-        uint256 expectedStrategyAssets = 1000 ether;
+        uint256 expectedStrategyAssets = 1000 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "requestCredit, strategy assets");
     }
 }

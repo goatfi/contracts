@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import {Errors} from "src/infra/libraries/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,6 +14,12 @@ contract Deposit_Integration_Concrete_Test is
 {
     uint256 amount;
     address recipient;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_RevertWhen_ContractIsPaused() external {
         // Pause the multistrategy
@@ -38,17 +45,17 @@ contract Deposit_Integration_Concrete_Test is
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 150_000 ether;
+        amount = 150_000 * 10 ** decimals;
         recipient = users.bob;
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 ether));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 * 10 ** decimals));
         IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     /// @dev Approve the tokens to be able to deposit
     modifier whenDepositLimitRespected() {
-        triggerApprove(users.bob, address(multistrategy), 1000 ether);
+        triggerApprove(users.bob, address(multistrategy), 1000 * 10 ** decimals);
         _;
     }
 
@@ -113,7 +120,7 @@ contract Deposit_Integration_Concrete_Test is
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 1000 ether;
+        amount = 1000 * 10 ** decimals;
         recipient = users.bob;
 
         swapCaller(users.bob);
@@ -123,7 +130,7 @@ contract Deposit_Integration_Concrete_Test is
     }
 
     modifier whenCallerHasEnoughBalance() {
-        mintAsset(users.bob, 1000 ether);
+        mintAsset(users.bob, 1000 * 10 ** decimals);
         _;
     }
 
@@ -135,7 +142,7 @@ contract Deposit_Integration_Concrete_Test is
         whenAmountIsGreaterThanZero
         whenCallerHasEnoughBalance
     {
-        amount = 1000 ether;
+        amount = 1000 * 10 ** decimals;
         recipient = users.bob;
         uint256 shares = IERC4626(address(multistrategy)).previewDeposit(amount);
 

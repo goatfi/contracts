@@ -2,10 +2,17 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     address strategy;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_StrategyTotalDebt_ZeroAddress() external {
         // Assert that zero address has 0 debt
@@ -28,7 +35,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
 
     modifier whenActiveStrategy() {
         // Add the strategy to the multistrategy
-        multistrategy.addStrategy(strategy, 5_000, 100 ether, 100_000 ether);
+        multistrategy.addStrategy(strategy, 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
         _;
     }
 
@@ -45,7 +52,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
 
     modifier whenCreditRequested() {
         // We need some funds into the multistrategy, else no credit can be requested
-        triggerUserDeposit(users.bob, 1_000 ether);
+        triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
 
         // Request the credit from the strategy
         IStrategyAdapter(strategy).requestCredit();
@@ -59,7 +66,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
         whenCreditRequested
     {
         // Debt should be half the user deposit, as strategy's debtRatio is 50%
-        uint256 creditRequested = 500 ether;
+        uint256 creditRequested = 500 * 10 ** decimals;
 
         // Assert the strategy total debt is the same as the credit requested
         uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(strategy);

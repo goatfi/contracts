@@ -2,12 +2,21 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     address strategy;
-    uint256 minDebtDelta = 100 ether;
-    uint256 maxDebtDelta = 10_000 ether;
+    uint256 minDebtDelta;
+    uint256 maxDebtDelta;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+        minDebtDelta = 100 * 10 ** decimals;
+        maxDebtDelta = 10_000 * 10 ** decimals;
+    }
 
     function test_CreditAvailable_ZeroAddress() external {
         strategy = address(0);
@@ -32,7 +41,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     modifier whenThereAreDeposits() {
-        triggerUserDeposit(users.bob, 1_000 ether);
+        triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
         _;
     }
 
@@ -122,7 +131,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenCreditAboveMinDebtDelta
     {   
         // Max debt delta is 10K, so we need a big deposit in order to ask for a big credit
-        triggerUserDeposit(users.alice, 25_000 ether);
+        triggerUserDeposit(users.alice, 25_000 * 10 ** decimals);
 
         // Assert creditAvailable is maxDebtDelta
         uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
@@ -144,7 +153,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenCreditBelowMaxDebtDelta
     {
         uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
-        uint256 expectedCreditAvailable = 500 ether;
+        uint256 expectedCreditAvailable = 500 * 10 ** decimals;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
 }

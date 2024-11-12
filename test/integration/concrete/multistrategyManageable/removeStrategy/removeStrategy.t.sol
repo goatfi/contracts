@@ -2,13 +2,19 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-
     address strategy;
     address strategy_two;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
@@ -39,8 +45,8 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     modifier whenStrategyIsActive() {
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         uint256 debtRatio = 5_000;
-        uint256 minDebtDelta = 100 ether;
-        uint256 maxDebtDelta = 100_000 ether;
+        uint256 minDebtDelta = 100 * 10 ** decimals;
+        uint256 maxDebtDelta = 100_000 * 10 ** decimals;
 
         swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
@@ -58,7 +64,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     }
 
     modifier whenStrategyDebtGreaterThanZero() {
-        triggerUserDeposit(users.bob, 1000 ether);
+        triggerUserDeposit(users.bob, 1000 * 10 ** decimals);
         swapCaller(users.keeper);
         IStrategyAdapter(strategy).requestCredit();
         _;
@@ -143,8 +149,8 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     modifier whenTwoActiveStrategies() {
         strategy_two = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         uint256 debtRatio = 5_000;
-        uint256 minDebtDelta = 100 ether;
-        uint256 maxDebtDelta = 100_000 ether;
+        uint256 minDebtDelta = 100 * 10 ** decimals;
+        uint256 maxDebtDelta = 100_000 * 10 ** decimals;
 
         swapCaller(users.owner); multistrategy.addStrategy(strategy_two, debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);

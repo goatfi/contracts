@@ -2,10 +2,17 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     address strategy;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_DebtExcess_ZeroAddress() external {
         uint256 actualDebtExcess = multistrategy.debtExcess(strategy);
@@ -28,7 +35,7 @@ contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Share
     }
 
     modifier whenThereAreDeposits() {
-        triggerUserDeposit(users.bob, 1_000 ether);
+        triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
         _;
     }
 
@@ -43,7 +50,7 @@ contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Share
     }
 
     modifier whenActiveStrategy() {
-        multistrategy.addStrategy(strategy, 5_000, 100 ether, 100_000 ether);
+        multistrategy.addStrategy(strategy, 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
         _;
     }
 
@@ -105,7 +112,7 @@ contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Share
         multistrategy.setStrategyDebtRatio(strategy, 4_000);
 
         uint256 actualDebtExcess = multistrategy.debtExcess(strategy);
-        uint256 expectedDebtExcess = 100 ether;
+        uint256 expectedDebtExcess = 100 * 10 ** decimals;
         assertEq(actualDebtExcess, expectedDebtExcess, "debtExcess");
     }
 }

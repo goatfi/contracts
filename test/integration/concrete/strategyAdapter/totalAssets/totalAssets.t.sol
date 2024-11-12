@@ -2,7 +2,8 @@
 
 pragma solidity >=0.8.20 <0.9.0;
 
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_Test {
 
@@ -13,7 +14,7 @@ contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Sh
     }
 
     modifier whenCreditRequested() {
-        requestCredit(address(strategy), 1000 ether);
+        requestCredit(address(strategy), 1000 * 10 ** decimals);
         _;
     }
 
@@ -22,7 +23,7 @@ contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Sh
         whenCreditRequested
     {
         uint256 actualTotalAssets = strategy.totalAssets();
-        uint256 expectedTotalAssets = 1000 ether;
+        uint256 expectedTotalAssets = 1000 * 10 ** decimals;
         assertEq(actualTotalAssets, expectedTotalAssets, "totalAssets, credit requested");
     }
 }

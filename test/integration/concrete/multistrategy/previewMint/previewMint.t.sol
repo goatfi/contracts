@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -11,6 +12,12 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     address strategy;
     uint256 slippage = 100;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_PreviewMint_ZeroShares() external {
         uint256 actualAssets = IERC4626(address(multistrategy)).previewMint(0);
@@ -19,7 +26,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
     }
 
     modifier whenSharesNotZero() {
-        triggerUserDeposit(users.bob, 1000 ether);
+        triggerUserDeposit(users.bob, 1000 * 10 ** decimals);
         _;
     }
 
@@ -36,7 +43,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     modifier whenThereIsActiveStrategy() {
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 10_000, 0, 100_000 ether);
+        multistrategy.addStrategy(strategy, 10_000, 0, 100_000 * 10 ** decimals);
         IStrategyAdapter(strategy).requestCredit();
         _;
     }
@@ -58,7 +65,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
     }
 
     modifier whenActiveStrategyMadeProfit() {
-        IStrategyAdapterMock(strategy).earn(100 ether);
+        IStrategyAdapterMock(strategy).earn(100 * 10 ** decimals);
         _;
     }
 
@@ -81,7 +88,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
     }
 
     modifier whenActiveStrategyMadeLoss() {
-        IStrategyAdapterMock(strategy).lose(100 ether);
+        IStrategyAdapterMock(strategy).lose(100 * 10 ** decimals);
         _;
     }
 
