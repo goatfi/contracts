@@ -20,16 +20,34 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
     }
 
     function test_RevertWhen_ContractIsPaused() external {
+        shares = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+        
         // Pause the multistrategy
         multistrategy.pause();
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        multistrategy.requestCredit();
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     modifier whenContractNotPaused() {
         _;
+    }
+
+    function test_RevertWhen_DepositIsPaused() 
+        external 
+        whenContractNotPaused
+    {
+        shares = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
+        //Pause Deposit
+        multistrategy.pauseDeposit();
+
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.DepositPaused.selector));
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     modifier whenRecipientNotZeroAddress() {

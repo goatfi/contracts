@@ -72,6 +72,9 @@ library Errors {
     /// @param liquidity The current liquidity available in the contract.
     error InsufficientLiquidity(uint256 assets, uint256 liquidity);
 
+    /// @notice Thrown when the deposits into the multistrategy are paused.
+    error DepositPaused();
+
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY ADAPTER
     //////////////////////////////////////////////////////////////////////////*/

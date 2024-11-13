@@ -22,15 +22,37 @@ contract Deposit_Integration_Concrete_Test is
     }
 
     function test_RevertWhen_ContractIsPaused() external {
+        amount = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
         // Pause the multistrategy
         multistrategy.pause();
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        multistrategy.requestCredit();
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenContractNotPaused() {
+        _;
+    }
+
+    function test_RevertWhen_DepositIsPaused() 
+        external 
+        whenContractNotPaused
+    {
+        amount = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
+        //Pause Deposit
+        multistrategy.pauseDeposit();
+
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.DepositPaused.selector));
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
+    }
+
+    modifier whenDepositNotPaused() {
         _;
     }
 
@@ -41,6 +63,8 @@ contract Deposit_Integration_Concrete_Test is
     /// @dev Deposit limit is 100K tokens
     function test_RevertWhen_AssetsAboveMaxDeposit()
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
@@ -61,6 +85,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_RecipientIsZeroAddress() 
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenDepositLimitRespected 
     {
         amount = 0;
@@ -75,6 +101,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_RecipientIsContractAddress()
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
@@ -97,6 +125,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_AmountIsZero()
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -115,6 +145,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_CallerHasInsufficientBalance()
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -136,6 +168,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_Deposit()
         external
+        whenContractNotPaused
+        whenDepositNotPaused
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress

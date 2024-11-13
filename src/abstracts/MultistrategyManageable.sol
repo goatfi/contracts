@@ -41,6 +41,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @inheritdoc IMultistrategyManageable
     uint8 public activeStrategies;
 
+    /// @inheritdoc IMultistrategyManageable
+    bool public depositPaused;
+
     /*//////////////////////////////////////////////////////////////////////////
                                   PRIVATE STORAGE
     //////////////////////////////////////////////////////////////////////////*/
@@ -83,6 +86,12 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @param _strategy Address of the strategy to check if it is active. 
     modifier onlyActiveStrategy(address _strategy) {
         require(strategies[_strategy].activation > 0, Errors.StrategyNotActive(_strategy));
+        _;
+    }
+
+    /// @dev Reverts if deposits into the multistrategy are paused.
+    modifier whenDepositNotPaused() {
+        require(depositPaused == false, Errors.DepositPaused());
         _;
     }
 
@@ -235,6 +244,19 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         strategies[_strategy].maxDebtDelta = _maxDebtDelta;
 
         emit StrategyMaxDebtDeltaSet(_strategy, _maxDebtDelta);
+    }
+
+
+    /// @inheritdoc IMultistrategyManageable
+    function pauseDeposit() external onlyGuardian {
+        depositPaused = true;
+        emit DepositPaused();
+    }
+
+    /// @inheritdoc IMultistrategyManageable
+    function unpauseDeposit() external onlyOwner {
+        depositPaused = false;
+        emit DepositUnpaused();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

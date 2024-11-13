@@ -151,7 +151,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+    function deposit(uint256 _assets, address _receiver) public override whenNotPaused whenDepositNotPaused nonReentrant returns (uint256) {
         _preDeposit();
 
         uint256 maxAssets = maxDeposit(_receiver);
@@ -164,7 +164,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+    function mint(uint256 _shares, address _receiver) public override whenNotPaused whenDepositNotPaused nonReentrant returns (uint256) {
         _preDeposit();
 
         uint256 maxShares = maxMint(_receiver);
