@@ -95,6 +95,9 @@ library Errors {
     /// @param amount1 The actual amount obtained.
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
 
+    /// @notice Thrown when the reward added is the base asset of the Strategy.
+    error InvalidRewardToken(address rewardToken);
+
     /*//////////////////////////////////////////////////////////////////////////
                                     ERC-4626
     //////////////////////////////////////////////////////////////////////////*/
