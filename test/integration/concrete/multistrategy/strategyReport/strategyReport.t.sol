@@ -375,6 +375,11 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 expectedStrategyTotalAssets = 500 * 10 ** decimals - repayAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
+        // Assert that locked profit is the profit minus the loss
+        uint256 actualLockedProfit = multistrategy.lockedProfit();
+        uint256 expectedLockedProfit = gainAmount - fee;
+        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
+
         // Assert that the multistrategy las report has been updated
         uint256 actualMultistrategyLastReport = multistrategy.lastReport();
         uint256 expectedMultistrategyLastReport = block.timestamp;
