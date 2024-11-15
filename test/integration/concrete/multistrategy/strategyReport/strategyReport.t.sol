@@ -114,6 +114,222 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         _;
     }
 
+    /// @dev LockedProfit is 0 here as the strategy still hasn't reported any gain. So any loss
+    /// will be higher than the locked profit.
+    function test_StrategyReport_LossHigherThanLockedProfit_ExceedingDebt()
+        external
+        whenContractNotPaused
+        whenCallerActiveStrategy
+        whenStrategyOnlyReportsGainOrLoss
+        whenStrategyHasBalanceToRepay(100 * 10 ** decimals)
+        whenStrategyHasMadeALoss(100 * 10 ** decimals)
+        whenStrategyHasExceedingDebt
+    {   
+        repayAmount = 100 * 10 ** decimals;
+        gainAmount = 0;
+        loseAmount = 100 * 10 ** decimals;
+
+        swapCaller(strategy);
+        vm.expectEmit({emitter: address(multistrategy)});
+        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+
+        // Report with [100, 0, 100]
+        multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
+
+        // Assert that the loss has been reported
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
+        uint256 expectedMultistrategyTotalAssets = (deposit * 10 ** decimals) - loseAmount;
+        assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
+
+        // Assert that the strategy paid the debt with the balance it made available
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
+        uint256 expectedMultistrategyBalance = (500 * 10 ** decimals) + repayAmount;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
+
+        // Assert that the strategy total assets have been reduced by the repayment and lose amount
+        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - repayAmount - loseAmount;
+        assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
+
+        // Assert that locked profit is zero
+        uint256 actualLockedProfit = multistrategy.lockedProfit();
+        uint256 expectedLockedProfit = 0;
+        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualMultistrategyLastReport = multistrategy.lastReport();
+        uint256 expectedMultistrategyLastReport = block.timestamp;
+        assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 expectedStrategyLastReport = block.timestamp;
+        assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
+    }
+
+    function test_StrategyReport_LossHigherThanLockedProfit_NoExceedingDebt()
+        external
+        whenContractNotPaused
+        whenCallerActiveStrategy
+        whenStrategyOnlyReportsGainOrLoss
+        whenStrategyHasBalanceToRepay(0)
+        whenStrategyHasMadeALoss(100  * 10 ** decimals)
+    {
+        repayAmount = 0;
+        gainAmount = 0;
+        loseAmount = 100  * 10 ** decimals;
+
+        swapCaller(strategy);
+        vm.expectEmit({emitter: address(multistrategy)});
+        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+
+        // Report with [0, 0, 100]
+        multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
+
+        // Assert that the loss has been reported
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
+        uint256 expectedMultistrategyTotalAssets = (deposit  * 10 ** decimals) - loseAmount;
+        assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
+
+        // Assert that the strategy didn't pay any debt
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
+        uint256 expectedMultistrategyBalance = 500  * 10 ** decimals;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
+
+        // Assert that the strategy total assets have been reduced by the lose amount
+        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 expectedStrategyTotalAssets = (500  * 10 ** decimals) - loseAmount;
+        assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
+
+        // Assert that locked profit is zero
+        uint256 actualLockedProfit = multistrategy.lockedProfit();
+        uint256 expectedLockedProfit = 0;
+        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualMultistrategyLastReport = multistrategy.lastReport();
+        uint256 expectedMultistrategyLastReport = block.timestamp;
+        assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 expectedStrategyLastReport = block.timestamp;
+        assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
+    }
+
+    modifier whenThereIsLockedProfit(uint256 _amount) {
+        // Report a 100 token gain in order to get some profit locked
+        swapCaller(strategy);
+        mintAsset(strategy, _amount);
+        multistrategy.strategyReport(0, _amount, 0);
+        _;
+    }
+
+    function test_StrategyReport_LossLowerThanLockedProfit_ExceedingDebt()
+        external
+        whenContractNotPaused
+        whenCallerActiveStrategy
+        whenStrategyOnlyReportsGainOrLoss
+        whenStrategyHasBalanceToRepay(100  * 10 ** decimals)
+        whenStrategyHasMadeALoss(10  * 10 ** decimals)
+        whenThereIsLockedProfit(100  * 10 ** decimals)
+        whenStrategyHasExceedingDebt
+    {   
+        repayAmount = 100  * 10 ** decimals;
+        gainAmount = 0;
+        loseAmount = 10  * 10 ** decimals;
+        uint256 profit = 95  * 10 ** decimals;
+
+        swapCaller(strategy);
+        vm.expectEmit({emitter: address(multistrategy)});
+        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+
+        // Report with [100, 0, 10]
+        multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
+
+        // Assert that the loss has been reported
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
+        uint256 expectedMultistrategyTotalAssets = (deposit * 10 ** decimals) + profit - loseAmount;
+        assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
+
+        // Assert that the strategy paid the debt with the balance it made available
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
+        uint256 expectedMultistrategyBalance = (500 * 10 ** decimals) + profit + repayAmount;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
+
+        // Assert that the strategy total assets have been reduced by the repayment and lose amount
+        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - repayAmount - loseAmount;
+        assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
+
+        // Assert that locked profit is the profit minus the loss
+        uint256 actualLockedProfit = multistrategy.lockedProfit();
+        uint256 expectedLockedProfit = profit - loseAmount;
+        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualMultistrategyLastReport = multistrategy.lastReport();
+        uint256 expectedMultistrategyLastReport = block.timestamp;
+        assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 expectedStrategyLastReport = block.timestamp;
+        assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
+    }
+
+    function test_StrategyReport_LossLowerThanLockedProfit_NoExceedingDebt()
+        external
+        whenContractNotPaused
+        whenCallerActiveStrategy
+        whenStrategyOnlyReportsGainOrLoss
+        whenStrategyHasBalanceToRepay(0)
+        whenStrategyHasMadeALoss(10 * 10 ** decimals)
+        whenThereIsLockedProfit(100 * 10 ** decimals)
+    {
+        repayAmount = 0;
+        gainAmount = 0;
+        loseAmount = 10 * 10 ** decimals;
+        uint256 profit = 95 * 10 ** decimals;
+
+        swapCaller(strategy);
+        vm.expectEmit({emitter: address(multistrategy)});
+        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+
+        // Report with [100, 0, 10]
+        multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
+
+        // Assert that the loss has been reported
+        uint256 actualMultistrategyTotalAssets = IERC4626(address(multistrategy)).totalAssets();
+        uint256 expectedMultistrategyTotalAssets = (deposit * 10 ** decimals) + profit - loseAmount;
+        assertEq(actualMultistrategyTotalAssets, expectedMultistrategyTotalAssets, "strategyReport multistrategy totalAssets");
+
+        // Assert that the strategy paid the debt with the balance it made available
+        uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
+        uint256 expectedMultistrategyBalance = (500 * 10 ** decimals) + profit;
+        assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
+
+        // Assert that the strategy total assets have been reduced by the repayment and lose amount
+        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - loseAmount;
+        assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
+
+        // Assert that locked profit is the profit minus the loss
+        uint256 actualLockedProfit = multistrategy.lockedProfit();
+        uint256 expectedLockedProfit = profit - loseAmount;
+        assertEq(actualLockedProfit, expectedLockedProfit, "strategyReport lockedProfit");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualMultistrategyLastReport = multistrategy.lastReport();
+        uint256 expectedMultistrategyLastReport = block.timestamp;
+        assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
+
+        // Assert that the multistrategy las report has been updated
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 expectedStrategyLastReport = block.timestamp;
+        assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
+    }
+
     modifier whenStrategyHasMadeAGain(uint256 _amount) {
         IStrategyAdapterMock(strategy).earn(_amount);
         IStrategyAdapterMock(strategy).withdrawFromStaking(_amount);
@@ -137,7 +353,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         vm.expectEmit({emitter: address(multistrategy)});
         emit StrategyReported(strategy, repayAmount, gainAmount - fee, loseAmount);
 
-        // Report with [100 ether, 100 ether, 0]
+        // Report with [100, 100, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         uint256 actualFeeRecipientBalance = asset.balanceOf(multistrategy.protocolFeeRecipient());
@@ -178,7 +394,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         whenStrategyHasBalanceToRepay(0)
         whenStrategyHasMadeAGain(100 * 10 ** decimals)
     {
-        repayAmount = 0 ether;
+        repayAmount = 0;
         gainAmount = 100 * 10 ** decimals;
         uint256 fee = Math.mulDiv(gainAmount, multistrategy.performanceFee(), 10_000);
 
@@ -186,7 +402,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         vm.expectEmit({emitter: address(multistrategy)});
         emit StrategyReported(strategy, repayAmount, gainAmount - fee, loseAmount);
 
-        // Report with [100 ether, 100 ether, 0]
+        // Report with [100, 100, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
 
         uint256 actualFeeRecipientBalance = asset.balanceOf(multistrategy.protocolFeeRecipient());
