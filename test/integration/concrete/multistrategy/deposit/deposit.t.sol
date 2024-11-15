@@ -37,18 +37,17 @@ contract Deposit_Integration_Concrete_Test is
         _;
     }
 
-    function test_RevertWhen_DepositIsPaused() 
+    function test_RevertWhen_Retired() 
         external 
         whenContractNotPaused
     {
         amount = 150_000 * 10 ** decimals;
         recipient = users.bob;
 
-        //Pause Deposit
-        multistrategy.pauseDeposit();
+        multistrategy.retire();
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.DepositPaused.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Retired.selector));
         IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 

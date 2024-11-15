@@ -29,6 +29,12 @@ interface IMultistrategy is IMultistrategyManageable {
     /// @notice Timestamp of the last report made by a strategy.
     function lastReport() external view returns (uint256);
 
+    /// @notice Amount of tokens that are locked as "locked profit" and can't be withdrawn.
+    function lockedProfit() external view returns (uint256);
+
+    /// @notice Rate at which the locked profit gets unlocked per second.
+    function lockedProfitDegradation() external view returns (uint256);
+
     /// @notice Returns the value of a share in `asset` value.
     function pricePerShare() external view returns (uint256);
 
