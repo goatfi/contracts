@@ -12,7 +12,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 abstract contract MultistrategyManageable is IMultistrategyManageable, MultistrategyAdminable {
 
     /// @dev Maximum amount of different strategies this contract can deposit into
-    uint8 constant MAXIMUM_STRATEGIES = 20;
+    uint8 constant MAXIMUM_STRATEGIES = 10;
 
     /// @dev Maximum basis points (10_000 = 100%)
     uint256 constant MAX_BPS = 10_000;
