@@ -51,7 +51,7 @@ contract Deposit_Integration_Concrete_Test is
         IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
-    modifier whenDepositNotPaused() {
+    modifier whenNotRetired() {
         _;
     }
 
@@ -63,7 +63,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_RevertWhen_AssetsAboveMaxDeposit()
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
@@ -85,7 +85,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_RevertWhen_RecipientIsZeroAddress() 
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenDepositLimitRespected 
     {
         amount = 0;
@@ -101,7 +101,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_RevertWhen_RecipientIsContractAddress()
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
@@ -125,7 +125,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_RevertWhen_AmountIsZero()
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -145,7 +145,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_RevertWhen_CallerHasInsufficientBalance()
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -168,7 +168,7 @@ contract Deposit_Integration_Concrete_Test is
     function test_Deposit()
         external
         whenContractNotPaused
-        whenDepositNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
