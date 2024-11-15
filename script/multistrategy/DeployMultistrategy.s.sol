@@ -12,15 +12,15 @@ import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 contract DeployMultistrategy is Script {
     address TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
 
-    address constant ASSET = AssetsArbitrum.WETH;
+    address constant ASSET = AssetsArbitrum.USDCe;
     address constant MANAGER = ProtocolArbitrum.TREASURY;
-    address constant FEE_RECIPIENT = ProtocolArbitrum.GOAT_FEE_BATCH;
-    string constant NAME = "Yield Chasing Silo ETH";
-    string constant SYMBOL = "ycsETH";
+    address constant FEE_RECIPIENT = ProtocolArbitrum.TREASURY;
+    string constant NAME = "Yield Chasing Silo USDC";
+    string constant SYMBOL = "ycsUSDC";
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address constant TIMELOCK = ProtocolArbitrum.TIMELOCK;
 
-    uint256 constant INITIAL_DEPOSIT = 0.01 ether;
+    uint256 constant INITIAL_DEPOSIT = 10 * 1e6;
 
     function run() public { 
 
@@ -36,7 +36,7 @@ contract DeployMultistrategy is Script {
         IERC20(ASSET).approve(address(multistrategy), INITIAL_DEPOSIT);
         
         // Set the deposit limit to 1 ETH
-        multistrategy.setDepositLimit(100 ether);
+        multistrategy.setDepositLimit(500_000 * 1e6);
         // Deposit some assets to prevent inflation attack
         multistrategy.deposit(INITIAL_DEPOSIT, TESTING_CUSTODIAN);
         // Enable a Guardian

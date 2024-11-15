@@ -250,7 +250,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @inheritdoc IMultistrategyManageable
     function retire() external onlyGuardian {
         retired = true;
-        emit DepositPaused();
+        emit MultistrategyRetired();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

@@ -53,10 +53,7 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     event StrategyRemoved(address indexed _strategy);
 
     /// @notice Emitted when the deposits into this multistrategy are paused.
-    event DepositPaused();
-
-    /// @notice Emitted when the deposits into this multistrategy are unpaused.
-    event DepositUnpaused();
+    event MultistrategyRetired();
 
     /// @notice Address that will receive performance fee.
     function protocolFeeRecipient() external view returns (address);
