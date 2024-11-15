@@ -11,7 +11,7 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, StrategyAdapter {
     using SafeERC20 for IERC20;
 
-    struct ProtocolAddresses {
+    struct HarvestAddresses {
         address swapper;
         address weth;
     }
@@ -26,7 +26,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     uint256 lastHarvest;
 
     /// @notice An array of reward token addresses that can be claimed and swapped.
-    address[] public rewardsToClaim;
+    address[] public rewards;
 
     /// @notice A mapping of minimum amounts for each reward token before it can be swapped.
     /// @dev The key is the reward token address, and the value is the minimum amount required for swapping.
@@ -39,20 +39,20 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     /// @notice Constructor for the strategy adapter.
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
-    /// @param _protocolAddresses Struct of Protocol Addresses.
+    /// @param _harvestAddresses Struct of Protocol Addresses.
     /// @param _name The name of this Strategy Adapter.
     /// @param _id The type identifier of this Strategy Adapter.
     constructor(
         address _multistrategy,
         address _asset,
-        ProtocolAddresses memory _protocolAddresses,
+        HarvestAddresses memory _harvestAddresses,
         string memory _name,
         string memory _id
     ) 
         StrategyAdapter(_multistrategy, _asset, _name, _id)
     {
-        swapper = _protocolAddresses.swapper;
-        weth = _protocolAddresses.weth;
+        swapper = _harvestAddresses.swapper;
+        weth = _harvestAddresses.weth;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -78,16 +78,16 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
         require(_token != asset && _token != weth, Errors.InvalidRewardToken(_token));
         _verifyRewardToken(_token);
 
-        rewardsToClaim.push(_token);
+        rewards.push(_token);
         IERC20(_token).forceApprove(swapper, type(uint256).max);
     }
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function resetRewards() external onlyOwner {
-        for (uint i; i < rewardsToClaim.length; ++i) {
-            IERC20(rewardsToClaim[i]).forceApprove(swapper, 0);
+        for (uint i; i < rewards.length; ++i) {
+            IERC20(rewards[i]).forceApprove(swapper, 0);
         }
-        delete rewardsToClaim;
+        delete rewards;
     }
 
     /// @inheritdoc IStrategyAdapterHarvestable
@@ -97,8 +97,8 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function updateSwapper(address _swapper) external onlyOwner {
-        for (uint i; i < rewardsToClaim.length; ++i) {
-            address token = rewardsToClaim[i];
+        for (uint i; i < rewards.length; ++i) {
+            address token = rewards[i];
             IERC20(token).forceApprove(swapper, 0);
             IERC20(token).forceApprove(_swapper, type(uint256).max);
         }
@@ -115,8 +115,8 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     /// @notice Swaps all reward tokens to WETH.
     /// @dev This function checks if the balance of each reward token exceeds the minimum amount before swapping.
     function _swapRewardsToWETH() internal virtual {
-        for (uint i; i < rewardsToClaim.length; ++i) {
-            address token = rewardsToClaim[i];
+        for (uint i; i < rewards.length; ++i) {
+            address token = rewards[i];
             uint256 amount = IERC20(token).balanceOf(address(this));
             if (amount > minimumAmounts[token]) {
                 IGoatSwapper(swapper).swap(token, weth, amount);

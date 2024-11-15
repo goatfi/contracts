@@ -35,7 +35,7 @@ contract DeployMultistrategy is Script {
 
         IERC20(ASSET).approve(address(multistrategy), INITIAL_DEPOSIT);
         
-        // Set the deposit limit to 1 ETH
+        // Set the deposit limit
         multistrategy.setDepositLimit(500_000 * 1e6);
         // Deposit some assets to prevent inflation attack
         multistrategy.deposit(INITIAL_DEPOSIT, TESTING_CUSTODIAN);

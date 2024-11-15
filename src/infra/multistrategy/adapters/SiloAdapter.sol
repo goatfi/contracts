@@ -22,11 +22,23 @@ contract SiloAdapter is StrategyAdapterHarvestable {
         address merklDistributor;
     }
 
-    ISiloLens siloLens;
-    ISiloRewards siloRewards;
-    IMerklDistributor merklDistributor;
+    /// @notice This is the main contract where assets are deposited and withdrawn.
     address public silo;
+
+    /// @notice Token used as collateral in the Silo protocol.
     address public collateral;
+
+    /// @notice Used to fetch data related to deposits, interest, and balances.
+    ISiloLens siloLens;
+
+    /// @notice Used to claim rewards from the Silo protocol.
+    ISiloRewards siloRewards;
+
+    /// @notice Used to manage reward distribution through Merkl.
+    IMerklDistributor merklDistributor;
+
+    /// @notice Collateral tokens for which rewards can be claimed.
+    address[] private collateralsToClaimFor;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -35,25 +47,26 @@ contract SiloAdapter is StrategyAdapterHarvestable {
     /// @notice Constructor for the strategy adapter.
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
-    /// @param _protocolAddresses Struct of Protocol Addresses.
+    /// @param _harvestAddresses Struct of Protocol Addresses.
     /// @param _siloAddresses Struct of Silo Addresses.
     /// @param _name The name of this Strategy Adapter.
     /// @param _id The type identifier of this Strategy Adapter.
     constructor(
         address _multistrategy,
         address _asset,
-        ProtocolAddresses memory _protocolAddresses,
+        HarvestAddresses memory _harvestAddresses,
         SiloAddresses memory _siloAddresses,
         string memory _name,
         string memory _id
     ) 
-        StrategyAdapterHarvestable(_multistrategy, _asset, _protocolAddresses,_name, _id)
+        StrategyAdapterHarvestable(_multistrategy, _asset, _harvestAddresses,_name, _id)
     {
         collateral = _siloAddresses.collateral;
         silo = _siloAddresses.silo;
         siloLens = ISiloLens(_siloAddresses.siloLens);
         siloRewards = ISiloRewards(_siloAddresses.siloRewards);
         merklDistributor = IMerklDistributor(_siloAddresses.merklDistributor);
+        collateralsToClaimFor.push(collateral);
         _giveAllowances();
     }
 
@@ -121,6 +134,6 @@ contract SiloAdapter is StrategyAdapterHarvestable {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        siloRewards.claimRewardsToSelf(rewardsToClaim, type(uint).max);
+        siloRewards.claimRewardsToSelf(collateralsToClaimFor, type(uint).max);
     }
 }
