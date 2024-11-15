@@ -72,8 +72,8 @@ library Errors {
     /// @param liquidity The current liquidity available in the contract.
     error InsufficientLiquidity(uint256 assets, uint256 liquidity);
 
-    /// @notice Thrown when the deposits into the multistrategy are paused.
-    error DepositPaused();
+    /// @notice Thrown when depositing / minting on a retired multistrategy.
+    error Retired();
 
     /*//////////////////////////////////////////////////////////////////////////
                                 STRATEGY ADAPTER
@@ -94,6 +94,9 @@ library Errors {
     /// @param amount0 The expected amount after accounting for allowed slippage.
     /// @param amount1 The actual amount obtained.
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
+
+    /// @notice Thrown when the reward added is the base asset of the Strategy.
+    error InvalidRewardToken(address rewardToken);
 
     /*//////////////////////////////////////////////////////////////////////////
                                     ERC-4626

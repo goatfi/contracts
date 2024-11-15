@@ -59,7 +59,8 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         uint256 expectedPricePerShare = 1 * 10 ** decimals;
         assertEq(actualPricePerShare, expectedPricePerShare, "pricePerShare");
 
-        triggerUserDeposit(users.alice, 1_000 * 10 ** decimals);
+        IStrategyAdapter(strategy).sendReport(0);
+        vm.warp(block.timestamp + 3 days);
 
         // At this point, all profit is unlocked, so price per share should be higher
         actualPricePerShare = multistrategy.pricePerShare();

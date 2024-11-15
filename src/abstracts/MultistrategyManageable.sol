@@ -17,8 +17,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @dev Maximum basis points (10_000 = 100%)
     uint256 constant MAX_BPS = 10_000;
 
-    /// @dev Maximum performance fee that the owner can set is 10%
-    uint256 constant MAX_PERFORMANCE_FEE = 1_000;
+    /// @dev Maximum performance fee that the owner can set is 20%
+    uint256 constant MAX_PERFORMANCE_FEE = 2_000;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;
@@ -42,7 +42,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     uint8 public activeStrategies;
 
     /// @inheritdoc IMultistrategyManageable
-    bool public depositPaused;
+    bool public retired;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   PRIVATE STORAGE
@@ -89,9 +89,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         _;
     }
 
-    /// @dev Reverts if deposits into the multistrategy are paused.
-    modifier whenDepositNotPaused() {
-        require(depositPaused == false, Errors.DepositPaused());
+    /// @dev Reverts if the multistrategy has been retired / eol.
+    modifier whenNotRetired() {
+        require(retired == false, Errors.Retired());
         _;
     }
 
@@ -248,15 +248,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
 
     /// @inheritdoc IMultistrategyManageable
-    function pauseDeposit() external onlyGuardian {
-        depositPaused = true;
+    function retire() external onlyGuardian {
+        retired = true;
         emit DepositPaused();
-    }
-
-    /// @inheritdoc IMultistrategyManageable
-    function unpauseDeposit() external onlyOwner {
-        depositPaused = false;
-        emit DepositUnpaused();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

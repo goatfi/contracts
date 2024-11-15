@@ -35,18 +35,17 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
         _;
     }
 
-    function test_RevertWhen_DepositIsPaused() 
+    function test_RevertWhen_Retired() 
         external 
         whenContractNotPaused
     {
         shares = 150_000 * 10 ** decimals;
         recipient = users.bob;
 
-        //Pause Deposit
-        multistrategy.pauseDeposit();
+        multistrategy.retire();
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.DepositPaused.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.Retired.selector));
         IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 

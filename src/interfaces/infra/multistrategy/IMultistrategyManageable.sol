@@ -82,8 +82,8 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @notice Amount of active strategies.
     function activeStrategies() external view returns (uint8);
 
-    /// @notice Returns true if deposits into this multistrategy are paused. 
-    function depositPaused() external view returns (bool);
+    /// @notice Returns true if multistrategy has been retired. 
+    function retired() external view returns (bool);
 
     /// @notice Returns the withdraw order.
     function getWithdrawOrder() external view returns (address[] memory);
@@ -158,10 +158,6 @@ interface IMultistrategyManageable is IMultistrategyAdminable {
     /// @param _maxDebtDelta Upper limit of the change of debt.
     function setStrategyMaxDebtDelta(address _strategy, uint256 _maxDebtDelta) external;
 
-    /// @notice Pauses the deposits into the multistrategy. To be used when the multistrategy is 
-    /// being set as End Of Life.
-    function pauseDeposit() external;
-
-    /// @notice Unpauses the deposits into the multistrategy.
-    function unpauseDeposit() external;
+    /// @notice Retires the Multistrategy. End of Life.
+    function retire() external;
 }
