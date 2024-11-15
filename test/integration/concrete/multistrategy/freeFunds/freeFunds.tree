@@ -1,8 +1,0 @@
-freeFunds.t.sol
-├── when totalAssets is 0
-│   └── it should return 0
-└── when totalAssets is greater than 0
-    ├── when lockedProfit is 0
-    │   └── it should return totalAssets
-    └── when lockedProfit is greater than 0
-        └── it should return totalAssets minus lockedProfit
