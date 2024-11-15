@@ -49,6 +49,10 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
         IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
+    modifier whenNotRetired() {
+        _;
+    }
+
     modifier whenRecipientNotZeroAddress() {
         _;
     }
@@ -65,6 +69,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
     /// @dev Deposit limit is 100K tokens
     function test_RevertWhen_AssetsAboveMaxMint()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
@@ -85,6 +90,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_RecipientIsZeroAddress() 
         external
+        whenNotRetired
         whenDepositLimitRespected 
     {
         shares = 0;
@@ -99,6 +105,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_RecipientIsContractAddress()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
@@ -117,6 +124,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_AmountIsZero()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -131,6 +139,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_CallerHasInsufficientBalance()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -152,6 +161,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_Mint()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
