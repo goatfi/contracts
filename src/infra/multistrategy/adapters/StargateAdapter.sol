@@ -3,7 +3,6 @@
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
@@ -39,6 +38,7 @@ contract StargateAdapter is StrategyAdapterHarvestable {
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
     /// @param _harvestAddresses Struct of Protocol Addresses.
+    /// @param _stargateAddresses Struct of Stargate Addresses.
     /// @param _name The name of this Strategy Adapter.
     /// @param _id The type identifier of this Strategy Adapter.
     constructor(
