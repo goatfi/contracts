@@ -42,21 +42,9 @@ interface ITimelock {
 
 contract ScheduleCall is Script {
 
-    //FeeBatch
-    address target = 0xa422b36ea2622BA3312f6c0144419ae7B3c78316;
-
     function run() public {
-        uint deployer_privateKey = vm.envUint("TESTNET_DEPLOY_PK");
-        address deployer = vm.addr(deployer_privateKey);
-        ITimelock timelock = ITimelock(0xc9f965604467E800A11d30cfbD23298C146c6701);
 
-        console.log("Deployer", deployer);
-
-        vm.startBroadcast(deployer_privateKey);
-
-        bytes memory data = abi.encodeWithSignature("harvest()");
-        timelock.schedule(target, 0, data, 0, keccak256(abi.encode(19)), 10);
-
-        vm.stopBroadcast();
+        bytes memory data = abi.encodeWithSignature("addStrategy(address,uint256,uint256,uint256)",0x0F93c7F6B7ab1e8d9d7b2B17acB7AB79390975da,0,0,500000000000);
+        console.logBytes(data);
     }
 }
