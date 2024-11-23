@@ -99,7 +99,11 @@ contract StargateAdapterNative is StrategyAdapterHarvestable {
     /// @param _amount The amount of assets to withdraw from the Silo.
     function _withdraw(uint256 _amount) internal override {
         uint256 assetsSupplied = stargateChef.balanceOf(stargateLPToken, address(this));
-        _amount = Math.min(_amount + 1e12, assetsSupplied);
+        uint256 convertedAmount = (_amount / conversionRate) * conversionRate;
+        if(assetsSupplied - convertedAmount < 1e12) {
+            _amount = Math.min(_amount + 1e12, assetsSupplied);
+        }
+
         stargateChef.withdraw(stargateLPToken, _amount);
         stargateRouter.redeem(_amount, address(this));
     }
@@ -107,7 +111,7 @@ contract StargateAdapterNative is StrategyAdapterHarvestable {
     /// @notice Performs an emergency withdrawal of all assets from Stargate.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint amount = _totalAssets();
+        uint amount = stargateChef.balanceOf(stargateLPToken, address(this));
         if (amount > 0) {
             stargateChef.withdraw(stargateLPToken, amount);
             stargateRouter.redeem(amount, address(this));
