@@ -17,7 +17,7 @@ fs_permissions = [{ access = "read", path = "./"}]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [fuzz]
-runs = 2048
+runs = 10000
 
 [invariant]
 runs = 256
