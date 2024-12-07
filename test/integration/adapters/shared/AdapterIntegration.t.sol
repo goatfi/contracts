@@ -86,6 +86,8 @@ abstract contract AdapterIntegration is Test {
     function earnYield(address _adapter, uint256 _time, bool _harvest) public virtual {
         vm.warp(block.timestamp + _time);
         if(_harvest) IStrategyAdapterHarvestable(_adapter).harvest();
+        vm.prank(users.keeper); IStrategyAdapter(_adapter).sendReport(type(uint256).max);
+        vm.warp(block.timestamp + 7 days);
     }
 
     function retireAdapter(address _adapter) public {
@@ -94,5 +96,13 @@ abstract contract AdapterIntegration is Test {
 
     function removeAdapter(address _adapter) public {
         vm.prank(users.owner); IMultistrategyManageable(address(multistrategy)).removeStrategy(_adapter);
+    }
+
+    function panicAdapter(address _adapter) public {
+        vm.prank(users.guardian); IStrategyAdapter(_adapter).panic();
+    }
+
+    function sendReportPanicked(address _adapter) public {
+        vm.prank(users.keeper); IStrategyAdapter(_adapter).sendReportPanicked();
     }
 }

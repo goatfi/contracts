@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Test } from "forge-std/Test.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
@@ -41,6 +42,7 @@ contract SiloAdapterIntegration is AdapterIntegration {
         });
 
         vm.prank(users.keeper); adapter = new SiloAdapter(address(multistrategy), asset, harvestAddresses, siloAddresses, "", "");
+        vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
         vm.prank(users.keeper); IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.SILO);
     }
 
@@ -57,5 +59,28 @@ contract SiloAdapterIntegration is AdapterIntegration {
         withdraw(_withdrawAmount);
         retireAdapter(address(adapter));
         withdrawAll();
+
+        uint256 currentBalance = IERC20(asset).balanceOf(users.bob);
+        assertGt(currentBalance, _depositAmount);
+    }
+
+    function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+        _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
+        _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
+        _yieldTime = bound(_yieldTime, 0, 10 * 365 days);
+
+        deposit(_depositAmount);
+        addAdapter(address(adapter));
+        requestCredit(address(adapter));
+        earnYield(address(adapter), _yieldTime, true);
+        setDebtRatio(address(adapter), 5_000);
+        withdraw(_withdrawAmount);
+
+        retireAdapter(address(adapter));
+        panicAdapter(address(adapter));
+        sendReportPanicked(address(adapter));
+
+        assertApproxEqAbs(adapter.totalAssets(), 0, 1);
+        assertApproxEqAbs(multistrategy.totalAssets(), IERC20(asset).balanceOf(address(multistrategy)), 1);
     }
 }
