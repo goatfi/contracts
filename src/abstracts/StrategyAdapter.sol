@@ -286,7 +286,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// 
     /// @param _amount The amount to withdraw from the strategy.
     function _tryWithdraw(uint256 _amount) internal {
-        if(_amount == 0) return;
+        if(_amount == 0 || _amount <= _liquidity()) return;
 
         // Liquidity is considered as amount already withdrawn, this amount doesn't need
         // to be withdrawn.
