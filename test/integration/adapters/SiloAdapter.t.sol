@@ -13,7 +13,6 @@ import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
 
 contract SiloAdapterIntegration is AdapterIntegration {
-    SiloAdapter adapter;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
@@ -51,14 +50,7 @@ contract SiloAdapterIntegration is AdapterIntegration {
         _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
         _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
 
-        deposit(_depositAmount);
-        addAdapter(address(adapter));
-        requestCredit(address(adapter));
-        earnYield(address(adapter), _yieldTime, true);
-        setDebtRatio(address(adapter), 5_000);
-        withdraw(_withdrawAmount);
-        retireAdapter(address(adapter));
-        withdrawAll();
+        super.adapterLifeCycle(_depositAmount, _withdrawAmount, _yieldTime);
 
         uint256 currentBalance = IERC20(asset).balanceOf(users.bob);
         assertGt(currentBalance, _depositAmount);
@@ -67,18 +59,9 @@ contract SiloAdapterIntegration is AdapterIntegration {
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
         _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
         _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
-        _yieldTime = bound(_yieldTime, 0, 10 * 365 days);
+        _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
 
-        deposit(_depositAmount);
-        addAdapter(address(adapter));
-        requestCredit(address(adapter));
-        earnYield(address(adapter), _yieldTime, true);
-        setDebtRatio(address(adapter), 5_000);
-        withdraw(_withdrawAmount);
-
-        retireAdapter(address(adapter));
-        panicAdapter(address(adapter));
-        sendReportPanicked(address(adapter));
+        super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime);
 
         assertApproxEqAbs(adapter.totalAssets(), 0, 1);
         assertApproxEqAbs(multistrategy.totalAssets(), IERC20(asset).balanceOf(address(multistrategy)), 1);

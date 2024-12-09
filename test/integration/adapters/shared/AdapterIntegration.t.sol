@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
+import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Test } from "forge-std/Test.sol";
 import { Users } from "../../../utils/Types.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
@@ -13,6 +14,7 @@ import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStr
 abstract contract AdapterIntegration is Test {
     Users internal users;
     Multistrategy multistrategy;
+    StrategyAdapter adapter;
 
     address public asset;
     uint256 public depositLimit;
@@ -51,6 +53,10 @@ abstract contract AdapterIntegration is Test {
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                     ACTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     function addAdapter(address _adapter) public {
         vm.prank(users.owner); IMultistrategyManageable(address(multistrategy)).addStrategy(_adapter, 10_000, 0, type(uint256).max);
@@ -104,5 +110,33 @@ abstract contract AdapterIntegration is Test {
 
     function sendReportPanicked(address _adapter) public {
         vm.prank(users.keeper); IStrategyAdapter(_adapter).sendReportPanicked();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                     TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function adapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+        deposit(_depositAmount);
+        addAdapter(address(adapter));
+        requestCredit(address(adapter));
+        earnYield(address(adapter), _yieldTime, true);
+        setDebtRatio(address(adapter), 5_000);
+        withdraw(_withdrawAmount);
+        retireAdapter(address(adapter));
+        withdrawAll();
+    }
+
+    function adapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+        deposit(_depositAmount);
+        addAdapter(address(adapter));
+        requestCredit(address(adapter));
+        earnYield(address(adapter), _yieldTime, true);
+        setDebtRatio(address(adapter), 5_000);
+        withdraw(_withdrawAmount);
+
+        retireAdapter(address(adapter));
+        panicAdapter(address(adapter));
+        sendReportPanicked(address(adapter));
     }
 }
