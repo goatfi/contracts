@@ -100,9 +100,8 @@ contract StargateAdapterNative is StrategyAdapterHarvestable {
     function _withdraw(uint256 _amount) internal override {
         uint256 assetsSupplied = stargateChef.balanceOf(stargateLPToken, address(this));
         uint256 convertedAmount = (_amount / conversionRate) * conversionRate;
-        if(assetsSupplied - convertedAmount < 1e12) {
-            _amount = Math.min(_amount + 1e12, assetsSupplied);
-        }
+        
+        _amount = Math.min(convertedAmount + conversionRate, assetsSupplied);
 
         stargateChef.withdraw(stargateLPToken, _amount);
         stargateRouter.redeem(_amount, address(this));

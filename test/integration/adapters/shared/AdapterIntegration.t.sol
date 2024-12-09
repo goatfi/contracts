@@ -123,6 +123,8 @@ abstract contract AdapterIntegration is Test {
         earnYield(address(adapter), _yieldTime, true);
         setDebtRatio(address(adapter), 5_000);
         withdraw(_withdrawAmount);
+        requestCredit(address(adapter));
+        withdraw(1);
         retireAdapter(address(adapter));
         withdrawAll();
     }
