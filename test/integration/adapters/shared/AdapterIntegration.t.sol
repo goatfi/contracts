@@ -116,12 +116,12 @@ abstract contract AdapterIntegration is Test {
                                      TESTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function adapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+    function adapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         deposit(_depositAmount);
         addAdapter(address(adapter));
         requestCredit(address(adapter));
         earnYield(address(adapter), _yieldTime, true);
-        setDebtRatio(address(adapter), 5_000);
+        setDebtRatio(address(adapter), _debtRatio);
         withdraw(_withdrawAmount);
         requestCredit(address(adapter));
         withdraw(1);
@@ -129,16 +129,49 @@ abstract contract AdapterIntegration is Test {
         withdrawAll();
     }
 
-    function adapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+    function adapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         deposit(_depositAmount);
         addAdapter(address(adapter));
         requestCredit(address(adapter));
         earnYield(address(adapter), _yieldTime, true);
-        setDebtRatio(address(adapter), 5_000);
+        setDebtRatio(address(adapter), _debtRatio);
         withdraw(_withdrawAmount);
 
         retireAdapter(address(adapter));
         panicAdapter(address(adapter));
         sendReportPanicked(address(adapter));
+    }
+
+    function adapterMixer() public {
+        uint256 runs = vm.randomUint(8);
+
+        deposit(minDeposit);
+        addAdapter(address(adapter));
+        requestCredit(address(adapter));
+
+        for (uint16 i = 0; i < runs; ++i) {
+            // Maybe deposit something
+            uint256 depositAmount = vm.randomUint(256);
+            depositAmount = bound(depositAmount, 0, multistrategy.depositLimit() - multistrategy.totalAssets());
+            deposit(depositAmount);
+
+            // Rebalance
+            uint256 debtRatio = vm.randomUint(256);
+            debtRatio = bound(debtRatio, 0, 10_000);
+            setDebtRatio(address(adapter), debtRatio);
+
+            // Earn yield
+            uint256 yieldTime = vm.randomUint(256);
+            yieldTime = bound(yieldTime, 1 hours, 30 days);
+            earnYield(address(adapter), yieldTime, true);
+
+            // Maybe withdraw
+            uint256 withdrawAmount = vm.randomUint(256);
+            withdrawAmount = bound(withdrawAmount, 0, IERC4626(address(multistrategy)).maxWithdraw(users.bob));
+            withdraw(withdrawAmount);
+        }
+
+        retireAdapter(address(adapter));
+        withdrawAll();
     }
 }

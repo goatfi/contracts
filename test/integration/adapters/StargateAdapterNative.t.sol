@@ -41,25 +41,34 @@ contract StargateAdapterNativeIntegration is AdapterIntegration {
         vm.prank(users.keeper); IStrategyAdapterHarvestable(address(adapter)).addReward(0x6694340fc020c5E6B96567843da2df01b2CE1eb6);
     }
 
-    function testFuzz_AdapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+    function testFuzz_AdapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
         _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
         _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
+        _debtRatio = bound(_debtRatio, 0, 10_000);
 
-        super.adapterLifeCycle(_depositAmount, _withdrawAmount, _yieldTime);
+        super.adapterLifeCycle(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         uint256 currentBalance = IERC20(asset).balanceOf(users.bob);
         assertGt(currentBalance, _depositAmount);
     }
 
-    function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime) public {
+    function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
         _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
         _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
+        _debtRatio = bound(_debtRatio, 0, 10_000);
 
-        super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime);
+        super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         assertApproxEqAbs(adapter.totalAssets(), 0, 1);
         assertApproxEqAbs(multistrategy.totalAssets(), IERC20(asset).balanceOf(address(multistrategy)), 1);
+    }
+
+    function test_AdapterMixer() public {
+        super.adapterMixer();
+
+        uint256 pps = multistrategy.pricePerShare();
+        assertGt(pps, 1 ether);
     }
 }
