@@ -44,11 +44,10 @@ contract ERC4626Adapter is StrategyAdapter {
 
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 sharesBalance = vault.balanceOf(address(this));
-        uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
+        uint256 maxWithdraw = vault.maxWithdraw(address(this));
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return assetsSupplied + assetBalance;
+        return maxWithdraw + assetBalance;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -70,9 +69,9 @@ contract ERC4626Adapter is StrategyAdapter {
     /// @notice Performs an emergency withdrawal of all assets from the ERC4626 vault.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint amount = _totalAssets();
-        if (amount > 0) {
-            vault.withdraw(amount, address(this), address(this));
+        uint256 maxWithdraw = vault.maxWithdraw(address(this));
+        if (maxWithdraw > 0) {
+            vault.withdraw(maxWithdraw, address(this), address(this));
         }
     }
 

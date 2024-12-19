@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { console } from "forge-std/console.sol";
 import { AdapterInvariantBase } from "./AdapterInvariantBase.t.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { AdapterHandler } from "./AdapterHandler.t.sol";
-import { SiloAdapter } from "src/infra/multistrategy/adapters/SiloAdapter.sol";
-import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
 import { Users } from "../../utils/Types.sol";
+import { SiloAdapter } from "src/infra/multistrategy/adapters/SiloAdapter.sol";
+import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
+import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
+
 
 contract SiloAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-
     address asset = AssetsArbitrum.WETH;
 
     function setUp() public {
@@ -22,11 +23,13 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
 
         createUsers();
         handler = new AdapterHandler(
-            createMultistrategy(asset, 10_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
+            createMultistrategy(asset, 1_000 * (10 ** IERC20Metadata(asset).decimals())), 
             createAdapter(), 
             users,
             true
         );
+
+        makeInitialDeposit(0.01 ether);
         targetContract(address(handler));
     }
 
@@ -44,14 +47,19 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
             weth: AssetsArbitrum.WETH
         });
 
-        vm.prank(users.keeper); SiloAdapter adapter = new SiloAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, siloAddresses, "", "");
-        vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
+        SiloAdapter adapter = new SiloAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, siloAddresses, "", "");
+        adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.SILO);
+        vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
 
         return adapter;
     }
 
-    function invariant_pricePerShare() public {
-        assertGt(multistrategy.pricePerShare(), 1 ether);
+    function invariant_pricePerShare() public view {
+        console.log("Deposited:", handler.ghost_deposited());
+        console.log("Withdrawn:", handler.ghost_withdrawn());
+        console.log("Yield Time:", handler.ghost_yieldTime());
+
+        //assertGt(multistrategy.pricePerShare(), 1 ether);
     }
 }

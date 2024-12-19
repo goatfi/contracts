@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { Users } from "../../utils/Types.sol";
 
@@ -41,5 +42,14 @@ abstract contract AdapterInvariantBase is Test {
         vm.prank(users.owner); multistrategy.setPerformanceFee(1000);
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
+
+        return multistrategy;
+    }
+
+    function makeInitialDeposit(uint256 _amount) public {
+        address asset = multistrategy.asset();
+        deal(asset, users.alice, _amount);
+        vm.prank(users.alice); IERC20(asset).approve(address(multistrategy), _amount);
+        vm.prank(users.alice); multistrategy.deposit(_amount, users.alice);
     }
 }
