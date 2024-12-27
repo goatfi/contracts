@@ -44,10 +44,11 @@ contract ERC4626Adapter is StrategyAdapter {
 
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 maxWithdraw = vault.maxWithdraw(address(this));
+        uint256 sharesBalance = vault.balanceOf(address(this));
+        uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return maxWithdraw + assetBalance;
+        return assetsSupplied + assetBalance;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
