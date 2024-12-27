@@ -23,7 +23,7 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
             createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
             createAdapter(), 
             users,
-            true
+            false
         );
 
         makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));
@@ -36,6 +36,7 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
         ERC4626Adapter adapter = new ERC4626Adapter(address(multistrategy), multistrategy.asset(), vault, "", "");
         adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
+        vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);
 
         return adapter;
     }
@@ -45,6 +46,8 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
         console.log("Withdrawn:", handler.ghost_withdrawn());
         console.log("Yield Time:", handler.ghost_yieldTime());
 
-        //assertGt(multistrategy.pricePerShare(), 1 ether);
+        if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
+            assertGt(multistrategy.pricePerShare(), 1 * (10 ** IERC20Metadata(asset).decimals()));
+        }
     }
 }

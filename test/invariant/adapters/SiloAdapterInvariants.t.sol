@@ -51,6 +51,7 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
         adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.SILO);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
+        vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);
 
         return adapter;
     }
@@ -60,6 +61,8 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
         console.log("Withdrawn:", handler.ghost_withdrawn());
         console.log("Yield Time:", handler.ghost_yieldTime());
 
-        //assertGt(multistrategy.pricePerShare(), 1 ether);
+        if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
+            assertGt(multistrategy.pricePerShare(), 1 ether);
+        }
     }
 }
