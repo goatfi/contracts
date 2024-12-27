@@ -1,11 +1,8 @@
-name: Goat Protocol Tests
+name: Invariant Tests
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - staging
+    schedule:
+    - cron: '0 8 * * *' # Runs at 8:00 AM UTC every day
 
 jobs:
   check:
@@ -25,5 +22,5 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: "Run Goat Protocol Tests"
-        run: 'forge test --no-match-path "test/invariant/**/*"'
+      - name: "Run Goat Protocol Invariant Tests"
+        run: 'forge test --match-path "test/invariant/**/*"'
