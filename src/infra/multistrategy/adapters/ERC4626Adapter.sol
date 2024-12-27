@@ -70,9 +70,9 @@ contract ERC4626Adapter is StrategyAdapter {
     /// @notice Performs an emergency withdrawal of all assets from the ERC4626 vault.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint amount = _totalAssets();
-        if (amount > 0) {
-            vault.withdraw(amount, address(this), address(this));
+        uint256 maxWithdraw = vault.maxWithdraw(address(this));
+        if (maxWithdraw > 0) {
+            vault.withdraw(maxWithdraw, address(this), address(this));
         }
     }
 

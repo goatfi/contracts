@@ -97,10 +97,10 @@ contract StargateAdapter is StrategyAdapterHarvestable {
     /// @notice Performs an emergency withdrawal of all assets from Stargate.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint amount = _totalAssets();
-        if (amount > 0) {
-            stargateChef.withdraw(stargateLPToken, amount);
-            stargateRouter.redeem(amount, address(this));
+        uint256 assetsSupplied = stargateChef.balanceOf(stargateLPToken, address(this));
+        if (assetsSupplied > 0) {
+            stargateChef.withdraw(stargateLPToken, assetsSupplied);
+            stargateRouter.redeem(assetsSupplied, address(this));
         }
     }
 

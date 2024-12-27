@@ -114,9 +114,10 @@ contract SiloAdapter is StrategyAdapterHarvestable {
     /// @notice Performs an emergency withdrawal of all assets from the Silo.
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        uint amount = _totalAssets();
-        if (amount > 0) {
-            ISilo(silo).withdraw(asset, amount -1, false);
+        uint256 totalSiloDeposits = siloLens.totalDepositsWithInterest(silo, asset);
+        uint256 assetsSupplied = siloLens.balanceOfUnderlying(totalSiloDeposits, collateral, address(this));
+        if (assetsSupplied > 0) {
+            ISilo(silo).withdraw(asset, assetsSupplied, false);
         }
     }
 
