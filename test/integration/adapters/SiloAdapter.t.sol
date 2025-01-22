@@ -21,6 +21,7 @@ contract SiloAdapterIntegration is AdapterIntegration {
         asset = AssetsArbitrum.WETH;
         depositLimit = 10_000_000 * (10 ** IERC20Metadata(asset).decimals());
         minDeposit = (10 ** IERC20Metadata(asset).decimals() - 2);
+        harvest = true;
 
         createMultistrategy(asset, depositLimit);
         createSiloAdapter();

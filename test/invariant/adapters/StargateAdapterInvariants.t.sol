@@ -24,7 +24,7 @@ contract StargateAdapterInvariants is AdapterInvariantBase {
             createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
             createAdapter(), 
             users,
-            false
+            true
         );
 
         makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));

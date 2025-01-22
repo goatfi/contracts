@@ -19,6 +19,7 @@ abstract contract AdapterIntegration is Test {
     address public asset;
     uint256 public depositLimit;
     uint256 public minDeposit;
+    bool public harvest;
 
     function setUp() public virtual {
         users = Users({
@@ -89,9 +90,9 @@ abstract contract AdapterIntegration is Test {
         }
     }
 
-    function earnYield(address _adapter, uint256 _time, bool _harvest) public virtual {
+    function earnYield(address _adapter, uint256 _time) public virtual {
         vm.warp(block.timestamp + _time);
-        if(_harvest) IStrategyAdapterHarvestable(_adapter).harvest();
+        if(harvest) IStrategyAdapterHarvestable(_adapter).harvest();
         vm.prank(users.keeper); IStrategyAdapter(_adapter).sendReport(type(uint256).max);
         vm.warp(block.timestamp + 7 days);
     }
@@ -120,7 +121,7 @@ abstract contract AdapterIntegration is Test {
         deposit(_depositAmount);
         addAdapter(address(adapter));
         requestCredit(address(adapter));
-        earnYield(address(adapter), _yieldTime, true);
+        earnYield(address(adapter), _yieldTime);
         setDebtRatio(address(adapter), _debtRatio);
         withdraw(_withdrawAmount);
         requestCredit(address(adapter));
@@ -133,7 +134,7 @@ abstract contract AdapterIntegration is Test {
         deposit(_depositAmount);
         addAdapter(address(adapter));
         requestCredit(address(adapter));
-        earnYield(address(adapter), _yieldTime, true);
+        earnYield(address(adapter), _yieldTime);
         setDebtRatio(address(adapter), _debtRatio);
         withdraw(_withdrawAmount);
 
@@ -163,7 +164,7 @@ abstract contract AdapterIntegration is Test {
             // Earn yield
             uint256 yieldTime = vm.randomUint(256);
             yieldTime = bound(yieldTime, 1 hours, 30 days);
-            earnYield(address(adapter), yieldTime, true);
+            earnYield(address(adapter), yieldTime);
 
             // Maybe withdraw
             uint256 withdrawAmount = vm.randomUint(256);
