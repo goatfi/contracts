@@ -41,7 +41,8 @@ contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
         uint256 minDebtDelta = 100 ether;
         maxDebtDelta = 100_000 ether;
 
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.keeper);
         _;
     }
 

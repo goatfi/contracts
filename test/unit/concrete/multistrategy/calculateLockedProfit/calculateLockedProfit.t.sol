@@ -7,7 +7,7 @@ import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapte
 
 contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_Shared_Test {
     using Math for uint256;
-    
+
     address strategy;
     uint256 strategyProfit = 100 ether;
 
@@ -29,7 +29,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
 
         // Strategy makes gain
         triggerStrategyGain(strategy, strategyProfit);
-        
+
         // Strategy reports
         IStrategyAdapter(strategy).sendReport(0);
         _;
@@ -39,7 +39,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         external
         whenThereIsPriorProfit
     {
-        vm.warp(block.timestamp + multistrategyHarness.PROFIT_UNLOCK_TIME() + 1);
+        vm.warp(block.timestamp + multistrategyHarness.profitUnlockTime() + 1);
 
         // Assert that locked profit is 0
         uint256 actualLockedProfit = multistrategyHarness.calculateLockedProfit();
@@ -58,7 +58,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         whenTimeSinceLastReportLowerThanUnlockTime
     {
         // Advance half of the unlock time
-        vm.warp(block.timestamp + multistrategyHarness.PROFIT_UNLOCK_TIME() / 2);
+        vm.warp(block.timestamp + multistrategyHarness.profitUnlockTime() / 2);
 
         // Add some profit again
         triggerStrategyGain(strategy, strategyProfit);
@@ -69,7 +69,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         assertApproxEqRel(actualLockedProfit, expectedLockedProfit, 0.00001 ether, "calculateLockedProfit");
 
         // Advance the unlock time
-        vm.warp(block.timestamp + multistrategyHarness.PROFIT_UNLOCK_TIME() + 1);
+        vm.warp(block.timestamp + multistrategyHarness.profitUnlockTime() + 1);
 
         // Assert that there is no locked profit
         actualLockedProfit = multistrategyHarness.calculateLockedProfit();
@@ -93,7 +93,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
         assertEq(actualLockedProfit, expectedLockedProfit, "calculateLockedProfit");
 
         // Advance half of the unlock time
-        vm.warp(block.timestamp + multistrategyHarness.PROFIT_UNLOCK_TIME() / 2);
+        vm.warp(block.timestamp + multistrategyHarness.profitUnlockTime() / 2);
 
         // Assert that locked profit is 47.5% of the gain at t = 6h
         // Due to rounding precision, it will give a margin of 0,001%

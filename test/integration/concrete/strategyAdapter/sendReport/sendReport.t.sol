@@ -4,6 +4,7 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -44,15 +45,15 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         whenContractNotPaused
     {
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
 
         // Make a loss
-        IStrategyAdapterMock(address(strategy)).lose(100 ether);
+        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
 
         // Set the strategy debt ratio to 0, se we can repay the debt
         multistrategy.setStrategyDebtRatio(address(strategy), 0);
 
-        uint256 repayAmount = 1000 ether;
+        uint256 repayAmount = 1000 * 10 ** decimals;
 
         // Expect a revert when the strategy manager wants to repay all the debt but it doesn't have the assets to do so
         vm.expectRevert();
@@ -71,14 +72,14 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
 
         // Set the strategy debt ratio to 0, se we can repay the debt
         multistrategy.setStrategyDebtRatio(address(strategy), 0);
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 900 ether, 850 ether));
-        strategy.sendReport(1_000 ether);
+        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 900 * 10 ** decimals, 850 * 10 ** decimals));
+        strategy.sendReport(1_000 * 10 ** decimals);
     }
 
     modifier whenSlippageLimitRespected() {
@@ -87,7 +88,7 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         // Set the staking slippage to be 0%
         IStrategyAdapterMock(address(strategy)).setStakingSlippage(0);
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
         _;
     }
 
@@ -97,13 +98,13 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
 
     modifier whenStrategyMadeGain() {
         // Makes a 100 ether gain (10%)
-        IStrategyAdapterMock(address(strategy)).earn(100 ether);
+        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
         _;
     }
 
     modifier whenStrategyMadeLoss() {
         // Makes a 100 ether loss (-10%)
-        IStrategyAdapterMock(address(strategy)).lose(100 ether);
+        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
         _;
     }
 
@@ -119,12 +120,12 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 1000 ether;
+        uint256 expectedStrategyAssets = 1000 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 1095 ether;
+        uint256 expectedMultistrategyAssets = 1095 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 
@@ -140,12 +141,12 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 900 ether;
+        uint256 expectedStrategyAssets = 900 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 900 ether;
+        uint256 expectedMultistrategyAssets = 900 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 
@@ -161,16 +162,16 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         whenDebtRepayment
         whenStrategyMadeGain
     {
-        strategy.sendReport(1000 ether);
+        strategy.sendReport(1000 * 10 ** decimals);
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 1000 ether;
+        uint256 expectedStrategyAssets = 1000 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 1095 ether;
+        uint256 expectedMultistrategyAssets = 1095 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 
@@ -182,16 +183,16 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         whenDebtRepayment
         whenStrategyMadeLoss
     {
-        strategy.sendReport(1000 ether);
+        strategy.sendReport(1000 * 10 ** decimals);
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 900 ether;
+        uint256 expectedStrategyAssets = 900 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 900 ether;
+        uint256 expectedMultistrategyAssets = 900 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 
@@ -211,16 +212,16 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         whenStrartegyHasDebtExcess
         whenStrategyMadeGain
     {
-        strategy.sendReport(1000 ether);
+        strategy.sendReport(1000 * 10 ** decimals);
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 0 ether;
+        uint256 expectedStrategyAssets = 0 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 1095 ether;
+        uint256 expectedMultistrategyAssets = 1095 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 
@@ -235,16 +236,16 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
     {
         // Note that we're only withdrawing 900 ether. Withdrawing more than totalAssets would revert
         // with InsufficientBalance
-        strategy.sendReport(900 ether);
+        strategy.sendReport(900 * 10 ** decimals);
 
         // Assert it has withdrawn the gain
         uint256 actualStrategyAssets = strategy.totalAssets();
-        uint256 expectedStrategyAssets = 0 ether;
+        uint256 expectedStrategyAssets = 0 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "withdraw, strategy assets");
 
         // Assert it has sent the gain to the multistrategy
         uint256 actualMultistrategyAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedMultistrategyAssets = 900 ether;
+        uint256 expectedMultistrategyAssets = 900 * 10 ** decimals;
         assertEq(actualMultistrategyAssets, expectedMultistrategyAssets, "withdraw, multistrategy assets");
     }
 }

@@ -21,10 +21,16 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     using SafeERC20 for IERC20;
     using Math for uint256;
     
-    /// @dev Used for locked profit calculations.
-    uint256 constant DEGRADATION_COEFFICIENT = 1 ether;
     /// @dev How much time it takes for the profit of a strategy to be unlocked.
-    uint256 public constant PROFIT_UNLOCK_TIME = 7 days;
+    uint256 public constant PROFIT_UNLOCK_TIME = 3 days;
+
+    /// @dev Used for locked profit calculations.
+    uint256 public constant DEGRADATION_COEFFICIENT = 1 ether;
+
+    /// @notice OpenZeppelin decimals offset used by the ERC4626 implementation.
+    /// @dev Calculated to be max(0, 18 - underlyingDecimals) at construction, so the initial conversion rate maximizes
+    /// precision between shares and assets.
+    uint8 public immutable DECIMALS_OFFSET;
 
     /// @inheritdoc IMultistrategy
     uint256 public lastReport;
@@ -56,6 +62,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {   
+        DECIMALS_OFFSET = uint8(Math.max(0, uint256(18) - IERC20Metadata(_asset).decimals()));
         performanceFee = 1000;
         lastReport = block.timestamp;
         lockedProfitDegradation = DEGRADATION_COEFFICIENT / PROFIT_UNLOCK_TIME;
@@ -129,12 +136,16 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         return strategies[_strategy].totalDebt;
     }
 
+    function currentPnL() external view returns (uint256, uint256) {
+        return _currentPnL();
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+    function deposit(uint256 _assets, address _receiver) public override whenNotPaused whenNotRetired nonReentrant returns (uint256) {
         uint256 maxAssets = maxDeposit(_receiver);
         require(_assets <= maxAssets, ERC4626ExceededMaxDeposit(_receiver, _assets, maxAssets));
 
@@ -145,7 +156,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) public override whenNotPaused nonReentrant returns (uint256) {
+    function mint(uint256 _shares, address _receiver) public override whenNotPaused whenNotRetired nonReentrant returns (uint256) {
         uint256 maxShares = maxMint(_receiver);
         require(_shares <= maxShares, ERC4626ExceededMaxMint(_receiver, _shares, maxShares));
 
@@ -311,6 +322,44 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
             return lockedProfit - lockedFundsRatio.mulDiv(lockedProfit, DEGRADATION_COEFFICIENT);
         }
         return 0;
+    }
+
+    /**
+     * @notice Calculates the current profit and loss (PnL) across all active strategies.
+     * 
+     * This function performs the following actions:
+     * - Iterates through the `withdrawOrder` array, which defines the order in which strategies are withdrawn from.
+     * - For each strategy in the `withdrawOrder`:
+     *   - If the strategy address is zero, it breaks the loop, indicating the end of the list.
+     *   - If the strategy has no debt, it skips to the next strategy.
+     *   - Otherwise, it retrieves the current profit and loss (PnL) from the strategy by calling `currentPnL`.
+     *   - Adds the strategy's profit to the total profit, after deducting the performance fee.
+     *   - Adds the strategy's loss to the total loss.
+     * - Returns the total profit and total loss across all active strategies.
+     * 
+     * @return totalProfit The total profit across all active strategies, after deducting the performance fee.
+     * @return totalLoss The total loss across all active strategies.
+     */
+    function _currentPnL() internal view returns (uint256, uint256) {
+        if (activeStrategies == 0) return (0, 0);
+        uint256 totalProfit = 0;
+        uint256 totalLoss = 0;
+
+        for(uint8 i = 0; i < activeStrategies; ++i){
+            address strategy = withdrawOrder[i];
+            if(strategy == address(0)) break;
+            if(strategies[strategy].totalDebt == 0) continue;
+
+            (uint256 gain, uint256 loss) = IStrategyAdapter(strategy).currentPnL();
+            totalProfit += gain.mulDiv(MAX_BPS - performanceFee, MAX_BPS);
+            totalLoss += loss;
+        }
+
+        return (totalProfit, totalLoss);
+    }
+
+    function _decimalsOffset() internal view override returns (uint8) {
+        return DECIMALS_OFFSET;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

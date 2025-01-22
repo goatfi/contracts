@@ -3,7 +3,8 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -48,15 +49,15 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
 
         // Earn some tokens so we can test the slippage when withdrawing the gain
-        IStrategyAdapterMock(address(strategy)).earn(100 ether);
+        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 90 ether, 85 ether));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 90 * 10 ** decimals, 85 * 10 ** decimals));
         strategy.askReport();
     }
 
@@ -70,20 +71,20 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         whenContractNotPaused
         whenSlippageLimitRespected
     {
-        requestCredit(address(strategy), 1_000 ether);
-        IStrategyAdapterMock(address(strategy)).earn(100 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
         strategy.askReport();
 
         // Assert the gain gets withdrawn from the underlying strategy
         uint256 actualUnderlyingStrategyBalance = IStrategyAdapterMock(address(strategy)).stakingBalance();
-        uint256 expectedUnderlyingStrategyBalance = 1000 ether;
+        uint256 expectedUnderlyingStrategyBalance = 1000 * 10 ** decimals;
         assertEq(actualUnderlyingStrategyBalance, expectedUnderlyingStrategyBalance, "askReport, underlying strategy balance");
 
-        // Assert the gain gets transfered to the multistrategy
+        // Assert the gain gets transferred to the multistrategy
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 95 ether;
+        uint256 expectedMultistrategyBalance = 95 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert the strategy has the same balance of totalAssets as totalDebt
@@ -98,15 +99,15 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         whenContractNotPaused
         whenSlippageLimitRespected
     {
-        requestCredit(address(strategy), 1_000 ether);
-        IStrategyAdapterMock(address(strategy)).lose(100 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
         strategy.askReport();
 
         // Assert the multistrategy doesn't get any gain
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 0 ether;
+        uint256 expectedMultistrategyBalance = 0 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert the strategy has the same balance of totalAssets as totalDebt

@@ -3,8 +3,8 @@
 pragma solidity ^0.8.20;
 
 import { RevenueShareTestBase } from "../RevenueShareBase.t.sol";
-import { MockToken } from "src/mocks/MockToken.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { MockERC20 } from "forge-std/mocks/MockERC20.sol";
+import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract RewardPoolAdminTest is RevenueShareTestBase {
 
@@ -46,7 +46,8 @@ contract RewardPoolAdminTest is RevenueShareTestBase {
 
     function test_RescueTokens() public {
         uint256 balanceToRescue = 1000 ether;
-        IERC20 t = new MockToken(balanceToRescue, "Mock", "MOCK");
+        MockERC20 t = new MockERC20();
+        t.initialize("M", "M", 18);
         deal(address(t), address(this), balanceToRescue);
         t.transfer(address(rewardPool), balanceToRescue);
 

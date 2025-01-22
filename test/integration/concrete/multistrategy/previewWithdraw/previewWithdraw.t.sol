@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -10,6 +11,13 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
 
     uint256 slippage = 100;
 
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
+
     function test_PreviewWithdraw_ZeroAssets() external {
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(0);
         uint256 expectedShares = 0;
@@ -17,7 +25,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     modifier whenAssetsNotZero() {
-        triggerUserDeposit(users.bob, 1000 ether);
+        triggerUserDeposit(users.bob, 1000 * 10 ** decimals);
         _;
     }
 
@@ -25,7 +33,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         external
         whenAssetsNotZero
     {
-        uint256 assets = 500 ether;
+        uint256 assets = 500 * 10 ** decimals;
 
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
         uint256 expectedShares = IERC4626(address(multistrategy)).convertToShares(assets);
@@ -34,7 +42,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
 
     modifier whenNotEnoughLiquidity() {
         address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 6_000, 0, 100_000 ether);
+        multistrategy.addStrategy(strategy, 6_000, 0, 100_000 * 10 ** decimals);
         IStrategyAdapter(strategy).requestCredit();
         _;
     }
@@ -44,7 +52,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         whenAssetsNotZero
         whenNotEnoughLiquidity
     {
-        uint256 assets = 500 ether;
+        uint256 assets = 500 * 10 ** decimals;
 
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
         uint256 expectedShares = IERC4626(address(multistrategy)).convertToShares(assets);
@@ -62,7 +70,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         whenNotEnoughLiquidity
         whenSlippageLimitNotZero
     {
-        uint256 assets = 500 ether;
+        uint256 assets = 500 * 10 ** decimals;
         multistrategy.setSlippageLimit(10_000);
 
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
@@ -82,11 +90,11 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         whenSlippageLimitNotZero
         whenSlippageLimitNotMAXBPS
     {
-        uint256 assets = 500 ether;
-        uint256 assetsWithSlippage = assets.mulDiv(10_000, 10_000 - slippage, Math.Rounding.Ceil);
+        uint256 assets = 500 * 10 ** decimals;
+        uint256 shares = IERC4626(address(multistrategy)).convertToShares(assets);
 
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(assets);
-        uint256 expectedShares = IERC4626(address(multistrategy)).convertToShares(assetsWithSlippage);
+        uint256 expectedShares = shares.mulDiv(10_000, 10_000 - slippage, Math.Rounding.Ceil);
         assertEq(actualShares, expectedShares, "preview withdraw");
     }
 }

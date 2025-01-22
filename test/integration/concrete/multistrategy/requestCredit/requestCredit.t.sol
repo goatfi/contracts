@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -9,6 +10,12 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     address strategy;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_RevertWhen_ContractIsPaused() external {
         // Pause the multistrategy
@@ -34,9 +41,9 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
 
     modifier whenCallerActiveStrategy() {
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 5_000, 0, 100_000 ether);
+        multistrategy.addStrategy(strategy, 5_000, 0, 100_000 * 10 ** decimals);
 
-        triggerUserDeposit(users.bob, 1_000 ether);
+        triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
         _;
     }
 
@@ -55,7 +62,7 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
         assertEq(actualCredit, expectedCredit, "requestCredit, credit");
 
         uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 1_000 ether;
+        uint256 expectedMultistrategyBalance = 1_000 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "requestCredit, no availableCredit, multistrategy balance");
 
         uint256 actualStrategyBalance = asset.balanceOf(strategy);
@@ -77,15 +84,15 @@ contract RequestCredit_Integration_Concrete_Test is Multistrategy_Integration_Sh
 
         uint256 actualCredit = multistrategy.requestCredit();
 
-        uint256 expectedCredit = 500 ether;
+        uint256 expectedCredit = 500 * 10 ** decimals;
         assertEq(actualCredit, expectedCredit, "requestCredit, credit");
 
         uint256 actualMultistrategyBalance = asset.balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 500 ether;
+        uint256 expectedMultistrategyBalance = 500 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "requestCredit, multistrategy balance");
 
         uint256 actualStrategyBalance = asset.balanceOf(strategy);
-        uint256 expectedStrategyBalance = 500 ether;
+        uint256 expectedStrategyBalance = 500 * 10 ** decimals;
         assertEq(actualStrategyBalance, expectedStrategyBalance, "requestCredit, strategy balance");
     }
 }

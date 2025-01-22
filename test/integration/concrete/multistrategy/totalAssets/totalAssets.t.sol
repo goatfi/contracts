@@ -2,10 +2,17 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     address strategy;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_TotalAssets_NoDeposits() external {
         // Assert that totalAssets are as expected
@@ -15,7 +22,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
     }
 
     modifier whenThereAreDeposits() {
-        triggerUserDeposit(users.bob, 1_000 ether);
+        triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
         _;
     }
 
@@ -25,14 +32,14 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
     {
         // Assert that totalAssets are as expected
         uint256 actualTotalAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedTotalAssets = 1_000 ether;
+        uint256 expectedTotalAssets = 1_000 * 10 ** decimals;
         assertEq(actualTotalAssets, expectedTotalAssets, "totalAssets");
     }
 
     modifier whenActiveStrategy() {
         // Add the strategy to the multistrategy
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 5_000, 100 ether, 100_000 ether);
+        multistrategy.addStrategy(strategy, 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
         _;
     }
 
@@ -43,7 +50,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
     {
         // Assert that totalAssets are as expected
         uint256 actualTotalAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedTotalAssets = 1_000 ether;
+        uint256 expectedTotalAssets = 1_000 * 10 ** decimals;
         assertEq(actualTotalAssets, expectedTotalAssets, "totalAssets");
     }
 
@@ -61,7 +68,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
     {
         // Assert that totalAssets are as expected
         uint256 actualTotalAssets = IERC4626(address(multistrategy)).totalAssets();
-        uint256 expectedTotalAssets = 1_000 ether;
+        uint256 expectedTotalAssets = 1_000 * 10 ** decimals;
         assertEq(actualTotalAssets, expectedTotalAssets, "totalAssets");
     }
 }

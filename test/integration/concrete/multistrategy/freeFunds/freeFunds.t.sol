@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
     function test_FreeFunds_ZeroTotalAssets() external {
@@ -12,6 +13,7 @@ contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration
     }
 
     modifier whenTotalAssetsNotZero() {
+        triggerUserDeposit(users.bob, 1000 ether);
         _;
     }
 
@@ -28,6 +30,11 @@ contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration
     }
 
     modifier whenLockedProfitNotZero() {
+        address strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
+        multistrategyHarness.addStrategy(strategy, 10000, 0, 100_000 ether);
+        IStrategyAdapter(strategy).requestCredit();
+        triggerStrategyGain(strategy, 1 ether);
+        IStrategyAdapter(strategy).sendReport(0);
         _;
     }
 

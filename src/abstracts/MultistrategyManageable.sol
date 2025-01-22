@@ -17,8 +17,8 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @dev Maximum basis points (10_000 = 100%)
     uint256 constant MAX_BPS = 10_000;
 
-    /// @dev Maximum performance fee that the owner can set is 10%
-    uint256 constant MAX_PERFORMANCE_FEE = 1_000;
+    /// @dev Maximum performance fee that the owner can set is 20%
+    uint256 constant MAX_PERFORMANCE_FEE = 2_000;
     
     /// @inheritdoc IMultistrategyManageable
     address public protocolFeeRecipient;
@@ -40,6 +40,9 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
 
     /// @inheritdoc IMultistrategyManageable
     uint8 public activeStrategies;
+
+    /// @inheritdoc IMultistrategyManageable
+    bool public retired;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   PRIVATE STORAGE
@@ -83,6 +86,12 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
     /// @param _strategy Address of the strategy to check if it is active. 
     modifier onlyActiveStrategy(address _strategy) {
         require(strategies[_strategy].activation > 0, Errors.StrategyNotActive(_strategy));
+        _;
+    }
+
+    /// @dev Reverts if the multistrategy has been retired / eol.
+    modifier whenNotRetired() {
+        require(retired == false, Errors.Retired());
         _;
     }
 
@@ -147,7 +156,7 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         uint256 _debtRatio,
         uint256 _minDebtDelta,
         uint256 _maxDebtDelta
-    ) external onlyManager {
+    ) external onlyOwner {
         require(activeStrategies < MAXIMUM_STRATEGIES, Errors.MaximumAmountStrategies());
         require(_strategy != address(0) && _strategy != address(this), Errors.InvalidAddress(_strategy));
         require(strategies[_strategy].activation == 0, Errors.StrategyAlreadyActive(_strategy));
@@ -235,6 +244,13 @@ abstract contract MultistrategyManageable is IMultistrategyManageable, Multistra
         strategies[_strategy].maxDebtDelta = _maxDebtDelta;
 
         emit StrategyMaxDebtDeltaSet(_strategy, _maxDebtDelta);
+    }
+
+
+    /// @inheritdoc IMultistrategyManageable
+    function retire() external onlyGuardian {
+        retired = true;
+        emit MultistrategyRetired();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

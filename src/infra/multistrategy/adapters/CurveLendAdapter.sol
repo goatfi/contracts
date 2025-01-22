@@ -6,7 +6,6 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { IERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
-import { IGoatVault } from "interfaces/infra/IGoatVault.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract CurveLendAdapter is StrategyAdapter {
@@ -27,25 +26,16 @@ contract CurveLendAdapter is StrategyAdapter {
     /// @notice Constructor for the strategy adapter.
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
-    /// @param _curveLendVault The address of the Curve Lend Vault.
-    /// @param _goatVault The address of the Goat Vault.
     /// @param _name The name of this Strategy Adapter.
     /// @param _id The type identifier of this Strategy Adapter.
     constructor(
         address _multistrategy,
         address _asset,
-        address _curveLendVault,
-        address _goatVault,
         string memory _name,
         string memory _id
     ) 
         StrategyAdapter(_multistrategy, _asset, _name, _id)
     {   
-        require(_curveLendVault != address(0) && _goatVault != address(0), Errors.ZeroAddress());
-        require(_curveLendVault == address(IGoatVault(_goatVault).want()), WantMismatch());
-
-        curveLendVault = _curveLendVault;
-        goatVault = _goatVault;
 
         _giveAllowances();
     }
@@ -64,13 +54,7 @@ contract CurveLendAdapter is StrategyAdapter {
     /// 
     /// @return The total amount of assets managed by the contract, including both assets supplied to Curve Lend and the base asset balance.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 goatVaultPricePerShare = IGoatVault(goatVault).getPricePerFullShare();
-        uint256 goatVaultSharesBalance = IERC20(goatVault).balanceOf(address(this));
-        uint256 curveVaultShares = goatVaultSharesBalance.mulDiv(goatVaultPricePerShare, 1 ether, Math.Rounding.Floor);
-        uint256 assetsSupplied = IERC4626(curveLendVault).convertToAssets(curveVaultShares);
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return assetsSupplied + assetBalance;
     }
 
     /// @notice Converts an amount of assets to shares based on the GoatVault's price per share.
@@ -82,8 +66,7 @@ contract CurveLendAdapter is StrategyAdapter {
     /// @param _amount The amount of assets to convert to shares.
     /// @return The number of shares corresponding to the given amount of assets.
     function _convertToShares(uint256 _amount) internal view returns(uint256) {
-        uint256 pricePerShare = IGoatVault(goatVault).getPricePerFullShare();
-        return _amount.mulDiv(1 ether, pricePerShare, Math.Rounding.Ceil);
+
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -96,11 +79,7 @@ contract CurveLendAdapter is StrategyAdapter {
     /// - Deposits the entire base asset balance into Curve Lend.
     /// - Deposits the Curve Lend Vault shares into a Goat Vault.
     function _deposit() internal override {
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
-        IERC4626(curveLendVault).deposit(assetBalance, address(this));
 
-        uint256 curveVaultShares = IERC20(curveLendVault).balanceOf(address(this));
-        IGoatVault(goatVault).deposit(curveVaultShares);
     }
 
     
@@ -114,14 +93,7 @@ contract CurveLendAdapter is StrategyAdapter {
     /// 
     /// @param _amount The amount of assets to withdraw from Curve Lend.
     function _withdraw(uint256 _amount) internal override {
-        uint256 curveLendVaultSharesNeeded = IERC4626(curveLendVault).previewWithdraw(_amount);
-        uint256 goatVaultShares = _convertToShares(curveLendVaultSharesNeeded);
-        uint256 goatVaultSharesBalance = IERC20(goatVault).balanceOf(address(this));
 
-        goatVaultShares = Math.min(goatVaultShares, goatVaultSharesBalance);
-        IGoatVault(goatVault).withdraw(goatVaultShares);
-        uint256 curveLendVaultShares = IERC20(curveLendVault).balanceOf(address(this));
-        IERC4626(curveLendVault).redeem(curveLendVaultShares, address(this), address(this));
     }
 
     /// @notice Performs an emergency withdrawal of all assets from Curve Lend.
@@ -132,9 +104,7 @@ contract CurveLendAdapter is StrategyAdapter {
     /// 
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     function _emergencyWithdraw() internal override {
-        IGoatVault(goatVault).withdrawAll();
-        uint256 curveLendVaultShares = IERC20(curveLendVault).balanceOf(address(this));
-        IERC4626(curveLendVault).redeem(curveLendVaultShares, address(this), address(this));
+
     }
 
     /// @notice Grants the Curve Lend Vault an unlimited allowance to deposit `asset`.

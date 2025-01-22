@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import {Errors} from "src/infra/libraries/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,17 +14,44 @@ contract Deposit_Integration_Concrete_Test is
 {
     uint256 amount;
     address recipient;
+    uint8 decimals;
+
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
 
     function test_RevertWhen_ContractIsPaused() external {
+        amount = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
         // Pause the multistrategy
         multistrategy.pause();
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        multistrategy.requestCredit();
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     modifier whenContractNotPaused() {
+        _;
+    }
+
+    function test_RevertWhen_Retired() 
+        external 
+        whenContractNotPaused
+    {
+        amount = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
+        multistrategy.retire();
+
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.Retired.selector));
+        IERC4626(address(multistrategy)).deposit(amount, recipient);
+    }
+
+    modifier whenNotRetired() {
         _;
     }
 
@@ -34,26 +62,30 @@ contract Deposit_Integration_Concrete_Test is
     /// @dev Deposit limit is 100K tokens
     function test_RevertWhen_AssetsAboveMaxDeposit()
         external
+        whenContractNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 150_000 ether;
+        amount = 150_000 * 10 ** decimals;
         recipient = users.bob;
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 ether));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ERC4626ExceededMaxDeposit.selector, recipient, amount, 100_000 * 10 ** decimals));
         IERC4626(address(multistrategy)).deposit(amount, recipient);
     }
 
     /// @dev Approve the tokens to be able to deposit
     modifier whenDepositLimitRespected() {
-        triggerApprove(users.bob, address(multistrategy), 1000 ether);
+        triggerApprove(users.bob, address(multistrategy), 1000 * 10 ** decimals);
         _;
     }
 
     function test_RevertWhen_RecipientIsZeroAddress() 
         external
+        whenContractNotPaused
+        whenNotRetired
         whenDepositLimitRespected 
     {
         amount = 0;
@@ -68,6 +100,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_RecipientIsContractAddress()
         external
+        whenContractNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
@@ -90,6 +124,8 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_AmountIsZero()
         external
+        whenContractNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -108,12 +144,14 @@ contract Deposit_Integration_Concrete_Test is
 
     function test_RevertWhen_CallerHasInsufficientBalance()
         external
+        whenContractNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        amount = 1000 ether;
+        amount = 1000 * 10 ** decimals;
         recipient = users.bob;
 
         swapCaller(users.bob);
@@ -123,19 +161,21 @@ contract Deposit_Integration_Concrete_Test is
     }
 
     modifier whenCallerHasEnoughBalance() {
-        mintAsset(users.bob, 1000 ether);
+        mintAsset(users.bob, 1000 * 10 ** decimals);
         _;
     }
 
     function test_Deposit()
         external
+        whenContractNotPaused
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
         whenCallerHasEnoughBalance
     {
-        amount = 1000 ether;
+        amount = 1000 * 10 ** decimals;
         recipient = users.bob;
         uint256 shares = IERC4626(address(multistrategy)).previewDeposit(amount);
 

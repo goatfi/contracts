@@ -2,6 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import {Errors} from "src/infra/libraries/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -10,18 +11,45 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     uint256 shares;
+    uint8 decimals;
     address recipient;
 
+    function setUp() public virtual override {
+        Multistrategy_Integration_Shared_Test.setUp();
+        decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
+    }
+
     function test_RevertWhen_ContractIsPaused() external {
+        shares = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+        
         // Pause the multistrategy
         multistrategy.pause();
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        multistrategy.requestCredit();
+        IERC4626(address(multistrategy)).mint(shares, recipient);
     }
 
     modifier whenContractNotPaused() {
+        _;
+    }
+
+    function test_RevertWhen_Retired() 
+        external 
+        whenContractNotPaused
+    {
+        shares = 150_000 * 10 ** decimals;
+        recipient = users.bob;
+
+        multistrategy.retire();
+
+        // Expect a revert
+        vm.expectRevert(abi.encodeWithSelector(Errors.Retired.selector));
+        IERC4626(address(multistrategy)).mint(shares, recipient);
+    }
+
+    modifier whenNotRetired() {
         _;
     }
 
@@ -41,6 +69,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
     /// @dev Deposit limit is 100K tokens
     function test_RevertWhen_AssetsAboveMaxMint()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
@@ -55,12 +84,13 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     /// @dev Approve the tokens to be able to deposit
     modifier whenDepositLimitRespected() {
-        triggerApprove(users.bob, address(multistrategy), 1000 ether);
+        triggerApprove(users.bob, address(multistrategy), 1000 * 10 ** decimals);
         _;
     }
 
     function test_RevertWhen_RecipientIsZeroAddress() 
         external
+        whenNotRetired
         whenDepositLimitRespected 
     {
         shares = 0;
@@ -75,6 +105,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_RecipientIsContractAddress()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
     {
@@ -93,6 +124,7 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_AmountIsZero()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -107,12 +139,13 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
 
     function test_RevertWhen_CallerHasInsufficientBalance()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
         whenAmountIsGreaterThanZero
     {
-        shares = 1000 ether;
+        shares = 1000 * 10 ** decimals;
         recipient = users.bob;
 
         swapCaller(users.bob);
@@ -122,12 +155,13 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
     }
 
     modifier whenCallerHasEnoughBalance() {
-        mintAsset(users.bob, 1000 ether);
+        mintAsset(users.bob, 1000 * 10 ** decimals);
         _;
     }
 
     function test_Mint()
         external
+        whenNotRetired
         whenRecipientNotZeroAddress
         whenDepositLimitRespected
         whenRecipientNotContractAddress
@@ -145,9 +179,9 @@ contract Mint_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test
         IERC4626(address(multistrategy)).mint(shares, recipient);
 
         // Assert correct amount of shares have been minted to recipient
-        uint256 actualAssets = IERC20(address(multistrategy)).balanceOf(recipient);
-        uint256 expectedAssets = assets;
-        assertEq(actualAssets, expectedAssets, "mint");
+        uint256 actualShares = IERC20(address(multistrategy)).balanceOf(recipient);
+        uint256 expectedShares = shares;
+        assertEq(actualShares, expectedShares, "mint");
 
         // Assert the assets have been deducted from the caller
         uint256 actualUserBalance = IERC20(address(asset)).balanceOf(recipient);

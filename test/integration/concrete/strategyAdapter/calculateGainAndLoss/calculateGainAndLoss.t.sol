@@ -3,7 +3,8 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 
 contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_Test {
@@ -21,7 +22,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
     }
 
     modifier whenTotalDebtNotZero() {
-        requestCredit(address(strategy), 1000 ether);
+        requestCredit(address(strategy), 1000 * 10 ** decimals);
         _;
     }
 
@@ -38,7 +39,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
     }
 
     modifier whenCurrentAssetsNotZero() {
-        currentAssets = 1000 ether;
+        currentAssets = 1000 * 10 ** decimals;
         _;
     }
 
@@ -57,7 +58,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
         whenCurrentAssetsNotZero
         whenTotalDebtNotZero
     {
-        currentAssets = 1100 ether;
+        currentAssets = 1100 * 10 ** decimals;
         totalDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
 
         (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
@@ -71,7 +72,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
         whenCurrentAssetsNotZero
         whenTotalDebtNotZero
     {
-        currentAssets = 900 ether;
+        currentAssets = 900 * 10 ** decimals;
         totalDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
 
         (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);

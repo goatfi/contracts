@@ -1,0 +1,26 @@
+name: Invariant Tests
+
+on:
+    schedule:
+    - cron: '0 8 * * *' # Runs at 8:00 AM UTC every day
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    env:
+      ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: "Run Goat Protocol Invariant Tests"
+        run: 'forge test --match-path "test/invariant/**/*"'

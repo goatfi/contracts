@@ -3,7 +3,8 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -38,13 +39,13 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     }
 
     modifier whenGain(uint256 _amount) {
-        requestCredit(address(strategy), 1000 ether);
+        requestCredit(address(strategy), 1000 * 10 ** decimals);
         IStrategyAdapterMock(address(strategy)).earn(_amount);
         _;
     }
 
     modifier whenLoss(uint256 _amount) {
-        requestCredit(address(strategy), 1000 ether);
+        requestCredit(address(strategy), 1000 * 10 ** decimals);
         IStrategyAdapterMock(address(strategy)).lose(_amount);
         _;
     }
@@ -52,7 +53,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     function test_SendReportPanicked_ZeroCurrentAssets()
         external
         whenCallerOwner
-        whenLoss(1000 ether)
+        whenLoss(1000 * 10 ** decimals)
         whenContractPaused
     {
 
@@ -81,7 +82,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     function test_SendReport_StrategyNotRetired_Gain()
         external
         whenCallerOwner
-        whenGain(100 ether)
+        whenGain(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
     {
@@ -89,7 +90,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
 
         // Assert that the strategy repaid the gain
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 95 ether;
+        uint256 expectedMultistrategyBalance = 95 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy has the same balance of assets as debt amount
@@ -101,7 +102,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     function test_SendReport_StrategyNotRetired_Loss()
         external
         whenCallerOwner
-        whenLoss(100 ether)
+        whenLoss(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
     {
@@ -109,7 +110,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
 
         // Assert that the strategy hasn't repaid anything
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 0 ether;
+        uint256 expectedMultistrategyBalance = 0 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy has the same balance of assets as debt amount
@@ -126,7 +127,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     function test_SendReport_Gain()
         external
         whenCallerOwner
-        whenGain(100 ether)
+        whenGain(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
         whenStrategyReired
@@ -135,7 +136,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
 
         // Assert that the strategy repaid the gain
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 1095 ether;
+        uint256 expectedMultistrategyBalance = 1095 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy total debt is 0
@@ -152,7 +153,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     function test_SendReport_Loss()
         external
         whenCallerOwner
-        whenLoss(100 ether)
+        whenLoss(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
         whenStrategyReired
@@ -161,7 +162,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
 
         // Assert that the strategy repaid the loss
         uint256 actualMultistrategyBalance = IERC20(strategy.asset()).balanceOf(address(multistrategy));
-        uint256 expectedMultistrategyBalance = 900 ether;
+        uint256 expectedMultistrategyBalance = 900 * 10 ** decimals;
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "sendReportPanicked, multistrategy balance");
 
         // Assert that the strategy total debt is 0

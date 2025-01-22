@@ -2,7 +2,8 @@
 
 pragma solidity >=0.8.20 <0.9.0;
 
-import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -14,7 +15,7 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
 
         // Expect it to revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotMultistrategy.selector, users.bob));
-        strategy.withdraw(1_000 ether);
+        strategy.withdraw(1_000 * 10 ** decimals);
     }
 
     modifier whenCallerMultistrategy() {
@@ -28,7 +29,7 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         
         // Expect it to revert
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-        strategy.withdraw(1_000 ether);
+        strategy.withdraw(1_000 * 10 ** decimals);
     }
 
     modifier whenContractNotPaused() {
@@ -47,13 +48,13 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
 
         // Expect a revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 900 ether, 850 ether));
-        strategy.withdraw(1_000 ether);
+        vm.expectRevert(abi.encodeWithSelector(Errors.SlippageCheckFailed.selector, 900 * 10 ** decimals, 850 * 10 ** decimals));
+        strategy.withdraw(1_000 * 10 ** decimals);
     }
 
     modifier whenSlippageLimitRespected() {
@@ -73,11 +74,11 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         IStrategyAdapterMock(address(strategy)).setStakingSlippage(50);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 ether);
+        requestCredit(address(strategy), 1_000 * 10 ** decimals);
 
         // Make a withdraw
         swapCaller(address(multistrategy));
-        uint256 withdrawn = strategy.withdraw(1_000 ether);
+        uint256 withdrawn = strategy.withdraw(1_000 * 10 ** decimals);
 
         // Assert the strategy no longer has the assets
         uint256 actualStrategyAssets = strategy.totalAssets();
