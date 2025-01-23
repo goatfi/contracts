@@ -2,6 +2,7 @@ forge-std/=lib/forge-std/src/
 src/=src/
 interfaces/=src/interfaces
 test-utils/=test/utils
+createx=lib/createx-forge
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @openzeppelin-4/contracts=lib/openzeppelin-contracts-4/contracts/
