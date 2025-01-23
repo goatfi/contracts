@@ -41,7 +41,7 @@ contract DeploySiloAdapter is Script {
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
         swapper: swapper,
-        weth: AssetsArbitrum.WETH
+        wrappedGas: AssetsArbitrum.WETH
     });
 
     function run() public {

@@ -36,7 +36,7 @@ contract DeployStargateAdapter is Script {
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses =
         StrategyAdapterHarvestable.HarvestAddresses({
             swapper: swapper,
-            weth: weth
+            wrappedGas: weth
         });
 
     StargateAdapter.StargateAddresses stargateAddresses =

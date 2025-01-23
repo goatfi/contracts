@@ -34,7 +34,7 @@ contract StargateAdapterIntegration is AdapterIntegration {
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         vm.prank(users.keeper); adapter = new StargateAdapter(address(multistrategy), asset, harvestAddresses, siloAddresses, "", "");

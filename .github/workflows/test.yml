@@ -26,4 +26,4 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: "Run Goat Protocol Tests"
-        run: 'forge test --no-match-path "{test/invariant/**/*,test/integration/adapters/**/*}"'
+        run: 'forge test --no-match-path "{test/invariant/**/*,test/integration/adapters/**/*}" -vvv'

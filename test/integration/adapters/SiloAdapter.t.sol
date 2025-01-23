@@ -38,7 +38,7 @@ contract SiloAdapterIntegration is AdapterIntegration {
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         vm.prank(users.keeper); adapter = new SiloAdapter(address(multistrategy), asset, harvestAddresses, siloAddresses, "", "");

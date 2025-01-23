@@ -6,7 +6,6 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 import { IStargateV2Chef, IStargateV2Router } from "interfaces/stargate/IStargate.sol";
 import { IWrappedNative } from "interfaces/common/IWrappedNative.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -121,14 +120,14 @@ contract StargateAdapterNative is StrategyAdapterHarvestable {
     function _giveAllowances() internal override {
         IERC20(asset).forceApprove(address(stargateRouter), type(uint).max);
         IERC20(stargateLPToken).forceApprove(address(stargateChef), type(uint).max);
-        IERC20(AssetsArbitrum.WETH).forceApprove(swapper, type(uint).max);
+        IERC20(wrappedGas).forceApprove(swapper, type(uint).max);
     }
 
     /// @notice Revokes the allowance of the base asset for Stargate.
     function _revokeAllowances() internal override {
         IERC20(asset).forceApprove(address(stargateRouter), 0);
         IERC20(stargateLPToken).forceApprove(address(stargateChef), 0);
-        IERC20(AssetsArbitrum.WETH).forceApprove(swapper, 0);
+        IERC20(wrappedGas).forceApprove(swapper, 0);
     }
 
     /// @inheritdoc StrategyAdapterHarvestable

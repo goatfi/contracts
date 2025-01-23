@@ -44,7 +44,7 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         SiloAdapter adapter = new SiloAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, siloAddresses, "", "");

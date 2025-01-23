@@ -7,7 +7,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ISilo, ISiloLens, ISiloRewards, ISiloCollateralToken } from "interfaces/silo/ISilo.sol";
 import { IMerklDistributor } from "interfaces/merkl/IDistributor.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SiloAdapter is StrategyAdapterHarvestable {
@@ -124,13 +123,13 @@ contract SiloAdapter is StrategyAdapterHarvestable {
     /// @notice Sets the maximum allowance of the base asset for the Silo.
     function _giveAllowances() internal override {
         IERC20(asset).forceApprove(silo, type(uint256).max);
-        IERC20(AssetsArbitrum.WETH).forceApprove(swapper, type(uint).max);
+        IERC20(wrappedGas).forceApprove(swapper, type(uint).max);
     }
 
     /// @notice Revokes the allowance of the base asset for the Silo.
     function _revokeAllowances() internal override {
         IERC20(asset).forceApprove(silo, 0);
-        IERC20(AssetsArbitrum.WETH).forceApprove(swapper, 0);
+        IERC20(wrappedGas).forceApprove(swapper, 0);
     }
 
     /// @inheritdoc StrategyAdapterHarvestable

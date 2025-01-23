@@ -34,7 +34,7 @@ contract StargateAdapterInvariants is AdapterInvariantBase {
     function createAdapter() public returns (StargateAdapter) {
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         StargateAdapter.StargateAddresses memory stargateAddresses = StargateAdapter.StargateAddresses({
