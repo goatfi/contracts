@@ -7,8 +7,7 @@ import { Test } from "forge-std/Test.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { ERC4626Adapter } from "src/infra/multistrategy/adapters/ERC4626Adapter.sol";
 import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract ERC4626AdapterIntegration is AdapterIntegration {
     function setUp() public override {

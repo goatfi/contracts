@@ -5,8 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 
 contract DeployMultistrategy is Script {

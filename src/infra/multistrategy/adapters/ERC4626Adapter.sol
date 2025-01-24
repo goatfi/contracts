@@ -6,7 +6,6 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
 
 contract ERC4626Adapter is StrategyAdapter {
     using SafeERC20 for IERC20;

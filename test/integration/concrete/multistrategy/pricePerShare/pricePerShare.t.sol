@@ -15,7 +15,7 @@ contract PricePerShare_Integration_Concrete_Test is Multistrategy_Integration_Sh
         Multistrategy_Integration_Shared_Test.setUp();
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
-    function test_PricePerShare_ZeroTotalSupply() external {
+    function test_PricePerShare_ZeroTotalSupply() external view {
         // Assert pricePerShare is 1e18
         uint256 actualPricePerShare = multistrategy.pricePerShare();
         uint256 expectedPricePerShare = 1  * 10 ** decimals;

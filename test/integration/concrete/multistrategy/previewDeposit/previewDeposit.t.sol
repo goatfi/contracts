@@ -19,7 +19,7 @@ contract PreviewDeposit_Integration_Concrete_Test is Multistrategy_Integration_S
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_PreviewDeposit_ZeroAssets() external {
+    function test_PreviewDeposit_ZeroAssets() external view {
         uint256 actualShares = IERC4626(address(multistrategy)).previewDeposit(0);
         uint256 expectedShares = 0;
         assertEq(actualShares, expectedShares, "preview deposit");

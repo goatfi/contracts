@@ -18,7 +18,7 @@ contract PreviewWithdraw_Integration_Concrete_Test is Multistrategy_Integration_
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_PreviewWithdraw_ZeroAssets() external {
+    function test_PreviewWithdraw_ZeroAssets() external view {
         uint256 actualShares = IERC4626(address(multistrategy)).previewWithdraw(0);
         uint256 expectedShares = 0;
         assertEq(actualShares, expectedShares, "preview withdraw");

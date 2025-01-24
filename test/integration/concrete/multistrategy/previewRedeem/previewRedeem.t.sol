@@ -16,7 +16,7 @@ contract PreviewRedeem_Integration_Concrete_Test is Multistrategy_Integration_Sh
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_PreviewRedeem_ZeroShares() external {
+    function test_PreviewRedeem_ZeroShares() external view {
         uint256 actualAssets = IERC4626(address(multistrategy)).previewRedeem(0);
         uint256 expectedAssets = 0;
         assertEq(actualAssets, expectedAssets, "preview redeem");

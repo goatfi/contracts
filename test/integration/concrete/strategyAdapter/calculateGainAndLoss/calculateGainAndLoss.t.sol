@@ -13,7 +13,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
     uint256 totalDebt = 0;
 
     function test_CalculateGainAndLoss_CurrentAssetsZero_TotalDebtZero()
-        external
+        external view
     {
         (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (0, 0);

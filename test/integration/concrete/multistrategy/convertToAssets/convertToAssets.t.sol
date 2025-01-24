@@ -15,7 +15,7 @@ contract ConvertToAssets_Integration_Concrete_Test is Multistrategy_Integration_
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
         shares = 100 * 10 ** decimals;
     }
-    function test_ConvertToAssets_ZeroTotalSupply() external {
+    function test_ConvertToAssets_ZeroTotalSupply() external view {
         // Assert share value is zero when totalSupply is 0
         uint256 actualAssets = IERC4626(address(multistrategy)).convertToAssets(shares);
         uint256 expectedAssets = shares / (1 * 10 ** (18 - decimals));

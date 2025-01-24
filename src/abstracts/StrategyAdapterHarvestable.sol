@@ -13,20 +13,21 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
 
     struct HarvestAddresses {
         address swapper;
-        address weth;
+        address wrappedGas;
     }
-
-    /// @notice The address of the swapper contract used to swap reward tokens.
-    address swapper;
-
-    /// @notice The address of the WETH token used as an intermediary for swaps.
-    address weth;
-
+    
     /// @notice The timestamp of the last successful harvest.
-    uint256 lastHarvest;
+    uint256 public lastHarvest;
 
     /// @notice An array of reward token addresses that can be claimed and swapped.
     address[] public rewards;
+
+    /// @notice The address of the Wrapped Gas token used as an intermediary for swaps.
+    /// Used because it has high liquidity.
+    address internal wrappedGas;
+
+    /// @notice The address of the swapper contract used to swap reward tokens.
+    address swapper;
 
     /// @notice A mapping of minimum amounts for each reward token before it can be swapped.
     /// @dev The key is the reward token address, and the value is the minimum amount required for swapping.
@@ -52,7 +53,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
         StrategyAdapter(_multistrategy, _asset, _name, _id)
     {
         swapper = _harvestAddresses.swapper;
-        weth = _harvestAddresses.weth;
+        wrappedGas = _harvestAddresses.wrappedGas;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -63,7 +64,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     function harvest() external whenNotPaused {
         _claim();
         _swapRewardsToWETH();
-        if (IERC20(weth).balanceOf(address(this)) > minimumAmounts[weth]) {
+        if (IERC20(wrappedGas).balanceOf(address(this)) > minimumAmounts[wrappedGas]) {
             _swapWETHToAsset();
             uint256 assetsHarvested = IERC20(asset).balanceOf(address(this));
             _deposit();
@@ -75,7 +76,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function addReward(address _token) external onlyOwner {
-        require(_token != asset && _token != weth, Errors.InvalidRewardToken(_token));
+        require(_token != asset && _token != wrappedGas, Errors.InvalidRewardToken(_token));
         _verifyRewardToken(_token);
 
         rewards.push(_token);
@@ -102,8 +103,8 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
             IERC20(token).forceApprove(swapper, 0);
             IERC20(token).forceApprove(_swapper, type(uint256).max);
         }
-        IERC20(weth).forceApprove(swapper, 0);
-        IERC20(weth).forceApprove(_swapper, type(uint256).max);
+        IERC20(wrappedGas).forceApprove(swapper, 0);
+        IERC20(wrappedGas).forceApprove(_swapper, type(uint256).max);
         swapper = _swapper;
         emit SwapperUpdated(_swapper);
     }
@@ -119,14 +120,14 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
             address token = rewards[i];
             uint256 amount = IERC20(token).balanceOf(address(this));
             if (amount > minimumAmounts[token]) {
-                IGoatSwapper(swapper).swap(token, weth, amount);
+                IGoatSwapper(swapper).swap(token, wrappedGas, amount);
             }
         }
     }
 
     /// @notice Swaps WETH to `asset`.
     function _swapWETHToAsset() internal virtual {
-        if (asset != weth) _swap(weth, asset);
+        if (asset != wrappedGas) _swap(wrappedGas, asset);
     }
 
     /// @notice Swaps one token for another using the swapper contract.
