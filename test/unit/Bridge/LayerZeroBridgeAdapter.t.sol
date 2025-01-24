@@ -96,7 +96,7 @@ contract LayerZeroBridgeAdapterTest is XERC20TestBase, RemoteXERC20 {
         org_bridgeAdapter.initialize(goa, xGoa, lockbox, org_neededContracts);
     }
 
-    function test_TrustedRemote() public {
+    function test_TrustedRemote() public view {
         bytes memory org_trustedRemote = org_bridgeAdapter.getTrustedRemoteAddress(_getLzId(chainIds[1]));
         bytes memory dst_trustedRemote = dst_bridgeAdapter.getTrustedRemoteAddress(_getLzId(chainIds[0]));
 

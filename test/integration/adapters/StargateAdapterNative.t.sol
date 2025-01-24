@@ -9,8 +9,7 @@ import { StargateAdapterNative } from "src/infra/multistrategy/adapters/Stargate
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract StargateAdapterNativeIntegration is AdapterIntegration {
     function setUp() public override {

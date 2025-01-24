@@ -14,7 +14,7 @@ contract DebtExcess_Integration_Concrete_Test is Multistrategy_Integration_Share
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_DebtExcess_ZeroAddress() external {
+    function test_DebtExcess_ZeroAddress() external view {
         uint256 actualDebtExcess = multistrategy.debtExcess(strategy);
         uint256 expectedDebtExcess = 0;
         assertEq(actualDebtExcess, expectedDebtExcess, "debtExcess");

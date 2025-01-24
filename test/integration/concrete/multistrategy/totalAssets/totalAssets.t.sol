@@ -14,7 +14,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_TotalAssets_NoDeposits() external {
+    function test_TotalAssets_NoDeposits() external view {
         // Assert that totalAssets are as expected
         uint256 actualTotalAssets = IERC4626(address(multistrategy)).totalAssets();
         uint256 expectedTotalAssets = 0;

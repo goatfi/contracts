@@ -17,7 +17,7 @@ contract ConvertToShares_Integration_Concrete_Test is Multistrategy_Integration_
         assets = deposit * 10 ** decimals;
     }
 
-    function test_ConvertToShares_ZeroAmount() external {
+    function test_ConvertToShares_ZeroAmount() external view {
         //Assert that shares for assets is zero when the assets of shares is zero
         uint256 actualShares = IERC4626(address(multistrategy)).convertToShares(0);
         uint256 expectedShares = 0;
@@ -29,7 +29,7 @@ contract ConvertToShares_Integration_Concrete_Test is Multistrategy_Integration_
     }
 
     function test_ConvertToShares_ZeroTotalSupply() 
-        external 
+        external view
         whenAssetsNotZero
     {
         //Assert that shares for assets is zero when the assets of shares is zero

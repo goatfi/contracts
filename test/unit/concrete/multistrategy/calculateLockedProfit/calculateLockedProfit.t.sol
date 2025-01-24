@@ -12,7 +12,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
     uint256 strategyProfit = 100 ether;
 
     function test_CalculateLockedProfit_NoPriorLockedProfit() 
-        external
+        external view
     {   
         uint256 actualLockedProfit = multistrategyHarness.calculateLockedProfit();
         uint256 expectedLockedProfit = 0;

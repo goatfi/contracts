@@ -35,7 +35,7 @@ contract FeeBatchInvariant is RevenueShareTestBase {
     }
 
     /// @notice All revenue must be distributed between the Reward Pool, FeeBatch and
-    function invariant_RevenueBalance() public {
+    function invariant_RevenueBalance() public view {
         uint256 rewardPoolBalance = weth.balanceOf(address(rewardPool));
         uint256 feeBatchBalance = weth.balanceOf(address(feeBatch));
         uint256 treasuryBalance = weth.balanceOf(TREASURY);

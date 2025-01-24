@@ -12,7 +12,7 @@ contract CalculateAmountToBeWithdrawn_Integration_Concrete_Test is StrategyAdapt
     uint256 gain = 0;
 
     function test_CalculateAmountToBeWithdrawn_ExceedingDebtZero_RepayAmountZero_GainZero()
-        external
+        external view
     {
 
         // Assert that it has to withdrawn 0

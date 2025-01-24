@@ -7,7 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadat
 
 contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_Test {
 
-    function test_totalAssets_ZeroAssets() external {
+    function test_totalAssets_ZeroAssets() external view {
         uint256 actualTotalAssets = strategy.totalAssets();
         uint256 expectedTotalAssets = 0;
         assertEq(actualTotalAssets, expectedTotalAssets, "totalAssets, no credit requested");

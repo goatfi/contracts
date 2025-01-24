@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { GoatSwapper } from "src/infra/GoatSwapper.sol";
-import { ProtocolArbitrum, AssetsArbitrum } from "@addressbook/GoatAddressBook.sol";
+import { ProtocolArbitrum, AssetsArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployGoatSwap is Script {
 

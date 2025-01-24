@@ -6,8 +6,7 @@ import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { SiloAdapter } from "src/infra/multistrategy/adapters/SiloAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeploySiloAdapter is Script {
     address collateral = 0x713fc13CaAB628F116Bc34961f22a6B44aD27668;    //FIXME:

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {CreateXScript} from "createx/script/CreateXScript.sol";
 import { console } from "forge-std/console.sol";
 import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
-import { ProtocolArbitrum, AssetsArbitrum } from "@addressbook/GoatAddressBook.sol";
+import { ProtocolArbitrum, AssetsArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployTimelock is CreateXScript {
 

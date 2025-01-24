@@ -19,7 +19,7 @@ contract PreviewMint_Integration_Concrete_Test is Multistrategy_Integration_Shar
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_PreviewMint_ZeroShares() external {
+    function test_PreviewMint_ZeroShares() external view {
         uint256 actualAssets = IERC4626(address(multistrategy)).previewMint(0);
         uint256 expectedAssets = 0;
         assertEq(actualAssets, expectedAssets, "preview mint");

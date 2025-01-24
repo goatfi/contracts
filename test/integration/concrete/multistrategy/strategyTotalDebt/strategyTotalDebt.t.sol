@@ -14,7 +14,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
         decimals = IERC20Metadata(IERC4626(address(multistrategy)).asset()).decimals();
     }
 
-    function test_StrategyTotalDebt_ZeroAddress() external {
+    function test_StrategyTotalDebt_ZeroAddress() external view {
         // Assert that zero address has 0 debt
         uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(address(0));
         uint256 expectedStrategyTotalDebt = 0;
