@@ -9,8 +9,7 @@ import { StargateAdapter } from "src/infra/multistrategy/adapters/StargateAdapte
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract StargateAdapterIntegration is AdapterIntegration {
     function setUp() public override {
@@ -34,7 +33,7 @@ contract StargateAdapterIntegration is AdapterIntegration {
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         vm.prank(users.keeper); adapter = new StargateAdapter(address(multistrategy), asset, harvestAddresses, siloAddresses, "", "");

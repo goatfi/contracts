@@ -32,7 +32,7 @@ contract GoatSwapper {
         _;
     }
 
-    /// @notice There is no swap data from  _fromToekn to _toToken
+    /// @notice There is no swap data from  _fromToken to _toToken
     /// @param fromToken Swap from Token
     /// @param toToken Swap to Token
     error NoSwapData(address fromToken, address toToken);
@@ -103,7 +103,7 @@ contract GoatSwapper {
 
     /// @notice Set swap info
     /// @param _fromTokens Swap from Token address array
-    /// @param _toTokens Swap to Token adddress array
+    /// @param _toTokens Swap to Token address array
     /// @param _swapInfos Swap infos 
     function setSwapInfos(address[] calldata _fromTokens, address[] calldata _toTokens, SwapInfo[] calldata _swapInfos) external onlyManager {
         uint256 tokenLength = _fromTokens.length;
@@ -148,7 +148,7 @@ contract GoatSwapper {
         keeper = _keeper;
     }
 
-    /// @notice Renouce the ownership of the deployer so only the manager has permissions
+    /// @notice Renounce the ownership of the deployer so only the manager has permissions
     function renounceDeployer() public onlyManager {
         deployer = address(0);
     }

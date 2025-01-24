@@ -57,7 +57,7 @@ contract RewardPoolInvariant is RevenueShareTestBase {
         vm.stopPrank();
     }
 
-    function invariant_totalStaked() public {
+    function invariant_totalStaked() public view {
         uint256 totalStaked;
         for (uint256 i = 0; i < handlerAmount; i++) {
             totalStaked += manager.stakedAmount(i);
@@ -67,7 +67,7 @@ contract RewardPoolInvariant is RevenueShareTestBase {
         assertEq(totalStaked, rewardPool.totalSupply());
     }
 
-    function invariant_rewardsCollected() public {
+    function invariant_rewardsCollected() public view {
         uint256 rewardsClaimed;
         for (uint256 i = 0; i < handlerAmount; i++) {
             rewardsClaimed += manager.rewardsClaimed(i);

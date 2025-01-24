@@ -5,8 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployAaveAdapter is Script {
     address constant AAVE_POOL = 0x794a61358D6845594F94dc1DB02A252b5b4814aD;

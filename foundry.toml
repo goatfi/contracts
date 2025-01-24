@@ -7,12 +7,9 @@ libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
 evm_version = "shanghai"
-gas_reports = ["GoatRewardPool", "GoatFeeBatch", "LayerZeroBridgeAdapter", "StrategyAdapter", "Multistrategy"]
 build_info = false
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "./"}]
-
-# Remappings in remappings.txt
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
@@ -35,6 +32,7 @@ quote_style = "double"
 goerli = { key = "${ETHERSCAN_API_KEY}" }
 arbitrum = { key = "${ARBISCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
 base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
+sonic = { key = "${SONICSCAN_API_KEY}",  url = "https://api.sonicscan.org/api", chain = 146 }
 
 [doc]
 out = "documentation"

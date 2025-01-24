@@ -58,11 +58,11 @@ contract XERC20AdminTest is XERC20TestBase {
         xGoa.burn(USER, 101_000 ether);
     }
 
-    function test_GetMintingMaxLimit() public {
+    function test_GetMintingMaxLimit() public view {
         assertEq(xGoa.mintingMaxLimitOf(BRIDGE), 100_000 ether);
     }
 
-    function test_GetBurningMaxLimit() public {
+    function test_GetBurningMaxLimit() public view {
         assertEq(xGoa.burningMaxLimitOf(BRIDGE), 100_000 ether);
     }
 

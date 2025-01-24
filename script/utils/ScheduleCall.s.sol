@@ -42,7 +42,7 @@ interface ITimelock {
 
 contract ScheduleCall is Script {
 
-    function run() public view {
+    function run() public pure {
         bytes memory data = abi.encodeWithSignature("addStrategy(address,uint256,uint256,uint256)",0x0F93c7F6B7ab1e8d9d7b2B17acB7AB79390975da,0,0,500000000000);
         console.logBytes(data);
     }

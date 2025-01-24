@@ -6,8 +6,7 @@ import { AdapterInvariantBase } from "./AdapterInvariantBase.t.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { AdapterHandler } from "./AdapterHandler.t.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
 import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
 

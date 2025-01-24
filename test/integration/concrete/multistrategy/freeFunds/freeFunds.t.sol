@@ -5,7 +5,7 @@ import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../..
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract FreeFunds_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
-    function test_FreeFunds_ZeroTotalAssets() external {
+    function test_FreeFunds_ZeroTotalAssets() external view {
         // Assert that free funds is zero when total Assets is zero
         uint256 actualFreeFunds = multistrategyHarness.freeFunds();
         uint256 expectedFreeFunds = 0;

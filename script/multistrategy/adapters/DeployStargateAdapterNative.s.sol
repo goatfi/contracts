@@ -6,8 +6,7 @@ import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {StargateAdapterNative} from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
 import {StrategyAdapterHarvestable} from "src/abstracts/StrategyAdapterHarvestable.sol";
-import {AssetsArbitrum} from "@addressbook/AssetsArbitrum.sol";
-import {ProtocolArbitrum} from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployStargateAdapterNative is Script {
     /////////////////////////////////////////////////////////
@@ -37,7 +36,7 @@ contract DeployStargateAdapterNative is Script {
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses =
         StrategyAdapterHarvestable.HarvestAddresses({
             swapper: swapper,
-            weth: weth
+            wrappedGas: weth
         });
 
     StargateAdapterNative.StargateAddresses stargateAddresses =

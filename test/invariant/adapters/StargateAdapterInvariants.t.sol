@@ -6,8 +6,7 @@ import { AdapterInvariantBase } from "./AdapterInvariantBase.t.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { AdapterHandler } from "./AdapterHandler.t.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { StargateAdapter } from "src/infra/multistrategy/adapters/StargateAdapter.sol";
@@ -34,7 +33,7 @@ contract StargateAdapterInvariants is AdapterInvariantBase {
     function createAdapter() public returns (StargateAdapter) {
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
-            weth: AssetsArbitrum.WETH
+            wrappedGas: AssetsArbitrum.WETH
         });
 
         StargateAdapter.StargateAddresses memory stargateAddresses = StargateAdapter.StargateAddresses({

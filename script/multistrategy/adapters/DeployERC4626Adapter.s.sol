@@ -5,8 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC4626Adapter } from "src/infra/multistrategy/adapters/ERC4626Adapter.sol";
-import { AssetsArbitrum } from "@addressbook/AssetsArbitrum.sol";
-import { ProtocolArbitrum } from "@addressbook/ProtocolArbitrum.sol";
+import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployERC4626Adapter is Script {
     address constant VAULT = 0x74E6AFeF5705BEb126C6d3Bf46f8fad8F3e07825;
