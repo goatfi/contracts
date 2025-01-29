@@ -35,3 +35,7 @@ interface ISiloRewards {
         uint256 amount
     ) external;
 }
+
+interface ISiloIncentivesController {
+    function claimRewards(address to) external;
+}
