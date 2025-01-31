@@ -21,7 +21,7 @@ contract DeploySiloV2Adapter is Script {
     address constant ASSET = AssetsSonic.USDCe;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address constant TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
-    string constant NAME = "Silo USDC.e Market ID-8";                            //FIXME:
+    string constant NAME = "Silo S/USDC.e ID-8";                            //FIXME:
     string constant ID = "SILO-V2";
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
