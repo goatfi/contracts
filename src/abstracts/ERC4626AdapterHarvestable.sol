@@ -48,7 +48,8 @@ abstract contract ERC4626AdapterHarvestable is StrategyAdapterHarvestable {
         uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return assetsSupplied + assetBalance - 1;
+        uint256 total = assetsSupplied + assetBalance;
+        return total > 0 ? total - 1 : total;
     }
 
     /// @inheritdoc StrategyAdapterHarvestable

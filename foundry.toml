@@ -17,7 +17,7 @@ fs_permissions = [{ access = "read", path = "./"}]
 runs = 2048
 
 [invariant]
-runs = 10
+runs = 20
 depth = 1000
 fail_on_revert = true
 

@@ -47,7 +47,8 @@ contract ERC4626Adapter is StrategyAdapter {
         uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return assetsSupplied + assetBalance;
+        uint256 total = assetsSupplied + assetBalance;
+        return total > 0 ? total - 1 : total;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
