@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GNU AGPLv3
-
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
+import { StrategyAdapterHarvestable } from "./StrategyAdapterHarvestable.sol";
+import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract ERC4626Adapter is StrategyAdapter {
+abstract contract ERC4626AdapterHarvestable is StrategyAdapterHarvestable {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -28,10 +28,11 @@ contract ERC4626Adapter is StrategyAdapter {
         address _multistrategy,
         address _asset,
         address _vault,
+        HarvestAddresses memory _harvestAddresses,
         string memory _name,
         string memory _id
     ) 
-        StrategyAdapter(_multistrategy, _asset,_name, _id)
+        StrategyAdapterHarvestable(_multistrategy, _asset, _harvestAddresses, _name, _id)
     {   
         vault = IERC4626(_vault);
         _giveAllowances();
@@ -49,6 +50,11 @@ contract ERC4626Adapter is StrategyAdapter {
 
         uint256 total = assetsSupplied + assetBalance;
         return total > 0 ? total - 1 : total;
+    }
+
+    /// @inheritdoc StrategyAdapterHarvestable
+    function _verifyRewardToken(address _token) internal view override {
+        require(_token != address(vault), Errors.InvalidRewardToken(_token));
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -79,10 +85,12 @@ contract ERC4626Adapter is StrategyAdapter {
     /// @notice Sets the maximum allowance of the base asset for the ERC4626 vault.
     function _giveAllowances() internal override {
         IERC20(asset).forceApprove(address(vault), type(uint).max);
+        IERC20(wrappedGas).forceApprove(swapper, type(uint).max);
     }
 
     /// @notice Revokes the allowance of the base asset for the ERC4626 vault.
     function _revokeAllowances() internal override {
         IERC20(asset).forceApprove(address(vault), 0);
+        IERC20(wrappedGas).forceApprove(swapper, 0);
     }
 }

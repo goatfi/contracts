@@ -13,6 +13,9 @@ interface IStrategyAdapterHarvestable {
     /// @param newSwapper The address of the new swapper contract.
     event SwapperUpdated(address newSwapper);
 
+    /// @notice Returns the amount of different reward tokens existent in the `rewards` array
+    function rewardsLength() external view returns (uint256);
+
     /// @notice Harvests rewards, swaps them to WETH, and then to the desired asset.
     /// @dev This function claims rewards, swaps them to WETH, and then converts WETH to the `want` token.
     function harvest() external;

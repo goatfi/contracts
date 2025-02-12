@@ -6,7 +6,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
-evm_version = "shanghai"
+evm_version = "cancun"
 build_info = false
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "./"}]
@@ -17,7 +17,7 @@ fs_permissions = [{ access = "read", path = "./"}]
 runs = 2048
 
 [invariant]
-runs = 10
+runs = 20
 depth = 1000
 fail_on_revert = true
 

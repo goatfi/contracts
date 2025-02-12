@@ -57,15 +57,24 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     }
 
     /*//////////////////////////////////////////////////////////////////////////
+                        USER FACING CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IStrategyAdapterHarvestable
+    function rewardsLength() external view returns (uint256) {
+        return rewards.length;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function harvest() external whenNotPaused {
         _claim();
-        _swapRewardsToWETH();
+        _swapRewardsToWrappedGas();
         if (IERC20(wrappedGas).balanceOf(address(this)) > minimumAmounts[wrappedGas]) {
-            _swapWETHToAsset();
+            _swapWrappedGasToAsset();
             uint256 assetsHarvested = IERC20(asset).balanceOf(address(this));
             _deposit();
             lastHarvest = block.timestamp;
@@ -113,9 +122,9 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Swaps all reward tokens to WETH.
+    /// @notice Swaps all reward tokens to Wrapped Gas.
     /// @dev This function checks if the balance of each reward token exceeds the minimum amount before swapping.
-    function _swapRewardsToWETH() internal virtual {
+    function _swapRewardsToWrappedGas() internal virtual {
         for (uint i; i < rewards.length; ++i) {
             address token = rewards[i];
             uint256 amount = IERC20(token).balanceOf(address(this));
@@ -125,8 +134,8 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
         }
     }
 
-    /// @notice Swaps WETH to `asset`.
-    function _swapWETHToAsset() internal virtual {
+    /// @notice Swaps Wrapped Gas to `asset`.
+    function _swapWrappedGasToAsset() internal virtual {
         if (asset != wrappedGas) _swap(wrappedGas, asset);
     }
 
