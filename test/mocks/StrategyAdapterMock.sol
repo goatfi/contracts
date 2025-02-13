@@ -3,11 +3,10 @@ pragma solidity ^0.8.20;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
-import { IStrategyAdapterMock } from "../shared/TestInterfaces.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract StrategyAdapterMock is StrategyAdapter, IStrategyAdapterMock {
+contract StrategyAdapterMock is StrategyAdapter {
     using SafeERC20 for IERC20;
 
     StakingMock staking;

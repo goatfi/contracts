@@ -2,22 +2,21 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetStrategyMinDebtDelta_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 minDebtDelta;
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
-
-        strategy = makeAddr("strategy");
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
-        multistrategy.setStrategyMinDebtDelta(strategy, minDebtDelta);
+        multistrategy.setStrategyMinDebtDelta(makeAddr("strategy"), minDebtDelta);
     }
 
     modifier whenCallerIsManager() {
@@ -26,12 +25,9 @@ contract SetStrategyMinDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
     }
 
     function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
-
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.setStrategyMinDebtDelta(strategy, minDebtDelta);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.setStrategyMinDebtDelta(makeAddr("strategy"), minDebtDelta);
     }
 
     /// @dev Add a mock strategy to the multistrategy
@@ -41,7 +37,7 @@ contract SetStrategyMinDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
         minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper); 
         _;
     }
@@ -56,7 +52,7 @@ contract SetStrategyMinDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
 
         // Expect it to revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidDebtDelta.selector));
-        multistrategy.setStrategyMinDebtDelta(strategy, minDebtDelta);
+        multistrategy.setStrategyMinDebtDelta(address(strategy), minDebtDelta);
     }
 
     // Le = lower or equal
@@ -73,11 +69,11 @@ contract SetStrategyMinDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
         whenMinDebtDeltaLeMaxDebtDelta
     {
         vm.expectEmit({ emitter: address(multistrategy) });
-        emit StrategyMinDebtDeltaSet(strategy, minDebtDelta);
+        emit StrategyMinDebtDeltaSet(address(strategy), minDebtDelta);
 
-        multistrategy.setStrategyMinDebtDelta(strategy, minDebtDelta);
+        multistrategy.setStrategyMinDebtDelta(address(strategy), minDebtDelta);
 
-        uint256 actualStrategyMinDebtDelta = multistrategy.getStrategyParameters(strategy).minDebtDelta;
+        uint256 actualStrategyMinDebtDelta = multistrategy.getStrategyParameters(address(strategy)).minDebtDelta;
         uint256 expectedStrategyMinDebtDelta = minDebtDelta;
         assertEq(actualStrategyMinDebtDelta, expectedStrategyMinDebtDelta, "setMinDebtDelta"); 
     }

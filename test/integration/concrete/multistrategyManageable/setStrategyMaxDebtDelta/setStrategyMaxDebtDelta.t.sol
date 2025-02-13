@@ -2,22 +2,21 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 maxDebtDelta;
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
-
-        strategy = makeAddr("strategy");
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
-        multistrategy.setStrategyMaxDebtDelta(strategy, maxDebtDelta);
+        multistrategy.setStrategyMaxDebtDelta(makeAddr("strategy"), maxDebtDelta);
     }
 
     modifier whenCallerIsManager() {
@@ -26,12 +25,10 @@ contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
     }
 
     function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
 
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.setStrategyMaxDebtDelta(strategy, maxDebtDelta);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.setStrategyMaxDebtDelta(makeAddr("strategy"), maxDebtDelta);
     }
 
     /// @dev Add a mock strategy to the multistrategy
@@ -41,7 +38,7 @@ contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
         uint256 minDebtDelta = 100 ether;
         maxDebtDelta = 100_000 ether;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
         _;
     }
@@ -56,7 +53,7 @@ contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
 
         // Expect it to revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidDebtDelta.selector));
-        multistrategy.setStrategyMaxDebtDelta(strategy, maxDebtDelta);
+        multistrategy.setStrategyMaxDebtDelta(address(strategy), maxDebtDelta);
     }
 
     // Ge = greater or equal
@@ -73,11 +70,11 @@ contract SetStrategyMaxDebtDelta_Integration_Concrete_Test is Multistrategy_Inte
         whenMaxDebtDeltaGeMinDebtDelta
     {
         vm.expectEmit({ emitter: address(multistrategy) });
-        emit StrategyMaxDebtDeltaSet(strategy, maxDebtDelta);
+        emit StrategyMaxDebtDeltaSet(address(strategy), maxDebtDelta);
 
-        multistrategy.setStrategyMaxDebtDelta(strategy, maxDebtDelta);
+        multistrategy.setStrategyMaxDebtDelta(address(strategy), maxDebtDelta);
 
-        uint256 actualStrategyMaxDebtDelta = multistrategy.getStrategyParameters(strategy).maxDebtDelta;
+        uint256 actualStrategyMaxDebtDelta = multistrategy.getStrategyParameters(address(strategy)).maxDebtDelta;
         uint256 expectedStrategyMaxDebtDelta = maxDebtDelta;
         assertEq(actualStrategyMaxDebtDelta, expectedStrategyMaxDebtDelta, "setMaxDebtDelta"); 
     }

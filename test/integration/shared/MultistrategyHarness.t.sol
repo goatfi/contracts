@@ -3,7 +3,7 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IStrategyAdapterMock } from "../../shared/TestInterfaces.sol";
+import { StrategyAdapterMock } from "../../mocks/StrategyAdapterMock.sol";
 import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
 
 contract MultistrategyHarness_Integration_Shared_Test is Base_Test {
@@ -19,12 +19,12 @@ contract MultistrategyHarness_Integration_Shared_Test is Base_Test {
         asset = IERC20Mock(IERC4626(address(multistrategyHarness)).asset());
     }
 
-    function triggerStrategyGain(address _strategy, uint256 _amount) internal {
-        IStrategyAdapterMock(_strategy).earn(_amount);
+    function triggerStrategyGain(StrategyAdapterMock _strategy, uint256 _amount) internal {
+        _strategy.earn(_amount);
     }
 
-    function triggerStrategyLoss(address _strategy, uint256 _amount) internal {
-        IStrategyAdapterMock(_strategy).lose(_amount);
+    function triggerStrategyLoss(StrategyAdapterMock _strategy, uint256 _amount) internal {
+        _strategy.lose(_amount);
     }
 
     function triggerUserDeposit(address _user, uint256 _amount) internal {

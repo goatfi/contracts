@@ -2,22 +2,21 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 debtRatio;
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
-
-        strategy = makeAddr("strategy");
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
-        multistrategy.setStrategyDebtRatio(strategy, debtRatio);
+        multistrategy.setStrategyDebtRatio(makeAddr("strategy"), debtRatio);
     }
 
     modifier whenCallerIsManager() {
@@ -26,12 +25,9 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
     }
 
     function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
-
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.setStrategyDebtRatio(strategy, debtRatio);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.setStrategyDebtRatio(makeAddr("strategy"), debtRatio);
     }
 
     /// @dev Add a mock strategy to the multistrategy
@@ -41,7 +37,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
         _;
     }
@@ -55,7 +51,7 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
         debtRatio = 11_000;
 
         vm.expectRevert(abi.encodeWithSelector(Errors.DebtRatioAboveMaximum.selector, debtRatio));
-        multistrategy.setStrategyDebtRatio(strategy, debtRatio);
+        multistrategy.setStrategyDebtRatio(address(strategy), debtRatio);
     }
 
     modifier whenDebtRatioBelowMaximum() {
@@ -72,12 +68,12 @@ contract SetStrategyDebtRatio_Integration_Concrete_Test is Multistrategy_Integra
     {   
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy) });
-        emit StrategyDebtRatioSet(strategy, debtRatio);
+        emit StrategyDebtRatioSet(address(strategy), debtRatio);
 
-        multistrategy.setStrategyDebtRatio(strategy, debtRatio);
+        multistrategy.setStrategyDebtRatio(address(strategy), debtRatio);
 
         // Assert the strategy debt ratio has been set
-        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(strategy).debtRatio;
+        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(address(strategy)).debtRatio;
         uint256 expectedStrategyDebtRatio = debtRatio;
         assertEq(actualStrategyDebtRatio, expectedStrategyDebtRatio, "setStrategyDebtRatio strategy debt ratio");
 

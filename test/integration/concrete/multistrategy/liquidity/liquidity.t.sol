@@ -2,7 +2,7 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, MultistrategyHarness_Integration_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 
 contract Liquidity_Integration_Concrete_Test is MultistrategyHarness_Integration_Shared_Test {
     uint256 depositAmount = 1000 ether;
@@ -17,9 +17,9 @@ contract Liquidity_Integration_Concrete_Test is MultistrategyHarness_Integration
 
     modifier whenActiveCredit() {
         triggerUserDeposit(users.bob, depositAmount);
-        address strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
-        multistrategyHarness.addStrategy(strategy, 6_000, 0, 100_000 ether);
-        IStrategyAdapter(strategy).requestCredit();
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
+        multistrategyHarness.addStrategy(address(strategy), 6_000, 0, 100_000 ether);
+        strategy.requestCredit();
         _;
     }
 

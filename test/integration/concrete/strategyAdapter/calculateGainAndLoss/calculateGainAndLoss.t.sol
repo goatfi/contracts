@@ -5,7 +5,6 @@ pragma solidity >=0.8.20 <0.9.0;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 
 contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_Test {
 
@@ -15,14 +14,14 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
     function test_CalculateGainAndLoss_CurrentAssetsZero_TotalDebtZero()
         external view
     {
-        (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (0, 0);
         assertEq(actualGain, expectedGain);
         assertEq(actualLoss, expectedLoss);
     }
 
     modifier whenTotalDebtNotZero() {
-        requestCredit(address(strategy), 1000 * 10 ** decimals);
+        requestCredit(strategy, 1000 * 10 ** decimals);
         _;
     }
 
@@ -32,7 +31,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
     {
         totalDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
 
-        (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (0, totalDebt);
         assertEq(actualGain, expectedGain);
         assertEq(actualLoss, expectedLoss);
@@ -47,7 +46,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
         external
         whenCurrentAssetsNotZero
     {
-        (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (currentAssets, 0);
         assertEq(actualGain, expectedGain);
         assertEq(actualLoss, expectedLoss);
@@ -61,7 +60,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
         currentAssets = 1100 * 10 ** decimals;
         totalDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
 
-        (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (currentAssets - totalDebt, 0);
         assertEq(actualGain, expectedGain);
         assertEq(actualLoss, expectedLoss);
@@ -75,7 +74,7 @@ contract CalculateGainAndLoss_Integration_Concrete_Test is StrategyAdapter_Integ
         currentAssets = 900 * 10 ** decimals;
         totalDebt = multistrategy.getStrategyParameters(address(strategy)).totalDebt;
 
-        (uint256 actualGain, uint256 actualLoss) = IStrategyAdapterMock(address(strategy)).calculateGainAndLoss(currentAssets);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLoss(currentAssets);
         (uint256 expectedGain, uint256 expectedLoss) = (0, totalDebt - currentAssets);
         assertEq(actualGain, expectedGain);
         assertEq(actualLoss, expectedLoss);

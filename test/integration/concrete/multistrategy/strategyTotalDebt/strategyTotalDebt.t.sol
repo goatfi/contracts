@@ -3,10 +3,10 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 
 contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    address strategy;
+    StrategyAdapterMock strategy;
     uint8 decimals;
 
     function setUp() public virtual override {
@@ -28,14 +28,14 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
 
     function test_StrategyTotalDebt_NoActiveStrategy() external whenNotZeroAddress {
         // Assert that a not active strategy has 0 debt
-        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(strategy);
+        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(address(strategy));
         uint256 expectedStrategyTotalDebt = 0;
         assertEq(actualStrategyTotalDebt, expectedStrategyTotalDebt, "strategyTotalDebt");
     }
 
     modifier whenActiveStrategy() {
         // Add the strategy to the multistrategy
-        multistrategy.addStrategy(strategy, 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy), 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
         _;
     }
 
@@ -45,7 +45,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
         whenActiveStrategy
     {
         // Assert debt is 0 as the strategy hasn't requested any credit
-        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(strategy);
+        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(address(strategy));
         uint256 expectedStrategyTotalDebt = 0;
         assertEq(actualStrategyTotalDebt, expectedStrategyTotalDebt, "strategyTotalDebt");
     }
@@ -55,7 +55,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
         triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
 
         // Request the credit from the strategy
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
         _;
     }
 
@@ -69,7 +69,7 @@ contract StrategyTotalDebt_Integration_Concrete_Test is Multistrategy_Integratio
         uint256 creditRequested = 500 * 10 ** decimals;
 
         // Assert the strategy total debt is the same as the credit requested
-        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(strategy);
+        uint256 actualStrategyTotalDebt = multistrategy.strategyTotalDebt(address(strategy));
         uint256 expectedStrategyTotalDebt = creditRequested;
         assertEq(actualStrategyTotalDebt, expectedStrategyTotalDebt, "strategyTotalDebt");
     }

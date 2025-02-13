@@ -4,7 +4,6 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
@@ -69,7 +68,7 @@ contract RequestCredit_Integration_Concrete_Test is StrategyAdapter_Integration_
         assertEq(actualTotalAssets, expectedTotalAssets, "requestCredit, totalAssets");
 
         // Assert the credit has been deposited into the underlying strategy
-        uint256 actualStrategyAssets = IStrategyAdapterMock(address(strategy)).stakingBalance();
+        uint256 actualStrategyAssets = strategy.stakingBalance();
         uint256 expectedStrategyAssets = 1000 * 10 ** decimals;
         assertEq(actualStrategyAssets, expectedStrategyAssets, "requestCredit, strategy assets");
     }

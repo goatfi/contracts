@@ -3,6 +3,7 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -22,7 +23,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, users.bob));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenCallerIsOwner() {
@@ -37,8 +38,8 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         
         // Deploy 10 strategies, each with 10% debt ratio
         for (uint256 i = 0; i < 10; i++) {
-            address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-            multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+            StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+            multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         }
         _;
     }
@@ -48,11 +49,11 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenCallerIsOwner
         whenActiveStrategiesAtMaximum
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.MaximumAmountStrategies.selector));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenActiveStrategiesBelowMaximum() {
@@ -68,7 +69,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, strategy));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenNotZeroAddress() {
@@ -85,7 +86,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAddress.selector, strategy));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenNotMultistrategyAddress() {
@@ -100,13 +101,13 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenNotZeroAddress
         whenNotMultistrategyAddress
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         // We add the strategy
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.StrategyAlreadyActive.selector, strategy));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenStrategyIsInactive() {
@@ -136,7 +137,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         });
         
         // Deploy a mock strategy for the usdt multistrategy
-        address strategy = deployMockStrategyAdapter(address(usdtMultistrategy), IERC4626(address(usdtMultistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(usdtMultistrategy), IERC4626(address(usdtMultistrategy)).asset());
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(
@@ -144,7 +145,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
             IERC4626(address(multistrategy)).asset(), 
             IERC4626(address(usdtMultistrategy)).asset()
         ));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     modifier whenAssetMatch() {
@@ -160,13 +161,13 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenStrategyIsInactive
         whenAssetMatch
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         minDebtDelta = 200_000 ether;
         maxDebtDelta = 100_000 ether;
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidDebtDelta.selector));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     /// @dev Le = Lower or Equal
@@ -184,13 +185,13 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         // 110% debt ratio
         debtRatio = 11_000;
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.DebtRatioAboveMaximum.selector, debtRatio));
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
     }
 
     /// @dev Le = Lower or Equal
@@ -208,16 +209,16 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         whenAssetMatch
         whenMinDebtDeltaLeMaxDebtDelta
     {
-        address strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
+        StrategyAdapterMock strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
 
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy) });
-        emit StrategyAdded(strategy);
+        emit StrategyAdded(address(strategy));
 
-        multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
 
         // Assert than the strategy has been added correctly
-        MStrat.StrategyParams memory actualStrategyParams = multistrategy.getStrategyParameters(strategy);
+        MStrat.StrategyParams memory actualStrategyParams = multistrategy.getStrategyParameters(address(strategy));
         MStrat.StrategyParams memory expectedStrategyParams = MStrat.StrategyParams({
             activation: block.timestamp,
             debtRatio: debtRatio,
@@ -236,7 +237,7 @@ contract AddStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shar
         uint256 expectedActiveStrategies = 1;
 
         address actualAddressAtWithdrawOrderPos0 = multistrategy.getWithdrawOrder()[0];
-        address expectedAddressAtWithdrawOrderPos0 = strategy;
+        address expectedAddressAtWithdrawOrderPos0 = address(strategy);
         
         // Assert strategy params
         assertEq(actualStrategyParams.activation, expectedStrategyParams.activation, "addStrategy Params activation");

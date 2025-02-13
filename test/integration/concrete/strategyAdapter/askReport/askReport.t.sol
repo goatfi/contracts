@@ -5,7 +5,7 @@ pragma solidity >=0.8.20 <0.9.0;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -46,13 +46,13 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         strategy.setSlippageLimit(1_000);
 
         // Set the staking slippage to be 15%
-        IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
+        strategy.setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
 
         // Earn some tokens so we can test the slippage when withdrawing the gain
-        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
+        (strategy).earn(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
 
@@ -71,14 +71,14 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         whenContractNotPaused
         whenSlippageLimitRespected
     {
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
-        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
+        strategy.earn(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
         strategy.askReport();
 
         // Assert the gain gets withdrawn from the underlying strategy
-        uint256 actualUnderlyingStrategyBalance = IStrategyAdapterMock(address(strategy)).stakingBalance();
+        uint256 actualUnderlyingStrategyBalance = strategy.stakingBalance();
         uint256 expectedUnderlyingStrategyBalance = 1000 * 10 ** decimals;
         assertEq(actualUnderlyingStrategyBalance, expectedUnderlyingStrategyBalance, "askReport, underlying strategy balance");
 
@@ -99,8 +99,8 @@ contract AskReport_Integration_Concrete_Test is StrategyAdapter_Integration_Shar
         whenContractNotPaused
         whenSlippageLimitRespected
     {
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
-        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
+        strategy.lose(100 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
         strategy.askReport();

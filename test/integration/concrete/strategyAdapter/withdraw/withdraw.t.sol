@@ -4,7 +4,6 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -45,10 +44,10 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         strategy.setSlippageLimit(1_000);
 
         // Set the staking slippage to be 15%
-        IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
+        strategy.setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
 
         swapCaller(address(multistrategy));
 
@@ -71,10 +70,10 @@ contract Withdraw_Integration_Concrete_Test is StrategyAdapter_Integration_Share
         strategy.setSlippageLimit(100);
 
         // Set the staking slippage to be 0.5%
-        IStrategyAdapterMock(address(strategy)).setStakingSlippage(50);
+        strategy.setStakingSlippage(50);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
 
         // Make a withdraw
         swapCaller(address(multistrategy));

@@ -6,7 +6,7 @@ import { StrategyAdapter_Integration_Shared_Test } from "../../../shared/Strateg
 import { IStrategyAdapterAdminable } from "interfaces/infra/multistrategy/IStrategyAdapterAdminable.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IStrategyAdapterMock, IPausable } from "../../../../shared/TestInterfaces.sol";
+import { IPausable } from "../../../../shared/TestInterfaces.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract Unpause_Integration_Concrete_Test is StrategyAdapter_Integration_Shared_Test {
@@ -53,7 +53,7 @@ contract Unpause_Integration_Concrete_Test is StrategyAdapter_Integration_Shared
         assertEq(actualStrategyPaused, expectedStrategyPaused, "pause");
 
         // Assert contract allowances are set
-        address stakingContract = IStrategyAdapterMock(address(strategy)).stakingContract();
+        address stakingContract = strategy.stakingContract();
         uint256 actualAssetAllowances = IERC20(strategy.asset()).allowance(address(strategy), stakingContract);
         uint256 expectedAssetAllowance = type(uint256).max;
         assertEq(actualAssetAllowances, expectedAssetAllowance, "unpause");
