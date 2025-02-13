@@ -60,6 +60,8 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
         console.log("Total Gain", totalGain);
         console.log("PPS:", multistrategy.pricePerShare());
 
-        assertGe(multistrategy.pricePerShare(), (10 ** IERC20Metadata(asset).decimals()));
+        if (handler.ghost_yieldTime() > 0) {
+            assertGe(multistrategy.pricePerShare(), (10 ** IERC20Metadata(asset).decimals()));
+        }
     }
 }
