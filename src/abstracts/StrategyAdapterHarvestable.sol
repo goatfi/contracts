@@ -27,7 +27,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
     address internal wrappedGas;
 
     /// @notice The address of the swapper contract used to swap reward tokens.
-    address swapper;
+    address internal swapper;
 
     /// @notice A mapping of minimum amounts for each reward token before it can be swapped.
     /// @dev The key is the reward token address, and the value is the minimum amount required for swapping.
@@ -71,6 +71,8 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function harvest() external whenNotPaused {
+        require(rewards.length > 0, Errors.NoRewards());
+
         _claim();
         _swapRewardsToWrappedGas();
         if (IERC20(wrappedGas).balanceOf(address(this)) > minimumAmounts[wrappedGas]) {
@@ -129,7 +131,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
             address token = rewards[i];
             uint256 amount = IERC20(token).balanceOf(address(this));
             if (amount > minimumAmounts[token]) {
-                IGoatSwapper(swapper).swap(token, wrappedGas, amount);
+                _swap(token, wrappedGas);
             }
         }
     }

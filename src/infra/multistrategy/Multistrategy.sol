@@ -508,6 +508,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
         uint256 feesCollected = 0;
         if(_loss > 0) _reportLoss(msg.sender, _loss);
         if(_gain > 0) {
+            strategies[msg.sender].totalGain += _gain;
             feesCollected = _gain.mulDiv(performanceFee, MAX_BPS);
             profit = _gain - feesCollected;
         } 
