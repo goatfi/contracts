@@ -71,8 +71,6 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
 
     /// @inheritdoc IStrategyAdapterHarvestable
     function harvest() external whenNotPaused {
-        require(rewards.length > 0, Errors.NoRewards());
-
         _claim();
         _swapRewardsToWrappedGas();
         if (IERC20(wrappedGas).balanceOf(address(this)) > minimumAmounts[wrappedGas]) {
