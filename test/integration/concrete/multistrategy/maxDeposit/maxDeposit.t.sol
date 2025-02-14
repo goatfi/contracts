@@ -3,7 +3,6 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test} from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IStrategyAdapter} from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract MaxDeposit_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
     uint8 decimals;

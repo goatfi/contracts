@@ -44,8 +44,21 @@ contract SiloV2Adapter is ERC4626AdapterHarvestable {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Claims the rewards.
+    /// @notice Claims the rewards from the incentives controller.
     function _claim() internal override {
-        incentivesController.claimRewards(address(this));
+        if(address(incentivesController) != address(0)) {
+            incentivesController.claimRewards(address(this));
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                            EXTERNAL NON-CONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Sets a new incentives controller contract.
+    /// @dev Only callable by the contract owner.
+    /// @param _incentivesController The address of the new incentives controller.
+    function setIncentivesController(address _incentivesController) external onlyOwner {
+        incentivesController = ISiloIncentivesController(_incentivesController);
     }
 }

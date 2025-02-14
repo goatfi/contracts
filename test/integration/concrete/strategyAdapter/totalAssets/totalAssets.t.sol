@@ -14,7 +14,7 @@ contract TotalAssets_Integration_Concrete_Test is StrategyAdapter_Integration_Sh
     }
 
     modifier whenCreditRequested() {
-        requestCredit(address(strategy), 1000 * 10 ** decimals);
+        requestCredit(strategy, 1000 * 10 ** decimals);
         _;
     }
 

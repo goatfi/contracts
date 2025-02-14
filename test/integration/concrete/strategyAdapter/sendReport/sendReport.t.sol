@@ -5,7 +5,6 @@ pragma solidity >=0.8.20 <0.9.0;
 import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -45,10 +44,10 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         whenContractNotPaused
     {
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
 
         // Make a loss
-        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
+        strategy.lose(100 * 10 ** decimals);
 
         // Set the strategy debt ratio to 0, se we can repay the debt
         multistrategy.setStrategyDebtRatio(address(strategy), 0);
@@ -69,10 +68,10 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         strategy.setSlippageLimit(1_000);
 
         // Set the staking slippage to be 15%
-        IStrategyAdapterMock(address(strategy)).setStakingSlippage(1_500);
+        strategy.setStakingSlippage(1_500);
 
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
 
         // Set the strategy debt ratio to 0, se we can repay the debt
         multistrategy.setStrategyDebtRatio(address(strategy), 0);
@@ -86,9 +85,9 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
         // Set the slippage limit of the strategy to 0%
         strategy.setSlippageLimit(0);
         // Set the staking slippage to be 0%
-        IStrategyAdapterMock(address(strategy)).setStakingSlippage(0);
+        strategy.setStakingSlippage(0);
         // Request a credit from the multistrategy
-        requestCredit(address(strategy), 1_000 * 10 ** decimals);
+        requestCredit(strategy, 1_000 * 10 ** decimals);
         _;
     }
 
@@ -98,13 +97,13 @@ contract SendReport_Integration_Concrete_Test is StrategyAdapter_Integration_Sha
 
     modifier whenStrategyMadeGain() {
         // Makes a 100 ether gain (10%)
-        IStrategyAdapterMock(address(strategy)).earn(100 * 10 ** decimals);
+        strategy.earn(100 * 10 ** decimals);
         _;
     }
 
     modifier whenStrategyMadeLoss() {
         // Makes a 100 ether loss (-10%)
-        IStrategyAdapterMock(address(strategy)).lose(100 * 10 ** decimals);
+        strategy.lose(100 * 10 ** decimals);
         _;
     }
 

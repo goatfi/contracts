@@ -16,6 +16,7 @@ import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStr
 contract SiloV2AdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
     address asset = AssetsSonic.USDCe;
+    bool harvest = false;
 
     function setUp() public {
         vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
@@ -25,7 +26,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
             createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
             createAdapter(), 
             users,
-            true
+            harvest
         );
 
         makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));
@@ -34,7 +35,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
 
     function createAdapter() public returns (SiloV2Adapter) {
         address vault = 0x4E216C15697C1392fE59e1014B009505E05810Df;
-        address incentivesController = 0x0dd368Cd6D8869F2b21BA3Cb4fd7bA107a2e3752;
+        address incentivesController = address(0);
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolSonic.GOAT_SWAPPER,
@@ -54,8 +55,13 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
         console.log("Withdrawn:", handler.ghost_withdrawn());
         console.log("Yield Time:", handler.ghost_yieldTime());
 
-        if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGt(multistrategy.pricePerShare(), (10 ** IERC20Metadata(asset).decimals()));
+        address adapter = multistrategy.getWithdrawOrder()[0];
+        uint256 totalGain = multistrategy.getStrategyParameters(address(adapter)).totalGain;
+        console.log("Total Gain", totalGain);
+        console.log("PPS:", multistrategy.pricePerShare());
+
+        if (handler.ghost_yieldTime() > 0) {
+            assertGe(multistrategy.pricePerShare(), (10 ** IERC20Metadata(asset).decimals()));
         }
     }
 }

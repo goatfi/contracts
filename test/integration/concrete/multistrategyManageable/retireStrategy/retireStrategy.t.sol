@@ -2,21 +2,20 @@
 pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
 
-    address strategy;
+    StrategyAdapterMock strategy;
 
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
-
-        strategy = makeAddr("strategy");
         
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
-        multistrategy.retireStrategy(strategy);
+        multistrategy.retireStrategy(makeAddr("strategy"));
     }
 
     modifier whenCallerIsManager() {
@@ -25,12 +24,9 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     }
 
     function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
-
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.retireStrategy(strategy);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.retireStrategy(makeAddr("strategy"));
     }
 
     /// @dev Add a mock strategy to the multistrategy
@@ -40,7 +36,7 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 minDebtDelta = 100 ether;
         uint256 maxDebtDelta = 100_000 ether;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
         _;
     }
@@ -52,22 +48,22 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy)});
-        emit StrategyRetired(strategy);
+        emit StrategyRetired(address(strategy));
 
         // Retire the strategy
-        multistrategy.retireStrategy(strategy);
+        multistrategy.retireStrategy(address(strategy));
 
         uint256 actualMultistrategyDebtRatio = multistrategy.debtRatio();
         uint256 expectedMultistrategyDebtRatio = 0;
         assertEq(actualMultistrategyDebtRatio, expectedMultistrategyDebtRatio, "retire strategy multistrategy debt ratio");
 
-        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(strategy).debtRatio;
+        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(address(strategy)).debtRatio;
         uint256 expectedStrategyDebtRatio = 0;
         assertEq(actualStrategyDebtRatio, expectedStrategyDebtRatio, "retire strategy strategy debt ratio");
     }
 
     modifier whenStrategyIsRetired() {
-        multistrategy.retireStrategy(strategy);
+        multistrategy.retireStrategy(address(strategy));
         _;
     }
 
@@ -83,16 +79,16 @@ contract RetireStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy)});
-        emit StrategyRetired(strategy);
+        emit StrategyRetired(address(strategy));
 
         // Retire the strategy
-        multistrategy.retireStrategy(strategy);
+        multistrategy.retireStrategy(address(strategy));
 
         uint256 actualMultistrategyDebtRatio = multistrategy.debtRatio();
         uint256 expectedMultistrategyDebtRatio = 0;
         assertEq(actualMultistrategyDebtRatio, expectedMultistrategyDebtRatio, "retire strategy multistrategy debt ratio");
 
-        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(strategy).debtRatio;
+        uint256 actualStrategyDebtRatio = multistrategy.getStrategyParameters(address(strategy)).debtRatio;
         uint256 expectedStrategyDebtRatio = 0;
         assertEq(actualStrategyDebtRatio, expectedStrategyDebtRatio, "retire strategy strategy debt ratio");
     }

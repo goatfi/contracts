@@ -3,12 +3,12 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    address strategy;
-    address strategy_two;
+    StrategyAdapterMock strategy;
+    StrategyAdapterMock strategy_two;
     uint8 decimals;
 
     function setUp() public virtual override {
@@ -19,12 +19,9 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     function test_RevertWhen_CallerNotManager() external {
         // Change caller to bob
         swapCaller(users.bob);
-
-        strategy = makeAddr("strategy");
-        
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.CallerNotManager.selector, users.bob));
-        multistrategy.removeStrategy(strategy);
+        multistrategy.removeStrategy(makeAddr("strategy"));
     }
 
     modifier whenCallerIsManager() {
@@ -33,12 +30,9 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     }
 
     function test_RevertWhen_StrategyIsNotActive() external whenCallerIsManager {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
-
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.removeStrategy(strategy);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.removeStrategy(makeAddr("strategy"));
     }
 
     /// @dev Add a mock strategy to the multistrategy
@@ -48,7 +42,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 minDebtDelta = 100 * 10 ** decimals;
         uint256 maxDebtDelta = 100_000 * 10 ** decimals;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
         _;
     }
@@ -60,18 +54,18 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect a revert when trying to remove the strategy from the withdraw order
         vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotRetired.selector));
-        multistrategy.removeStrategy(strategy);
+        multistrategy.removeStrategy(address(strategy));
     }
 
     modifier whenStrategyDebtGreaterThanZero() {
         triggerUserDeposit(users.bob, 1000 * 10 ** decimals);
         swapCaller(users.keeper);
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
         _;
     }
 
     modifier whenDebtRatioIsZero() {
-        multistrategy.retireStrategy(strategy);
+        multistrategy.retireStrategy(address(strategy));
         _;
     }
 
@@ -84,7 +78,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect a revert when trying to remove the strategy from the withdraw order
         vm.expectRevert(abi.encodeWithSelector(Errors.StrategyWithOutstandingDebt.selector));
-        multistrategy.removeStrategy(strategy);
+        multistrategy.removeStrategy(address(strategy));
     }
 
     modifier whenStrategyHasNoDebt() {
@@ -98,12 +92,9 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         whenDebtRatioIsZero
         whenStrategyHasNoDebt
     {
-        // Create address for a strategy that wont be activated
-        strategy = makeAddr("strategy");
-
         // Expect Revert
-        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, strategy));
-        multistrategy.removeStrategy(strategy);
+        vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotActive.selector, makeAddr("strategy")));
+        multistrategy.removeStrategy(makeAddr("strategy"));
     }
 
     modifier whenStrategyIsInWithdrawOrder() {
@@ -120,10 +111,10 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy)});
-        emit StrategyRemoved(strategy);
+        emit StrategyRemoved(address(strategy));
 
         // Remove the strategy from withdraw order
-        multistrategy.removeStrategy(strategy);
+        multistrategy.removeStrategy(address(strategy));
     
         bool isInWithdrawOrder;
         bool expectedInWithdrawOrder = false;
@@ -131,7 +122,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         // Check if the strategy is in the withdraw order array
         address[] memory actualWithdrawOrder = multistrategy.getWithdrawOrder();
         for(uint256 i = 0; i < actualWithdrawOrder.length; ++i) {
-            if(actualWithdrawOrder[i] == strategy) {
+            if(actualWithdrawOrder[i] == address(strategy)) {
                 isInWithdrawOrder = true;
             }
         }
@@ -152,9 +143,9 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         uint256 minDebtDelta = 100 * 10 ** decimals;
         uint256 maxDebtDelta = 100_000 * 10 ** decimals;
 
-        swapCaller(users.owner); multistrategy.addStrategy(strategy_two, debtRatio, minDebtDelta, maxDebtDelta);
+        swapCaller(users.owner); multistrategy.addStrategy(address(strategy_two), debtRatio, minDebtDelta, maxDebtDelta);
         swapCaller(users.keeper);
-        multistrategy.retireStrategy(strategy_two);
+        multistrategy.retireStrategy(address(strategy_two));
         _;
     }
 
@@ -169,10 +160,10 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
     {
         // Expect the relevant event
         vm.expectEmit({ emitter: address(multistrategy)});
-        emit StrategyRemoved(strategy_two);
+        emit StrategyRemoved(address(strategy_two));
 
         // Remove the strategy from withdraw order
-        multistrategy.removeStrategy(strategy_two);
+        multistrategy.removeStrategy(address(strategy_two));
     
         bool isInWithdrawOrder;
         bool expectedInWithdrawOrder = false;
@@ -180,7 +171,7 @@ contract RemoveStrategy_Integration_Concrete_Test is Multistrategy_Integration_S
         // Check if the strategy is in the withdraw order array
         address[] memory actualWithdrawOrder = multistrategy.getWithdrawOrder();
         for(uint256 i = 0; i < actualWithdrawOrder.length; ++i) {
-            if(actualWithdrawOrder[i] == strategy_two) {
+            if(actualWithdrawOrder[i] == address(strategy_two)) {
                 isInWithdrawOrder = true;
             }
         }

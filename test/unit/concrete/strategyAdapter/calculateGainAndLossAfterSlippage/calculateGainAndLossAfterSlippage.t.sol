@@ -4,7 +4,6 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { StrategyAdapter_Unit_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 
 contract CalculateGainAndLossAfterSlippage_Unit_Concrete_Test is StrategyAdapter_Unit_Shared_Test {
     uint256 gain;
@@ -20,8 +19,7 @@ contract CalculateGainAndLossAfterSlippage_Unit_Concrete_Test is StrategyAdapter
         withdrawn = 1000;
         toBeWithdrawn = 1000;
 
-        (uint256 actualGain, uint256 actualLoss) = 
-            IStrategyAdapterMock(address(strategy)).calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
         (uint256 expectedGain, uint256 expectedLoss) = (gain, loss);
         assertEq(actualGain, expectedGain, "gain");
         assertEq(actualLoss, expectedLoss, "loss");
@@ -40,8 +38,7 @@ contract CalculateGainAndLossAfterSlippage_Unit_Concrete_Test is StrategyAdapter
         withdrawn = 800;
         toBeWithdrawn = 1000;
 
-        (uint256 actualGain, uint256 actualLoss) = 
-            IStrategyAdapterMock(address(strategy)).calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
         (uint256 expectedGain, uint256 expectedLoss) = (0, 100);
         assertEq(actualGain, expectedGain, "gain");
         assertEq(actualLoss, expectedLoss, "loss");
@@ -61,8 +58,7 @@ contract CalculateGainAndLossAfterSlippage_Unit_Concrete_Test is StrategyAdapter
         withdrawn = 950;
         toBeWithdrawn = 1000;
 
-        (uint256 actualGain, uint256 actualLoss) = 
-            IStrategyAdapterMock(address(strategy)).calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
+        (uint256 actualGain, uint256 actualLoss) = strategy.calculateGainAndLossAfterSlippage(gain, loss, withdrawn, toBeWithdrawn);
         (uint256 expectedGain, uint256 expectedLoss) = (50, 0);
         assertEq(actualGain, expectedGain, "gain");
         assertEq(actualLoss, expectedLoss, "loss");

@@ -5,7 +5,6 @@ pragma solidity >=0.8.20 <0.9.0;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { IERC4626, StrategyAdapter_Integration_Shared_Test } from "../../../shared/StrategyAdapter.t.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -39,14 +38,14 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
     }
 
     modifier whenGain(uint256 _amount) {
-        requestCredit(address(strategy), 1000 * 10 ** decimals);
-        IStrategyAdapterMock(address(strategy)).earn(_amount);
+        requestCredit(strategy, 1000 * 10 ** decimals);
+        strategy.earn(_amount);
         _;
     }
 
     modifier whenLoss(uint256 _amount) {
-        requestCredit(address(strategy), 1000 * 10 ** decimals);
-        IStrategyAdapterMock(address(strategy)).lose(_amount);
+        requestCredit(strategy, 1000 * 10 ** decimals);
+        strategy.lose(_amount);
         _;
     }
 
@@ -119,7 +118,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         assertEq(actualStrategyDebt, actualStrategyTotalAssets, "sendReportPanicked, assets and debt match");
     }
 
-    modifier whenStrategyReired() {
+    modifier whenStrategyRetired() {
         IMultistrategyManageable(address(multistrategy)).retireStrategy(address(strategy));
         _;
     }
@@ -130,7 +129,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         whenGain(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
-        whenStrategyReired
+        whenStrategyRetired
     {
         strategy.sendReportPanicked();
 
@@ -156,7 +155,7 @@ contract SendReportPanicked_Integration_Concrete_Test is StrategyAdapter_Integra
         whenLoss(100 * 10 ** decimals)
         whenContractPaused
         whenCurrentAssetsNotZero
-        whenStrategyReired
+        whenStrategyRetired
     {
         strategy.sendReportPanicked();
 

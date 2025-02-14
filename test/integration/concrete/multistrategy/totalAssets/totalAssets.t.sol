@@ -3,10 +3,10 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 
 contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    address strategy;
+    StrategyAdapterMock strategy;
     uint8 decimals;
 
     function setUp() public virtual override {
@@ -39,7 +39,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
     modifier whenActiveStrategy() {
         // Add the strategy to the multistrategy
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy), 5_000, 100 * 10 ** decimals, 100_000 * 10 ** decimals);
         _;
     }
 
@@ -56,7 +56,7 @@ contract TotalAssets_Integration_Concrete_Test is Multistrategy_Integration_Shar
 
     modifier whenCreditRequested() {
         // Request the credit from the strategy
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
         _;
     }
 

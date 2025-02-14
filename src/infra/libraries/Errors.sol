@@ -95,8 +95,16 @@ library Errors {
     /// @param amount1 The actual amount obtained.
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
 
-    /// @notice Thrown when the reward added is the base asset of the Strategy.
+    /*//////////////////////////////////////////////////////////////////////////
+                            STRATEGY ADAPTER HARVESTABLE
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Thrown when the reward added is not valid according to `_verifyRewardToken`
     error InvalidRewardToken(address rewardToken);
+
+    /// @notice Thrown when this adapter is being harvested but there are no rewards defined
+    /// in the rewards array.
+    error NoRewards();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     ERC-4626

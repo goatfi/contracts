@@ -6,8 +6,6 @@ import { ERC20Mock } from "../../../mocks/erc20/ERC20Mock.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { IMultistrategyManageable } from "interfaces/infra/multistrategy/IMultistrategyManageable.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { IStrategyAdapterMock } from "../../../shared/TestInterfaces.sol";
 import { StrategyAdapterMock } from "../../../mocks/StrategyAdapterMock.sol";
 
 interface IOwnable {
@@ -47,28 +45,27 @@ contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
             uint assets = init.asset[i];
             try IMockERC20(_underlying_).mint(user, assets) {} catch { vm.assume(false); }
             // strategies
-            address strategy = addStrategy();
+            StrategyAdapterMock strategy = addStrategy();
             addMockSlippage(strategy, slippageLimit[i], slippage[i]);
             setUpYield(init, strategy);
         }
     }
 
     // setup initial yield
-    function setUpYield(Init memory init, address _strategy) public {
-        vm.prank(manager); IStrategyAdapter(_strategy).requestCredit();
-        IStrategyAdapterMock(_strategy);
+    function setUpYield(Init memory init, StrategyAdapterMock _strategy) public {
+        vm.prank(manager); _strategy.requestCredit();
         if (init.yield >= 0) { // gain
             uint gain = uint(init.yield);
             vm.assume(gain <= type(uint).max / 1e10); // avoid overflow, as we perform this operation 4 times
-            IStrategyAdapterMock(_strategy).earn(gain);
+            _strategy.earn(gain);
         } else { // loss
             vm.assume(init.yield > type(int).min); // avoid overflow in conversion
             uint loss = uint(-1 * init.yield);
-            uint strategyAssets = IStrategyAdapter(_strategy).totalAssets();
+            uint strategyAssets = _strategy.totalAssets();
             vm.assume(loss <= strategyAssets);
-            IStrategyAdapterMock(_strategy).lose(loss);
+            _strategy.lose(loss);
         }
-        vm.prank(manager); IStrategyAdapter(_strategy).sendReport(0);
+        vm.prank(manager); _strategy.sendReport(0);
     }
 
     // Each multistrategy will have security deposit that will be "burned"
@@ -83,14 +80,14 @@ contract MultistrategyERC4626_Fuzz_Test is ERC4626Test {
         vm.prank(secureDepositor); try IERC20(_vault_).transfer(address(42069), shares) {} catch { vm.assume(false); }
     }
 
-    function addStrategy() public returns(address) {
-        vm.prank(manager); address strategy = address(new StrategyAdapterMock(_vault_, _underlying_));
-        vm.prank(IOwnable(_vault_).owner()); IMultistrategyManageable(_vault_).addStrategy(strategy, debtRatio, 0, type(uint256).max);
+    function addStrategy() public returns(StrategyAdapterMock) {
+        vm.prank(manager); StrategyAdapterMock strategy = new StrategyAdapterMock(_vault_, _underlying_);
+        vm.prank(IOwnable(_vault_).owner()); IMultistrategyManageable(_vault_).addStrategy(address(strategy), debtRatio, 0, type(uint256).max);
         return strategy;
     }
 
-    function addMockSlippage(address _strategy, uint16 _slippageLimit, uint16 _slippage) public {
-        vm.prank(manager); IStrategyAdapter(_strategy).setSlippageLimit(uint(_slippageLimit));
-        IStrategyAdapterMock(_strategy).setStakingSlippage(uint(_slippage));
+    function addMockSlippage(StrategyAdapterMock _strategy, uint16 _slippageLimit, uint16 _slippage) public {
+        vm.prank(manager); _strategy.setSlippageLimit(uint(_slippageLimit));
+        _strategy.setStakingSlippage(uint(_slippage));
     }
 }

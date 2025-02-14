@@ -3,11 +3,9 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Users } from "../../utils/Types.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 
@@ -51,14 +49,14 @@ contract AdapterHandler is Test {
         vm.warp(block.timestamp + 1 minutes);
 
         vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(adapter), _debtRatio);
-        vm.prank(users.keeper); IStrategyAdapter(address(adapter)).requestCredit();
-        vm.prank(users.keeper); IStrategyAdapter(address(adapter)).sendReport(type(uint256).max);
+        vm.prank(users.keeper); adapter.requestCredit();
+        vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
     }
 
     function requestCredit() public {
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
-            vm.prank(users.keeper); IStrategyAdapter(address(adapter)).requestCredit();
+            vm.prank(users.keeper); adapter.requestCredit();
         }
     }
 
@@ -72,25 +70,25 @@ contract AdapterHandler is Test {
 
         deal(asset, users.bob, _amount);
         vm.prank(users.bob); IERC20(asset).approve(address(multistrategy), _amount);
-        vm.prank(users.bob); IERC4626(address(multistrategy)).deposit(_amount, users.bob);
+        vm.prank(users.bob); multistrategy.deposit(_amount, users.bob);
     }
 
     function withdraw(uint256 _amount) public {
-        uint256 maxWithdraw = IERC4626(address(multistrategy)).maxWithdraw(users.bob);
+        uint256 maxWithdraw = multistrategy.maxWithdraw(users.bob);
         if(maxWithdraw == 0) return;
 
         _amount = bound(_amount, 1, maxWithdraw);
         ghost_withdrawn += _amount;
 
         vm.warp(block.timestamp + 1 minutes);
-        vm.prank(users.bob); IERC4626(address(multistrategy)).withdraw(_amount, users.bob, users.bob);
+        vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
     }
 
     function withdrawAll() public {
-        uint256 balance = IERC4626(address(multistrategy)).balanceOf(users.bob);
+        uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
             vm.warp(block.timestamp + 1 minutes);
-            vm.prank(users.bob); IERC4626(address(multistrategy)).redeem(balance, users.bob, users.bob);
+            vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);
         }
     }
 
@@ -100,12 +98,12 @@ contract AdapterHandler is Test {
         ghost_yieldTime += _time;
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
-            vm.prank(users.keeper); IStrategyAdapter(address(adapter)).requestCredit();
+            vm.prank(users.keeper); adapter.requestCredit();
         }
         vm.warp(block.timestamp + _time);
 
         if(harvest) IStrategyAdapterHarvestable(address(adapter)).harvest();
-        vm.prank(users.keeper); IStrategyAdapter(address(adapter)).sendReport(type(uint256).max);
+        vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
         vm.warp(block.timestamp + 7 days);
     }
 }

@@ -3,10 +3,10 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 
 contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 minDebtDelta;
     uint256 maxDebtDelta;
     uint8 decimals;
@@ -18,10 +18,8 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         maxDebtDelta = 10_000 * 10 ** decimals;
     }
 
-    function test_CreditAvailable_ZeroAddress() external {
-        strategy = address(0);
-
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+    function test_CreditAvailable_ZeroAddress() external view {
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(0));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
@@ -35,7 +33,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         external
         whenNotZeroAddress
     {
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
@@ -50,13 +48,13 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenNotZeroAddress
         whenThereAreDeposits
     {
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
 
     modifier whenActiveStrategy() {
-        multistrategy.addStrategy(strategy, 5_000, minDebtDelta, maxDebtDelta);
+        multistrategy.addStrategy(address(strategy), 5_000, minDebtDelta, maxDebtDelta);
         _;
     }
 
@@ -67,12 +65,12 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenActiveStrategy
     {
         // Strategy requests a credit. So it will have the same debt as the limit
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
         // We need to reduce the debt ratio of the strategy to lower the limit.
-        multistrategy.setStrategyDebtRatio(strategy, 2_500);
+        multistrategy.setStrategyDebtRatio(address(strategy), 2_500);
 
         // As the strategy has more debt than its limit, there is no credit available
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }    
@@ -84,10 +82,10 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenActiveStrategy
     {
         // Strategy requests a credit. So it will have the same debt as the limit
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
 
         // As the strategy has the same debt as its limit, there is no credit available
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
@@ -106,14 +104,14 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenDebtBelowDebtLimit
     {
         // Strategy requests a credit. So it will have the same debt as the limit
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
 
         // We increase the debt limit 0.1%, with 1K deposited, this means the strategy can
         // take a credit of 1 extra token.
-        multistrategy.setStrategyDebtRatio(strategy, 5_010);
+        multistrategy.setStrategyDebtRatio(address(strategy), 5_010);
 
         // As 1 token of credit is below the minDebtDelta (100 tokens), assert credit available is 0
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 0;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
@@ -134,7 +132,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         triggerUserDeposit(users.alice, 25_000 * 10 ** decimals);
 
         // Assert creditAvailable is maxDebtDelta
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = maxDebtDelta;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }
@@ -152,7 +150,7 @@ contract CreditAvailable_Integration_Concrete_Test is Multistrategy_Integration_
         whenCreditAboveMinDebtDelta
         whenCreditBelowMaxDebtDelta
     {
-        uint256 actualCreditAvailable = multistrategy.creditAvailable(strategy);
+        uint256 actualCreditAvailable = multistrategy.creditAvailable(address(strategy));
         uint256 expectedCreditAvailable = 500 * 10 ** decimals;
         assertEq(actualCreditAvailable, expectedCreditAvailable, "creditAvailable");
     }

@@ -3,8 +3,7 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
-import { IStrategyAdapterMock } from "../../../../shared/TestInterfaces.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -13,9 +12,8 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
     uint256 deposit = 1000;
     uint256 amountToRedeem;
 
-    // Addresses for the mock strategies
-    address strategy_one;
-    address strategy_two;
+    StrategyAdapterMock strategy_one;
+    StrategyAdapterMock strategy_two;
 
     uint8 decimals;
 
@@ -68,11 +66,11 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
     modifier whenMultistrategyBalanceLowerThanRedeemAmount() {
         strategy_one = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         strategy_two = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 * 10 ** decimals);
-        multistrategy.addStrategy(strategy_two, 2_000, 0, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy_one), 5_000, 0, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy_two), 2_000, 0, 100_000 * 10 ** decimals);
 
-        IStrategyAdapter(strategy_one).requestCredit();
-        IStrategyAdapter(strategy_two).requestCredit();
+        strategy_one.requestCredit();
+        strategy_two.requestCredit();
         _;
     }
 
@@ -83,7 +81,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         whenAmountGreaterThanZero
         whenMultistrategyBalanceLowerThanRedeemAmount
     {
-        IStrategyAdapterMock(strategy_two).setStakingSlippage(5_000);
+        strategy_two.setStakingSlippage(5_000);
 
         amountToRedeem = 1000 ether;
         swapCaller(users.bob);
@@ -101,8 +99,8 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         whenAmountGreaterThanZero
         whenMultistrategyBalanceLowerThanRedeemAmount
     {   
-        IStrategyAdapterMock(strategy_one).setSlippageLimit(200);
-        IStrategyAdapterMock(strategy_one).setStakingSlippage(100);
+        strategy_one.setSlippageLimit(200);
+        strategy_one.setStakingSlippage(100);
 
         amountToRedeem = 800 ether;
         swapCaller(users.bob);
@@ -166,12 +164,12 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
         // Assert strategy_one assets.
-        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
+        uint256 actualStrategyOneAssets = strategy_one.totalAssets();
         uint256 expectedStrategyOneAssets = 0;
         assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "redeem, strategy one assets");
 
         // Assert strategy_two assets.
-        uint256 actualStrategyTwoAssets = IStrategyAdapter(strategy_two).totalAssets();
+        uint256 actualStrategyTwoAssets = strategy_two.totalAssets();
         uint256 expectedStrategyTwoAssets = 0;
         assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "redeem, strategy two assets");
 
@@ -181,12 +179,12 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "redeem, multistrategy total debt");
 
         // Assert strategy_one totalDebt
-        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(address(strategy_one)).totalDebt;
         uint256 expectedStrategyOneDebt = 0;
         assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "redeem, strategy one debt");
 
         // Assert strategy_two totalDebt
-        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(strategy_two).totalDebt;
+        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(address(strategy_two)).totalDebt;
         uint256 expectedStrategyTwoDebt = 0 ether;
         assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "redeem, strategy two debt");
     }
@@ -207,7 +205,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         IERC4626(address(multistrategy)).redeem(amountToRedeem * 1e18, users.bob, users.bob);
 
         // Assert strategy one has no debt
-        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(address(strategy_one)).totalDebt;
         uint256 expectedStrategyOneDebt = 0;
         assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "redeem, strategy one debt");
 
@@ -232,12 +230,12 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
         // Assert strategy_one assets.
-        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
+        uint256 actualStrategyOneAssets = strategy_one.totalAssets();
         uint256 expectedStrategyOneAssets = 0;
         assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "redeem, strategy one assets");
 
         // Assert strategy_two assets.
-        uint256 actualStrategyTwoAssets = IStrategyAdapter(strategy_two).totalAssets();
+        uint256 actualStrategyTwoAssets = strategy_two.totalAssets();
         uint256 expectedStrategyTwoAssets = 100 * 10 ** decimals;
         assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "redeem, strategy two assets");
 
@@ -247,12 +245,12 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "redeem, multistrategy total debt");
 
         // Assert strategy_one totalDebt
-        actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        actualStrategyOneDebt = multistrategy.getStrategyParameters(address(strategy_one)).totalDebt;
         expectedStrategyOneDebt = 0;
         assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "redeem, strategy one debt");
 
         // Assert strategy_two totalDebt
-        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(strategy_two).totalDebt;
+        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(address(strategy_two)).totalDebt;
         uint256 expectedStrategyTwoDebt = 100 * 10 ** decimals;
         assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "redeem, strategy two debt");
     }
@@ -287,12 +285,12 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
         // Assert strategy_one assets
-        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
+        uint256 actualStrategyOneAssets = strategy_one.totalAssets();
         uint256 expectedStrategyOneAssets = 0;
         assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "redeem, strategy one assets");
 
         // Assert strategy_two assets
-        uint256 actualStrategyTwoAssets = IStrategyAdapter(strategy_two).totalAssets();
+        uint256 actualStrategyTwoAssets = strategy_two.totalAssets();
         uint256 expectedStrategyTwoAssets = 200 * 10 ** decimals;
         assertEq(actualStrategyTwoAssets, expectedStrategyTwoAssets, "redeem, strategy two assets");
 
@@ -302,21 +300,21 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "redeem, multistrategy total debt");
 
         // Assert strategy_one totalDebt
-        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(address(strategy_one)).totalDebt;
         uint256 expectedStrategyOneDebt = 0;
         assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "redeem, strategy one debt");
 
         // Assert strategy_two totalDebt
-        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(strategy_two).totalDebt;
+        uint256 actualStrategyTwoDebt = multistrategy.getStrategyParameters(address(strategy_two)).totalDebt;
         uint256 expectedStrategyTwoDebt = 200 * 10 ** decimals;
         assertEq(actualStrategyTwoDebt, expectedStrategyTwoDebt, "redeem, strategy two debt");
     }
 
     modifier whenMultistrategyBalanceHigherOrEqualThanRedeemAmount() {
         strategy_one = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy_one, 5_000, 0, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy_one), 5_000, 0, 100_000 * 10 ** decimals);
 
-        IStrategyAdapter(strategy_one).requestCredit();
+        strategy_one.requestCredit();
         _;
     }
 
@@ -349,7 +347,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "redeem, multistrategy balance");
 
         // Assert strategy_one assets
-        uint256 actualStrategyOneAssets = IStrategyAdapter(strategy_one).totalAssets();
+        uint256 actualStrategyOneAssets = strategy_one.totalAssets();
         uint256 expectedStrategyOneAssets = 500 * 10 ** decimals;
         assertEq(actualStrategyOneAssets, expectedStrategyOneAssets, "redeem, strategy one assets");
 
@@ -359,7 +357,7 @@ contract Redeem_Integration_Concrete_Test is Multistrategy_Integration_Shared_Te
         assertEq(actualMultistrategyDebt, expectedMultistrategyDebt, "redeem, multistrategy total debt");
 
         // Assert strategy_one totalDebt
-        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(strategy_one).totalDebt;
+        uint256 actualStrategyOneDebt = multistrategy.getStrategyParameters(address(strategy_one)).totalDebt;
         uint256 expectedStrategyOneDebt = 500 * 10 ** decimals;
         assertEq(actualStrategyOneDebt, expectedStrategyOneDebt, "redeem, strategy one debt");
     }

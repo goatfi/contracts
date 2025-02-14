@@ -3,13 +3,13 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Base_Test } from "../../Base.t.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 import { IOwnable } from "../../shared/TestInterfaces.sol";
+import { StrategyAdapterMock } from "../../mocks/StrategyAdapterMock.sol";
 import { IERC20Mock } from "interfaces/common/IERC20Mock.sol";
 
 contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
-    IStrategyAdapter strategy;
+    StrategyAdapterMock strategy;
     IERC20Mock asset;
 
     function setUp() public virtual override {
@@ -17,7 +17,7 @@ contract StrategyAdapter_Unit_Shared_Test is Base_Test {
 
         deployMultistrategy();
         transferMultistrategyOwnershipToOwner();
-        strategy = IStrategyAdapter(deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset()));
+        strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
         transferStrategyAdapterOwnershipToOwner();
 
         swapCaller(users.owner);

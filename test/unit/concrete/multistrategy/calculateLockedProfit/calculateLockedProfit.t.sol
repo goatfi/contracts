@@ -3,12 +3,12 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC4626, MultistrategyHarness_Unit_Shared_Test } from "../../../shared/MultistrategyHarness.t.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 
 contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_Shared_Test {
     using Math for uint256;
 
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 strategyProfit = 100 ether;
 
     function test_CalculateLockedProfit_NoPriorLockedProfit() 
@@ -22,16 +22,11 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
     modifier whenThereIsPriorProfit() {
         // Strategy deployed and added
         strategy = deployMockStrategyAdapter(address(multistrategyHarness), IERC4626(address(multistrategyHarness)).asset());
-        multistrategyHarness.addStrategy(strategy, 5_000, 100 ether, 10_000 ether);
+        multistrategyHarness.addStrategy(address(strategy), 5_000, 100 ether, 10_000 ether);
 
-        //User deposits
         triggerUserDeposit(users.bob, 1000 ether);
-
-        // Strategy makes gain
         triggerStrategyGain(strategy, strategyProfit);
-
-        // Strategy reports
-        IStrategyAdapter(strategy).sendReport(0);
+        strategy.sendReport(0);
         _;
     }
 
@@ -62,7 +57,7 @@ contract CalculateLockedProfit_Unit_Concrete_Test is MultistrategyHarness_Unit_S
 
         // Add some profit again
         triggerStrategyGain(strategy, strategyProfit);
-        IStrategyAdapter(strategy).sendReport(0);
+        strategy.sendReport(0);
 
         uint256 actualLockedProfit = multistrategyHarness.calculateLockedProfit();
         uint256 expectedLockedProfit = strategyProfit.mulDiv(95, 100) + strategyProfit.mulDiv(475, 1000);

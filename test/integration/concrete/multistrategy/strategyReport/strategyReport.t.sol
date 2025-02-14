@@ -3,20 +3,14 @@ pragma solidity >=0.8.20 <0.9.0;
 
 import { IERC4626, Multistrategy_Integration_Shared_Test } from "../../../shared/Multistrategy.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { StrategyAdapterMock } from "../../../../mocks/StrategyAdapterMock.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-interface IStrategyAdapterMock {
-    function earn(uint256 _amount) external;
-    function lose(uint256 _amount) external;
-    function withdrawFromStaking(uint256 _amount) external;
-}
-
 contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_Shared_Test {
-    address strategy;
+    StrategyAdapterMock strategy;
     uint256 deposit = 1_000;
     uint256 gainAmount;
     uint256 loseAmount;
@@ -52,7 +46,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
 
     modifier whenCallerActiveStrategy() {
         strategy = deployMockStrategyAdapter(address(multistrategy), IERC4626(address(multistrategy)).asset());
-        multistrategy.addStrategy(strategy, 5_000, 0, 100_000 * 10 ** decimals);
+        multistrategy.addStrategy(address(strategy), 5_000, 0, 100_000 * 10 ** decimals);
 
         triggerUserDeposit(users.bob, 1_000 * 10 ** decimals);
         _;
@@ -67,7 +61,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 100 * 10 ** decimals;
         loseAmount = 100 * 10 ** decimals;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.GainLossMismatch.selector));
@@ -88,7 +82,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 100 * 10 ** decimals;
         loseAmount = 0;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
 
         // Expect a revert
         vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientBalance.selector, 0, repayAmount + gainAmount));
@@ -97,20 +91,20 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
 
     modifier whenStrategyHasBalanceToRepay(uint256 _amount) {
         swapCaller(users.owner);
-        IStrategyAdapter(strategy).requestCredit();
+        strategy.requestCredit();
 
-        IStrategyAdapterMock(strategy).withdrawFromStaking(_amount);
+        strategy.withdrawFromStaking(_amount);
         _;
     }
 
     modifier whenStrategyHasMadeALoss(uint256 _amount) {
-        IStrategyAdapterMock(strategy).lose(_amount);
+        strategy.lose(_amount);
         _;
     }
 
     modifier whenStrategyHasExceedingDebt() {
         swapCaller(users.owner);
-        multistrategy.setStrategyDebtRatio(strategy,  0);
+        multistrategy.setStrategyDebtRatio(address(strategy),  0);
         _;
     }
 
@@ -129,9 +123,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 0;
         loseAmount = 100 * 10 ** decimals;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount, loseAmount);
 
         // Report with [100, 0, 100]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -147,7 +141,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the repayment and lose amount
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - repayAmount - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -162,7 +156,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
@@ -179,9 +173,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 0;
         loseAmount = 100  * 10 ** decimals;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount, loseAmount);
 
         // Report with [0, 0, 100]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -197,7 +191,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the lose amount
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = (500  * 10 ** decimals) - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -212,15 +206,15 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
 
     modifier whenThereIsLockedProfit(uint256 _amount) {
         // Report a 100 token gain in order to get some profit locked
-        swapCaller(strategy);
-        mintAsset(strategy, _amount);
+        swapCaller(address(strategy));
+        mintAsset(address(strategy), _amount);
         multistrategy.strategyReport(0, _amount, 0);
         _;
     }
@@ -240,9 +234,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         loseAmount = 10  * 10 ** decimals;
         uint256 profit = 95  * 10 ** decimals;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount, loseAmount);
 
         // Report with [100, 0, 10]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -258,7 +252,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the repayment and lose amount
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - repayAmount - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -273,7 +267,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
@@ -292,9 +286,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         loseAmount = 10 * 10 ** decimals;
         uint256 profit = 95 * 10 ** decimals;
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount, loseAmount);
 
         // Report with [100, 0, 10]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -310,7 +304,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the repayment and lose amount
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = (500 * 10 ** decimals) - loseAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -325,14 +319,14 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
 
     modifier whenStrategyHasMadeAGain(uint256 _amount) {
-        IStrategyAdapterMock(strategy).earn(_amount);
-        IStrategyAdapterMock(strategy).withdrawFromStaking(_amount);
+        strategy.earn(_amount);
+        strategy.withdrawFromStaking(_amount);
         _;
     }
 
@@ -349,9 +343,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 100 * 10 ** decimals;
         uint256 fee = Math.mulDiv(gainAmount, multistrategy.performanceFee(), 10_000);
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount - fee, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount - fee, loseAmount);
 
         // Report with [100, 100, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -371,7 +365,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the repayment
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = 500 * 10 ** decimals - repayAmount;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -386,7 +380,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
@@ -403,9 +397,9 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         gainAmount = 100 * 10 ** decimals;
         uint256 fee = Math.mulDiv(gainAmount, multistrategy.performanceFee(), 10_000);
 
-        swapCaller(strategy);
+        swapCaller(address(strategy));
         vm.expectEmit({emitter: address(multistrategy)});
-        emit StrategyReported(strategy, repayAmount, gainAmount - fee, loseAmount);
+        emit StrategyReported(address(strategy), repayAmount, gainAmount - fee, loseAmount);
 
         // Report with [100, 100, 0]
         multistrategy.strategyReport(repayAmount, gainAmount, loseAmount);
@@ -425,7 +419,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyBalance, expectedMultistrategyBalance, "strategyReport multistrategy balance");
 
         // Assert that the strategy total assets have been reduced by the repayment
-        uint256 actualStrategyTotalAssets = IStrategyAdapter(strategy).totalAssets();
+        uint256 actualStrategyTotalAssets = strategy.totalAssets();
         uint256 expectedStrategyTotalAssets = 500 * 10 ** decimals;
         assertEq(actualStrategyTotalAssets, expectedStrategyTotalAssets, "strategyReport strategy totalAssets");
 
@@ -435,7 +429,7 @@ contract StrategyReport_Integration_Concrete_Test is Multistrategy_Integration_S
         assertEq(actualMultistrategyLastReport, expectedMultistrategyLastReport, "strategyReport multistrategy lastReport");
 
         // Assert that the multistrategy las report has been updated
-        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(strategy).lastReport;
+        uint256 actualStrategyLastReport = multistrategy.getStrategyParameters(address(strategy)).lastReport;
         uint256 expectedStrategyLastReport = block.timestamp;
         assertEq(actualStrategyLastReport, expectedStrategyLastReport, "strategyReport strategy lastReport");
     }
