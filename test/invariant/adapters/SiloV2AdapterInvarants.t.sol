@@ -10,7 +10,6 @@ import { AssetsSonic, ProtocolSonic } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
 import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 
 
 contract SiloV2AdapterInvariants is AdapterInvariantBase {
@@ -35,7 +34,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
 
     function createAdapter() public returns (SiloV2Adapter) {
         address vault = 0x4E216C15697C1392fE59e1014B009505E05810Df;
-        address incentivesController = address(0);
+        address incentivesController = 0x0dd368Cd6D8869F2b21BA3Cb4fd7bA107a2e3752;
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolSonic.GOAT_SWAPPER,
