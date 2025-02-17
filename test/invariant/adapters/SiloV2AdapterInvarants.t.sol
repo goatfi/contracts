@@ -10,7 +10,6 @@ import { AssetsSonic, ProtocolSonic } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
 import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 
 
 contract SiloV2AdapterInvariants is AdapterInvariantBase {
