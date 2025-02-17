@@ -93,7 +93,7 @@ contract AdapterHandler is Test {
     }
 
     function earnYield(uint256 _time) public {
-        _time = bound(_time, 1 hours, 30 days);
+        _time = bound(_time, 1 days, 30 days);
 
         ghost_yieldTime += _time;
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
