@@ -7,4 +7,10 @@ library AssetsSonic {
 
     // https://sonicscan.org/token/0x29219dd400f2Bf60E5a23d13Be72B486D4038894
     address internal constant USDCe = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
+
+    // https://sonicscan.org/token/0x53f753E4B17F4075D6fa2c6909033d224b81e698
+    address internal constant SILO = 0x53f753E4B17F4075D6fa2c6909033d224b81e698;
+
+    // https://sonicscan.org/token/0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1
+    address internal constant WOS = 0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1;
 }
