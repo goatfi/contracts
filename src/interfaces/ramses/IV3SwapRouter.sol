@@ -3,7 +3,7 @@ pragma solidity >=0.7.5;
 
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Ramses V3
-interface IV3SwapRouter {
+interface IRamsesV3SwapRouter {
     struct ExactInputParams {
         bytes path;
         address recipient;
