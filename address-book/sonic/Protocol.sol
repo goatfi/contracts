@@ -13,4 +13,7 @@ library ProtocolSonic {
     
     // https://sonicscan.org/address/0x108e823a26C5FB096D1f7c493809ccE9015507a6
     address internal constant GOAT_SWAPPER = 0x108e823a26C5FB096D1f7c493809ccE9015507a6;
+
+    // https://sonicscan.org/address/0xaACe416fCC30E227b023b323299651ec75688b01
+    address internal constant MULTI_MANAGER = 0xaACe416fCC30E227b023b323299651ec75688b01;
 }

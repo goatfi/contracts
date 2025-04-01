@@ -34,4 +34,7 @@ library ProtocolArbitrum {
 
   // https://arbiscan.io/address/0xC3B853A257F9dA40B14e1D1437D147787c7FDdeb
   address internal constant GOAT_SWAPPER = 0xC3B853A257F9dA40B14e1D1437D147787c7FDdeb;
+
+  // https://arbiscan.io/address/0x97c7808A1b47b1C60f7ab70C384979412D2A20B6
+  address internal constant MULTI_MANAGER = 0x97c7808A1b47b1C60f7ab70C384979412D2A20B6;
 }
