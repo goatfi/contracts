@@ -11,6 +11,27 @@ build_info = false
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "./"}]
 
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "src/=src/",
+    "interfaces/=src/interfaces",
+    "test-utils/=test/utils",
+    "createx=lib/createx-forge",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin-4/contracts=lib/openzeppelin-contracts-4/contracts/",
+    "@layerzero/=lib/solidity-examples/contracts/",
+    "@aave/=lib/aave-v3-origin/src/",
+    "@xerc20=lib/xERC20/",
+    "@uniswap/v3-periphery=lib/v3-periphery/",
+    "@uniswap/v3-core=lib/v3-core/",
+    "@addressbook/=address-book/",
+    "@trust-security/trustlessPermit/=lib/trustlessPermit/",
+    "@uniswapV3-periphery/=lib/v3-periphery/contracts/",
+    "@prb/math/=lib/prb-math/",
+    "@properties/=lib/properties/",
+]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [fuzz]
