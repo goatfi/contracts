@@ -7,10 +7,11 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { SiloAdapter } from "src/infra/multistrategy/adapters/SiloAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
+import { ISilo, ISiloRepository } from "interfaces/silo/ISilo.sol";
 
 contract DeploySiloAdapter is Script {
-    address collateral = 0x713fc13CaAB628F116Bc34961f22a6B44aD27668;    //FIXME:
-    address silo = 0xA8897b4552c075e884BDB8e7b704eB10DB29BF0D;          //FIXME:
+    address marketAsset = AssetsArbitrum.ezETH;          //Address of the asset used in the market. ezETH, WBTC, wstETH
+    address siloRepository = 0x8658047e48CC09161f4152c79155Dac1d710Ff0a;
     address siloLens = 0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536;
     address siloRewards = 0xbDBBf747402653A5aD6F6B8c49F2e8dCeC37fAcF;
     address merklDistributor = 0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae;
@@ -24,16 +25,8 @@ contract DeploySiloAdapter is Script {
     address constant MULTISTRATEGY = 0x8a1eF3066553275829d1c0F64EE8D5871D5ce9d3; //FIXME:
     address constant ASSET = AssetsArbitrum.USDCe;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    string constant NAME = "Silo USDC.e WBTC Market";                            //FIXME:
+    string constant NAME = "Silo WETH ezETH Market";                            //FIXME:
     string constant ID = "SILO";
-
-    SiloAdapter.SiloAddresses siloAddresses = SiloAdapter.SiloAddresses({
-        silo: silo,
-        collateral: collateral,
-        siloLens: siloLens,
-        siloRewards: siloRewards,
-        merklDistributor: merklDistributor
-    });
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
         swapper: ProtocolArbitrum.GOAT_SWAPPER,
@@ -47,6 +40,16 @@ contract DeploySiloAdapter is Script {
         /////////////////////////////////////////////////////////
 
         vm.startBroadcast();
+
+        address silo = ISiloRepository(siloRepository).getSilo(marketAsset);
+        address collateral = ISilo(silo).assetStorage(ASSET).collateralToken;
+        SiloAdapter.SiloAddresses memory siloAddresses = SiloAdapter.SiloAddresses({
+            silo: silo,
+            collateral: collateral,
+            siloLens: siloLens,
+            siloRewards: siloRewards,
+            merklDistributor: merklDistributor
+        });
 
         SiloAdapter adapter = new SiloAdapter(MULTISTRATEGY, ASSET, harvestAddresses, siloAddresses, NAME, ID);
 

@@ -11,11 +11,14 @@ import { Users } from "../../utils/Types.sol";
 import { SiloAdapter } from "src/infra/multistrategy/adapters/SiloAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
+import { ISilo, ISiloRepository } from "interfaces/silo/ISilo.sol";
 
 
 contract SiloAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
     address asset = AssetsArbitrum.WETH;
+    address marketAsset = AssetsArbitrum.ezETH;          //Address of the asset used in the market. ezETH, WBTC, wstETH
+    address siloRepository = 0x8658047e48CC09161f4152c79155Dac1d710Ff0a;
 
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
@@ -33,9 +36,11 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
     }
 
     function createAdapter() public returns (SiloAdapter) {
+        address silo = ISiloRepository(siloRepository).getSilo(marketAsset);
+        address collateral = ISilo(silo).assetStorage(asset).collateralToken;
         SiloAdapter.SiloAddresses memory siloAddresses = SiloAdapter.SiloAddresses({
-            silo: 0x1182559e5cf2247e4DdB7a38e28a88ec3825f2BA,
-            collateral: 0x95633979ae07b857a5A03BbA349EAE891E27fB5E,
+            silo: silo,
+            collateral: collateral,
             siloLens: 0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536,
             siloRewards: 0xbDBBf747402653A5aD6F6B8c49F2e8dCeC37fAcF,
             merklDistributor: 0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae
