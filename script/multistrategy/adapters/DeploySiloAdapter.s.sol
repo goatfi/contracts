@@ -16,9 +16,7 @@ contract DeploySiloAdapter is Script {
     address merklDistributor = 0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae;
     address merklOperator = 0x1017417B0EE0a96Ee7230e534A83d35d28613B78;
 
-    address[] rewards = [AssetsArbitrum.SILO, 0x12275DCB9048680c4Be40942eA4D92c74C63b844];
-
-    address swapper = ProtocolArbitrum.GOAT_SWAPPER;
+    address[] rewards = [AssetsArbitrum.SILO];
 
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
@@ -26,7 +24,6 @@ contract DeploySiloAdapter is Script {
     address constant MULTISTRATEGY = 0x8a1eF3066553275829d1c0F64EE8D5871D5ce9d3; //FIXME:
     address constant ASSET = AssetsArbitrum.USDCe;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    address constant TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
     string constant NAME = "Silo USDC.e WBTC Market";                            //FIXME:
     string constant ID = "SILO";
 
@@ -39,7 +36,7 @@ contract DeploySiloAdapter is Script {
     });
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
-        swapper: swapper,
+        swapper: ProtocolArbitrum.GOAT_SWAPPER,
         wrappedGas: AssetsArbitrum.WETH
     });
 
@@ -59,7 +56,7 @@ contract DeploySiloAdapter is Script {
 
         adapter.enableGuardian(GUARDIAN);
         adapter.toggleMerklOperator(merklOperator);
-        adapter.transferOwnership(TESTING_CUSTODIAN);
+        adapter.transferOwnership(ProtocolArbitrum.MULTI_MANAGER);
 
         vm.stopBroadcast();
 
