@@ -50,6 +50,6 @@ library AssetsArbitrum {
   // https://arbiscan.io/address/0x1509706a6c66CA549ff0cB464de88231DDBe213B
   address internal constant AURA = 0x1509706a6c66CA549ff0cB464de88231DDBe213B;
 
-  // https://arbiscan.io/address/0xd1E094CabC5aCB9D3b0599C3F76f2D01fF8d3563
-  address internal constant VRSW = 0xd1E094CabC5aCB9D3b0599C3F76f2D01fF8d3563;
+  // https://arbiscan.io/address/0x2416092f143378750bb29b79eD961ab195CcEea5
+  address internal constant ezETH = 0x2416092f143378750bb29b79eD961ab195CcEea5;
 }
