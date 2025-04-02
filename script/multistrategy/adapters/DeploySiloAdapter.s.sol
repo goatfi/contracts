@@ -11,7 +11,7 @@ import { ISilo, ISiloRepository } from "interfaces/silo/ISilo.sol";
 
 contract DeploySiloAdapter is Script {
     address marketAsset = AssetsArbitrum.ezETH; //FIXME:
-
+    
     address siloRepository = 0x8658047e48CC09161f4152c79155Dac1d710Ff0a;
     address siloLens = 0xBDb843c7a7e48Dc543424474d7Aa63b61B5D9536;
     address siloRewards = 0xbDBBf747402653A5aD6F6B8c49F2e8dCeC37fAcF;
