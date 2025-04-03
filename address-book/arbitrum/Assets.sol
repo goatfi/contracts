@@ -52,4 +52,7 @@ library AssetsArbitrum {
 
   // https://arbiscan.io/address/0x2416092f143378750bb29b79eD961ab195CcEea5
   address internal constant ezETH = 0x2416092f143378750bb29b79eD961ab195CcEea5;
+
+  // https://arbiscan.io/address/0x3d15fD46CE9e551498328B1C83071D9509E2C3a0
+  address internal constant uniETH = 0x3d15fD46CE9e551498328B1C83071D9509E2C3a0;
 }
