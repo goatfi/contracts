@@ -14,6 +14,7 @@ test/local/
 
 #Echidna
 /crytic-export
+recon.json
 
 # Ignores development broadcast logs
 /broadcast
@@ -23,6 +24,7 @@ test/local/
 # VS Code
 .vscode/
 .cursorrules
+.wake/
 
 # Dotenv file
 .env
