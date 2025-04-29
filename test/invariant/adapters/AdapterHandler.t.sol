@@ -46,7 +46,7 @@ contract AdapterHandler is Test {
     function setDebtRatio(uint256 _debtRatio) public {
         _debtRatio = bound(_debtRatio, 0, 10_000);
 
-        vm.warp(block.timestamp + 1 minutes);
+        vm.warp(block.timestamp + 10 minutes);
 
         vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(adapter), _debtRatio);
         vm.prank(users.keeper); adapter.requestCredit();
@@ -80,14 +80,14 @@ contract AdapterHandler is Test {
         _amount = bound(_amount, 1, maxWithdraw);
         ghost_withdrawn += _amount;
 
-        vm.warp(block.timestamp + 1 minutes);
+        vm.warp(block.timestamp + 10 minutes);
         vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
     }
 
     function withdrawAll() public {
         uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
-            vm.warp(block.timestamp + 1 minutes);
+            vm.warp(block.timestamp + 10 minutes);
             vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);
         }
     }

@@ -39,6 +39,13 @@ interface ISiloLens {
         address _silo,
         address _asset
     ) external view returns (uint256 _totalDeposits);
+
+    function getDepositAmount(
+        address _silo, 
+        address _asset, 
+        address _user, 
+        uint256 _timestamp
+        ) external view returns (uint256 _totalUserDeposits);
 }
 
 interface ISiloRewards {
