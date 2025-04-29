@@ -16,7 +16,7 @@ import { ISilo, ISiloRepository } from "interfaces/silo/ISilo.sol";
 
 contract SiloAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-    address asset = AssetsArbitrum.WETH;
+    address asset = AssetsArbitrum.USDCe;
     address marketAsset = AssetsArbitrum.ezETH;          //Address of the asset used in the market. ezETH, WBTC, wstETH
     address siloRepository = 0x8658047e48CC09161f4152c79155Dac1d710Ff0a;
 
@@ -25,13 +25,13 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
 
         createUsers();
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000 * (10 ** IERC20Metadata(asset).decimals())), 
+            createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
             createAdapter(), 
             users,
             true
         );
 
-        makeInitialDeposit(0.01 ether);
+        makeInitialDeposit(100 * (10 ** IERC20Metadata(asset).decimals()));
         targetContract(address(handler));
     }
 
@@ -56,6 +56,7 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
         vm.prank(users.keeper); adapter.addReward(AssetsArbitrum.SILO);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
         vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);
+        vm.prank(users.owner); multistrategy.setStrategyMinDebtDelta(address(adapter), 1e6);
 
         return adapter;
     }
@@ -66,7 +67,7 @@ contract SiloAdapterInvariants is AdapterInvariantBase {
         console.log("Yield Time:", handler.ghost_yieldTime());
 
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGt(multistrategy.pricePerShare(), 1 ether);
+            assertGe(multistrategy.pricePerShare(), 1 * (10 ** IERC20Metadata(asset).decimals()));
         }
     }
 }

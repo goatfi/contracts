@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IERC20} from "@openzeppelin-4/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin-4/contracts/token/ERC20/utils/SafeERC20.sol";
-
 struct AssetStorage {
         address collateralToken;
         address collateralOnlyToken;
@@ -42,6 +39,13 @@ interface ISiloLens {
         address _silo,
         address _asset
     ) external view returns (uint256 _totalDeposits);
+
+    function getDepositAmount(
+        address _silo, 
+        address _asset, 
+        address _user, 
+        uint256 _timestamp
+        ) external view returns (uint256 _totalUserDeposits);
 }
 
 interface ISiloRewards {
