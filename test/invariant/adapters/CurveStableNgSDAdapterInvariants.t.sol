@@ -10,11 +10,13 @@ import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { AdapterInvariantBase } from "./AdapterInvariantBase.t.sol";
 import { AdapterHandler } from "./AdapterHandler.t.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
+import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 
 contract CurveNgSDTest is AdapterInvariantBase {
     AdapterHandler handler;
     CurveStableNgSDAdapter adapter;
+    CurveStableNgSlippageUtility curveUtility;
     address asset = AssetsArbitrum.USDC;
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
     address sdVault = 0xa8D278db4ca48e7333901b24A83505BB078ecF86;
@@ -24,6 +26,7 @@ contract CurveNgSDTest is AdapterInvariantBase {
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
         createUsers();
+        curveUtility = new CurveStableNgSlippageUtility();
         multistrategy = createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals()));
         adapter = createAdapter();
 
@@ -40,6 +43,7 @@ contract CurveNgSDTest is AdapterInvariantBase {
             curveLiquidityPool: curveLP,
             sdVault: sdVault,
             sdRewards: sdRewards,
+            curveSlippageUtility: address(curveUtility),
             assetIndex: assetIndex
         });
 

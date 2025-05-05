@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Test } from "forge-std/Test.sol";
@@ -14,6 +15,7 @@ abstract contract AdapterIntegration is Test {
     StrategyAdapter adapter;
 
     address public asset;
+    uint256 decimals;
     uint256 public depositLimit;
     uint256 public minDeposit;
     uint256 public minDebtDelta;
@@ -28,6 +30,8 @@ abstract contract AdapterIntegration is Test {
             alice: createUser("Alice"),
             bob: createUser("Bob")
         });
+
+        decimals = IERC20Metadata(asset).decimals();
     }
 
     function createUser(string memory name) internal returns (address payable) {
@@ -50,6 +54,12 @@ abstract contract AdapterIntegration is Test {
         multistrategy.enableGuardian(users.guardian);
         multistrategy.setDepositLimit(depositLimit);
         multistrategy.setPerformanceFee(1000);
+        vm.stopPrank();
+
+        deal(asset, users.alice, minDeposit);
+        vm.startPrank(users.alice);
+        IERC20(asset).approve(address(multistrategy), minDeposit);
+        multistrategy.deposit(minDeposit, users.alice);
         vm.stopPrank();
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
@@ -75,15 +85,19 @@ abstract contract AdapterIntegration is Test {
     }
 
     function deposit(uint256 _amount) public {
-        uint256 amount = bound(_amount, minDeposit, multistrategy.depositLimit());
+        uint256 amount = bound(_amount, minDeposit, multistrategy.maxDeposit(users.bob));
         deal(asset, users.bob, amount);
         vm.prank(users.bob); IERC20(asset).approve(address(multistrategy), amount);
         vm.prank(users.bob); multistrategy.deposit(amount, users.bob);
     }
 
     function withdraw(uint256 _amount) public {
-        uint256 amount = bound(_amount, 1, multistrategy.maxWithdraw(users.bob));
-        vm.prank(users.bob); multistrategy.withdraw(amount, users.bob, users.bob);
+        if(_amount >= multistrategy.maxWithdraw(users.bob)) {
+            withdrawAll();
+        } else {
+            uint256 amount = bound(_amount, 1, multistrategy.maxWithdraw(users.bob));
+            vm.prank(users.bob); multistrategy.withdraw(amount, users.bob, users.bob);
+        }
     }
 
     function withdrawAll() public {

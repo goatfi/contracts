@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
@@ -10,6 +9,7 @@ import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
+import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 interface ICurveStableNgSDAdapter {
@@ -28,21 +28,23 @@ interface ICurveLP {
 contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
     using Math for uint256;
 
-    uint256 decimals;
+    CurveStableNgSlippageUtility curveUtility;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
+        asset = AssetsArbitrum.USDT;
         super.setUp();
 
-        asset = AssetsArbitrum.USDT;
-        decimals = IERC20Metadata(asset).decimals();
         depositLimit = 100_000 * (10 ** decimals);
         minDeposit = 10 * (10 ** decimals);
         minDebtDelta = 1 * (10 ** decimals);
         harvest = true;
+        curveUtility = new CurveStableNgSlippageUtility();
 
         createMultistrategy();
         createCurveAdapter();
+
+        vm.prank(users.owner); multistrategy.setSlippageLimit(1);
     }
 
     function createCurveAdapter() public {
@@ -51,6 +53,7 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
             curveLiquidityPool: 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F,
             sdVault: 0xa8D278db4ca48e7333901b24A83505BB078ecF86,
             sdRewards: 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233,
+            curveSlippageUtility: address(curveUtility),
             assetIndex: 1
         });
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({

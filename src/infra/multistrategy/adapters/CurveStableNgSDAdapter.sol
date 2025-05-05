@@ -3,12 +3,13 @@
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { ICurveVaultXChain } from "interfaces/stakedao/ICurveVaultXChain.sol";
 import { IClaimRewardsXChain } from "interfaces/stakedao/IClaimRewardsXChain.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
+import { ICurveSlippageUtility } from "interfaces/infra/utilities/curve/ICurveSlippageUtility.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
@@ -22,6 +23,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         address curveLiquidityPool;
         address sdVault;
         address sdRewards;
+        address curveSlippageUtility;
         int128 assetIndex;
     }
 
@@ -36,6 +38,9 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
 
     /// @notice The StakeDAO Claim rewards contract.
     IClaimRewardsXChain public immutable stakeDAORewards;
+
+    /// @notice Utility contract to calculate the slippage when adding and removing liquidity.
+    ICurveSlippageUtility public immutable curveSlippageUtility;
 
     /// @notice Address of the StakeDAO Vault Gauge
     address public immutable gauge;
@@ -79,6 +84,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         curveLiquidityPool = ICurveLiquidityPool(_curveLPSDData.curveLiquidityPool);
         stakeDAOVault = ICurveVaultXChain(_curveLPSDData.sdVault);
         stakeDAORewards = IClaimRewardsXChain(_curveLPSDData.sdRewards);
+        curveSlippageUtility = ICurveSlippageUtility(_curveLPSDData.curveSlippageUtility);
         assetIndex = _curveLPSDData.assetIndex;
         nCoins = curveLiquidityPool.N_COINS();
         gauge = stakeDAOVault.sdGauge();
@@ -89,12 +95,12 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
                             USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function getDepositSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive) {
-        return _getDepositSlippage(_amount);
+    function getDepositSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
+        return curveSlippageUtility.getDepositSlippage(address(curveLiquidityPool), assetIndex, _amount);
     }
 
-    function getWithdrawSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive) {
-        return _getWithdrawSlippage(_amount);
+    function getWithdrawSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
+        return curveSlippageUtility.getWithdrawSlippage(address(curveLiquidityPool), assetIndex, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -122,89 +128,6 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
             Errors.InvalidRewardToken(_token));
     }
 
-    /// @notice Calculates the slippage when adding liquidity to a Curve Liquidity Pool.
-    function _getDepositSlippage(uint256 _amount) internal view returns (uint256 slippage, bool positive) {
-        uint256[] memory amounts = new uint256[](nCoins);
-        amounts[assetIndex.toUint256()] = _amount;
-        uint256[] memory prices = curveLiquidityPool.stored_rates();
-        uint256[] memory balances = curveLiquidityPool.get_balances();
-        uint256[] memory balancedAmounts = _getDepositBalancedAmounts(amounts, prices, balances);
-        
-        uint256 lpSharesExpected = curveLiquidityPool.calc_token_amount(amounts, true);
-        uint256 lpSharesBalancedExpected = curveLiquidityPool.calc_token_amount(balancedAmounts, true);
-
-        slippage = (
-            lpSharesExpected > lpSharesBalancedExpected
-                ? (lpSharesExpected - lpSharesBalancedExpected).mulDiv(1 ether, lpSharesBalancedExpected)
-                : (lpSharesBalancedExpected - lpSharesExpected).mulDiv(1 ether, lpSharesBalancedExpected)
-        );
-        positive = lpSharesExpected >= lpSharesBalancedExpected;
-    }
-
-    /// @notice Calculates the slippage when removing liquidity from a Curve Liquidity Pool with one coin.
-    function _getWithdrawSlippage(uint256 _amount) internal view returns (uint256 slippage, bool positive) {
-        uint256[] memory amounts = new uint256[](nCoins);
-        amounts[assetIndex.toUint256()] = _amount;
-        uint256 lpShares = curveLiquidityPool.calc_token_amount(amounts, false);
-        uint256[] memory prices = curveLiquidityPool.stored_rates();
-        uint256[] memory balancedAmounts = _getWithdrawBalancedAmounts(lpShares);
-
-        uint256 amount = curveLiquidityPool.calc_withdraw_one_coin(lpShares, assetIndex);
-        uint256 value = amount * prices[assetIndex.toUint256()];
-        uint256 balancedValue = 0;
-
-        for (uint256 i = 0; i < nCoins; i++) {
-            balancedValue += prices[i] * balancedAmounts[i];
-        }
-
-        slippage = (
-            value > balancedValue
-                ? (value - balancedValue).mulDiv(1 ether, balancedValue)
-                : (balancedValue - value).mulDiv(1 ether, balancedValue)
-        );
-        positive = value >= balancedValue;
-    }
-
-    /// @notice Calculates the balanced amounts to not get any slippage when adding liquidity on a Curve Liquidity Pool
-    function _getDepositBalancedAmounts(
-        uint256[] memory _amounts, 
-        uint256[] memory _prices, 
-        uint256[] memory _balances
-    ) internal view returns (uint256[] memory) {
-        uint256 totalValue;
-        uint256 totalBalances;
-        uint256[] memory ratios = new uint256[](nCoins);
-        uint256[] memory balancedAmounts = new uint256[](nCoins);
-
-        for(uint256 i = 0; i < nCoins; ++i) {
-            totalValue += _amounts[i] * _prices[i];
-            totalBalances += _balances[i];
-        }
-        for(uint256 i = 0; i < nCoins; ++i) {
-            ratios[i] = _balances[i].mulDiv(1e18, totalBalances);
-        }
-        for(uint256 i = 0; i < nCoins; ++i) {
-            uint256 denominator;
-            for(uint256 j = 0; j < nCoins; ++j) {
-                denominator += ratios[j].mulDiv(_prices[j], ratios[i]);
-            }
-            balancedAmounts[i] = totalValue / denominator;
-        }
-        return balancedAmounts;
-    }
-
-    /// @notice Calculates the balanced amounts to not get any slippage when removing liquidity from a Curve Liquidity Pool.
-    function _getWithdrawBalancedAmounts(uint256 _lpTokenAmount) internal view returns (uint256[] memory) {
-        uint256 totalSupply = curveLiquidityPool.totalSupply();
-        uint256[] memory balances = curveLiquidityPool.get_balances();
-        uint256[] memory balancedAmounts = new uint256[](nCoins);
-
-        for(uint256 i = 0; i < nCoins; ++i) {
-            balancedAmounts[i] = balances[i].mulDiv(_lpTokenAmount, totalSupply);
-        }
-        return balancedAmounts;
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
@@ -226,7 +149,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     /// @notice Deposits all the available base asset balance.
     function _deposit() internal override {
         uint256 balance = IERC20(asset).balanceOf(address(this));
-        (uint256 slippage, bool positiveSlippage) = _getDepositSlippage(balance);
+        (uint256 slippage, bool positiveSlippage) = getDepositSlippage(balance);
         require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
 
         uint256[] memory amounts = new uint256[](nCoins);
@@ -238,18 +161,19 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     /// @notice Withdraws a specified amount of assets.
     /// @param _amount The amount of assets to withdraw.
     function _withdraw(uint256 _amount) internal override {
-        (uint256 slippage, bool positiveSlippage) = _getWithdrawSlippage(_amount);
+        (uint256 slippage, bool positiveSlippage) = getWithdrawSlippage(_amount);
         require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
 
         uint256[] memory amounts = new uint256[](nCoins);
         amounts[assetIndex.toUint256()] = _amount;
         uint256 lpSharesNeeded = curveLiquidityPool.calc_token_amount(amounts, false);
         uint256 lpSharesBalance = IERC20(gauge).balanceOf(address(this));
-        lpSharesNeeded = lpSharesNeeded.mulDiv(ppmSafetyFactor, PPM_DENOMINATOR);
-        uint256 lpShares = Math.min(lpSharesNeeded, lpSharesBalance);
 
+        lpSharesNeeded = _amount >= _getMinDebtDelta() ? lpSharesNeeded.mulDiv(ppmSafetyFactor, PPM_DENOMINATOR) : lpSharesNeeded *= 2;
+
+        uint256 lpShares = Math.min(lpSharesNeeded, lpSharesBalance);
         stakeDAOVault.withdraw(lpShares);
-        if(lpSharesNeeded > lpSharesBalance || _amount < _getMinDebtDelta()) {
+        if(lpSharesNeeded > lpSharesBalance) {
             curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, 0);
         } else {
             curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, _amount);
@@ -261,9 +185,12 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     /// @dev The other non-asset tokens will be sent to the owner of this contract.
     function _emergencyWithdraw() internal override {
         stakeDAOVault.withdrawAll();
-        uint256 lpSharesAmount = curveLiquidityPool.balanceOf(address(this));
-        uint256[] memory minAmounts = new uint256[](nCoins);
-        curveLiquidityPool.remove_liquidity(lpSharesAmount, minAmounts);
+        uint256 lpShares = curveLiquidityPool.balanceOf(address(this));
+
+        if(lpShares > 0) {
+            uint256[] memory minAmounts = new uint256[](nCoins);
+            curveLiquidityPool.remove_liquidity(lpShares, minAmounts);
+        }
 
         for(uint256 i = 0; i < nCoins; ++i) {
             address token = curveLiquidityPool.coins(i);
