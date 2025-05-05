@@ -21,7 +21,7 @@ contract StargateAdapterNativeIntegration is AdapterIntegration {
         minDeposit = (10 ** IERC20Metadata(asset).decimals() - 2);
         harvest = true;
 
-        createMultistrategy(asset, depositLimit);
+        createMultistrategy();
         createStargateAdapterNative();
     }
 
@@ -42,11 +42,6 @@ contract StargateAdapterNativeIntegration is AdapterIntegration {
     }
 
     function testFuzz_AdapterLifeCycle(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
-        _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
-        _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
-        _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
-        _debtRatio = bound(_debtRatio, 0, 10_000);
-
         super.adapterLifeCycle(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         uint256 currentBalance = IERC20(asset).balanceOf(users.bob);
@@ -54,11 +49,6 @@ contract StargateAdapterNativeIntegration is AdapterIntegration {
     }
 
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
-        _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
-        _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
-        _yieldTime = bound(_yieldTime, 1 hours, 10 * 365 days);
-        _debtRatio = bound(_debtRatio, 0, 10_000);
-
         super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         assertApproxEqAbs(adapter.totalAssets(), 0, 1);

@@ -18,7 +18,7 @@ contract CurveNgSDTest is AdapterInvariantBase {
     address asset = AssetsArbitrum.USDC;
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
     address sdVault = 0xa8D278db4ca48e7333901b24A83505BB078ecF86;
-    address sdRewards = address(0);
+    address sdRewards = 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233;
     int128 assetIndex = 0;
 
     function setUp() public {

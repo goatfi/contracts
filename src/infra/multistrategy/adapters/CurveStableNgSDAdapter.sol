@@ -9,6 +9,8 @@ import { IClaimRewardsXChain } from "interfaces/stakedao/IClaimRewardsXChain.sol
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
+import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
+import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
@@ -22,6 +24,9 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         address sdRewards;
         int128 assetIndex;
     }
+
+    /// @notice Parts-per-million base; 1 000 000 ppm = 100 %.
+    uint256 constant PPM_DENOMINATOR = 1_000_000;
 
     /// @notice The Curve Liquidity Pool where the asset will be deposited.
     ICurveLiquidityPool curveLiquidityPool;
@@ -44,6 +49,10 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     /// @notice Slippage limit when withdrawing from the Curve Liquidity Pool.
     /// @dev If the slippage is higher than this parameter, the transaction will revert.
     uint256 public curveSlippageLimit;
+
+    /// @notice Buffer uplift applied to LP burns to cover round-down. 1 ppm (+0.0001 %)
+    /// @dev Only used before burning shares when withdrawing.
+    uint256 public ppmSafetyFactor;
 
     /// @notice Thrown when the withdraw slippage
     /// @param slippage Expected slippage
@@ -73,6 +82,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         assetIndex = _curveLPSDData.assetIndex;
         nCoins = curveLiquidityPool.N_COINS();
         gauge = stakeDAOVault.sdGauge();
+        ppmSafetyFactor = PPM_DENOMINATOR + 1;
         _giveAllowances();
     }
     /*//////////////////////////////////////////////////////////////////////////
@@ -93,10 +103,12 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
 
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
-        uint256 assetsWithdrawable = curveLiquidityPool.calc_withdraw_one_coin(vaultShares, assetIndex);
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
+        uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
 
+        if(vaultShares == 0) return assetBalance;
+
+        uint256 assetsWithdrawable = curveLiquidityPool.calc_withdraw_one_coin(vaultShares, assetIndex);
         return assetsWithdrawable + assetBalance;
     }
 
@@ -202,16 +214,24 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         curveSlippageLimit = _slippageLimit;
     }
 
+    function setBufferPPM(uint256 _ppm) external onlyOwner {
+        require(_ppm > 0 && _ppm < 1_000);
+        ppmSafetyFactor = PPM_DENOMINATOR + _ppm;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Deposits all the available base asset balance.
     function _deposit() internal override {
-        uint256[] memory amounts = new uint256[](nCoins);
         uint256 balance = IERC20(asset).balanceOf(address(this));
+        (uint256 slippage, bool positiveSlippage) = _getDepositSlippage(balance);
+        require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
+
+        uint256[] memory amounts = new uint256[](nCoins);
         amounts[assetIndex.toUint256()] = balance;
-        uint256 lpSharesAmount = curveLiquidityPool.add_liquidity(amounts, type(uint256).max);
+        uint256 lpSharesAmount = curveLiquidityPool.add_liquidity(amounts, 0);
         stakeDAOVault.deposit(address(this), lpSharesAmount);
     }
 
@@ -225,9 +245,15 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         amounts[assetIndex.toUint256()] = _amount;
         uint256 lpSharesNeeded = curveLiquidityPool.calc_token_amount(amounts, false);
         uint256 lpSharesBalance = IERC20(gauge).balanceOf(address(this));
+        lpSharesNeeded = lpSharesNeeded.mulDiv(ppmSafetyFactor, PPM_DENOMINATOR);
         uint256 lpShares = Math.min(lpSharesNeeded, lpSharesBalance);
+
         stakeDAOVault.withdraw(lpShares);
-        curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, _amount);
+        if(lpSharesNeeded > lpSharesBalance || _amount < _getMinDebtDelta()) {
+            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, 0);
+        } else {
+            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, _amount);
+        }
     }
 
     /// @notice Performs an emergency withdrawal of all assets from StakeDAO and Curve.
@@ -268,5 +294,10 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         address[] memory gauges = new address[](1);
         gauges[0] = gauge;
         stakeDAORewards.claimRewards(gauges);
+    }
+
+    function _getMinDebtDelta() internal view returns (uint256 minDebtDelta) {
+        MStrat.StrategyParams memory params = IMultistrategy(multistrategy).getStrategyParameters(address(this));
+        minDebtDelta = params.minDebtDelta;
     }
 }
