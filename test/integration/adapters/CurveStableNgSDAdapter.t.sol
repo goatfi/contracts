@@ -16,6 +16,7 @@ interface ICurveStableNgSDAdapter {
     function getDepositSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive);
     function getWithdrawSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive);
     function curveSlippageLimit() external view returns (uint256 slippageLimit);
+    function ppmSafetyFactor() external view returns (uint256);
     function setCurveSlippageLimit(uint256 _slippageLimit) external;
     function setBufferPPM(uint256 _ppm) external;
 }
@@ -73,7 +74,7 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         vm.stopPrank();
     }
 
-    function test_RevertWhen_callerNotOwner() public {
+    function test_SetCurveSlippageLimit_RevertWhen_callerNotOwner() public {
         uint256 newLimit = 50 ether;
         vm.startPrank(users.alice);
         vm.expectRevert(
@@ -86,7 +87,7 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         vm.stopPrank();
     }
 
-    function test_RevertWhen_SlippageAboveLimit() public {
+    function test_SetCurveSlippageLimit_RevertWhen_SlippageAboveLimit() public {
         uint256 excessiveLimit = 101 ether;
 
         vm.expectRevert(
@@ -104,6 +105,41 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         vm.prank(users.keeper); ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(newLimit);
 
         assertEq(ICurveStableNgSDAdapter(address(adapter)).curveSlippageLimit(), newLimit);
+    }
+
+    function test_SetBufferPPM_RevertWhen_callerNotOwner() public {
+        uint256 ppm = 500;
+        vm.startPrank(users.alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector, 
+                users.alice
+            )
+        );
+        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(ppm);
+        vm.stopPrank();
+    }
+
+    function test_SetBufferPPM_RevertWhen_zeroPPM() public {
+        vm.startPrank(users.keeper);
+        vm.expectRevert(abi.encodeWithSelector(CurveStableNgSDAdapter.InvalidPPM.selector, 0));
+        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(0);
+        vm.stopPrank();
+    }
+
+    function test_SetBufferPPM_RevertWhen_PPMTooHigh() public {
+        vm.startPrank(users.keeper);
+        vm.expectRevert(abi.encodeWithSelector(CurveStableNgSDAdapter.InvalidPPM.selector, 10_001));
+        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(10_001);
+        vm.stopPrank();
+    }
+
+    function test_SetBufferPPM() public {
+        uint256 ppm = 500;
+        uint256 expected = 1_000_000 + ppm;
+
+        vm.prank(users.keeper); ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(ppm);
+        assertEq(ICurveStableNgSDAdapter(address(adapter)).ppmSafetyFactor(), expected);
     }
 
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {

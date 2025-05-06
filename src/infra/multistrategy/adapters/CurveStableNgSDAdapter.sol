@@ -59,10 +59,14 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     /// @dev Only used before burning shares when withdrawing.
     uint256 public ppmSafetyFactor;
 
-    /// @notice Thrown when the withdraw slippage
+    /// @notice Thrown when the withdraw slippage is above the valid limit.
     /// @param slippage Expected slippage
     /// @param slippageLimit Slippage limit
     error CurveSlippageTooHigh(uint256 slippage, uint256 slippageLimit);
+
+    /// @notice Thrown when the provided PPM value is out of the valid range.
+    /// @param ppm The invalid PPM value that caused the error
+    error InvalidPPM(uint256 ppm);
 
     /// @notice Constructor for the strategy adapter.
     /// @param _multistrategy The address of the multi-strategy contract.
@@ -95,10 +99,20 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
                             USER-FACING CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Estimates the slippage for depositing a given amount into the Curve liquidity pool
+    /// @dev Delegates to the `curveSlippageUtility` to compute slippage based on the current pool state
+    /// @param _amount The amount of the asset to simulate depositing, in asset decimals
+    /// @return slippage The estimated slippage. (100 ether = 100%)
+    /// @return positive Indicates whether the slippage is positive (true) or negative (false)
     function getDepositSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
         return curveSlippageUtility.getDepositSlippage(address(curveLiquidityPool), assetIndex, _amount);
     }
 
+    /// @notice Estimates the slippage for withdrawing a given amount from the Curve liquidity pool
+    /// @dev Delegates to the `curveSlippageUtility` to compute slippage based on the current pool state
+    /// @param _amount The amount of the asset to simulate withdrawing, in asset decimals
+    /// @return slippage The estimated slippage. (100 ether = 100%)
+    /// @return positive Indicates whether the slippage is positive (true) or negative (false)
     function getWithdrawSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
         return curveSlippageUtility.getWithdrawSlippage(address(curveLiquidityPool), assetIndex, _amount);
     }
@@ -132,13 +146,18 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /// @notice Sets the maximum allowed slippage limit for Curve operations
+    /// @param _slippageLimit The new slippage limit, expressed in ether (100 ether = 100%)
     function setCurveSlippageLimit(uint256 _slippageLimit) external onlyOwner {
         require(_slippageLimit <= 100 ether, Errors.SlippageLimitExceeded(_slippageLimit));
         curveSlippageLimit = _slippageLimit;
     }
 
+    /// @notice Sets the buffer for price impact protection as parts per million (PPM)
+    /// @dev The PPM value represents parts per million and is used to adjust the number of LP shares needed when withdrawing.
+    /// @param _ppm The PPM value to add to the base denominator for safety calculations
     function setBufferPPM(uint256 _ppm) external onlyOwner {
-        require(_ppm > 0 && _ppm < 1_000);
+        require(_ppm > 0 && _ppm < 1_000, InvalidPPM(_ppm));
         ppmSafetyFactor = PPM_DENOMINATOR + _ppm;
     }
 
@@ -223,6 +242,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         stakeDAORewards.claimRewards(gauges);
     }
 
+    /// @notice Returns this adapter's minimum debt delta.
     function _getMinDebtDelta() internal view returns (uint256 minDebtDelta) {
         MStrat.StrategyParams memory params = IMultistrategy(multistrategy).getStrategyParameters(address(this));
         minDebtDelta = params.minDebtDelta;

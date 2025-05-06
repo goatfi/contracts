@@ -52,12 +52,17 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
             balancedValue += prices[i] * balancedAmounts[i];
         }
 
-        slippage = (
+        if(balancedValue > 0) {
+            slippage = (
             value > balancedValue
                 ? (value - balancedValue).mulDiv(1 ether, balancedValue)
                 : (balancedValue - value).mulDiv(1 ether, balancedValue)
-        );
-        positive = value >= balancedValue;
+            );
+            positive = value >= balancedValue;
+        } else {
+            slippage = 0;
+            positive = true;
+        }
     }
 
     /// @notice Calculates the balanced amounts to not get any slippage when adding liquidity on a Curve Liquidity Pool
