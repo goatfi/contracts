@@ -21,6 +21,8 @@ contract AdapterHandler is Test {
     uint256 public ghost_withdrawn;
     uint256 public ghost_yieldTime;
 
+    uint256 timeBetweenActions = 6 hours;
+
     constructor(Multistrategy _multistrategy, StrategyAdapter _adapter, Users memory _users, bool _harvest) {
         multistrategy = _multistrategy;
         adapter = _adapter;
@@ -45,8 +47,6 @@ contract AdapterHandler is Test {
 
     function setDebtRatio(uint256 _debtRatio) public {
         _debtRatio = bound(_debtRatio, 0, 10_000);
-
-        vm.warp(block.timestamp + 10 minutes);
 
         vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(adapter), _debtRatio);
         vm.prank(users.keeper); adapter.requestCredit();
@@ -81,7 +81,6 @@ contract AdapterHandler is Test {
             withdrawAll();
         } else {
             _amount = bound(_amount, 1, maxWithdraw);
-            vm.warp(block.timestamp + 10 minutes);
             vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
             ghost_withdrawn += _amount;
         }
@@ -90,7 +89,6 @@ contract AdapterHandler is Test {
     function withdrawAll() public {
         uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
-            vm.warp(block.timestamp + 10 minutes);
             vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);
         }
     }
@@ -107,6 +105,5 @@ contract AdapterHandler is Test {
 
         if(harvest) IStrategyAdapterHarvestable(address(adapter)).harvest();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
-        vm.warp(block.timestamp + 7 days);
     }
 }
