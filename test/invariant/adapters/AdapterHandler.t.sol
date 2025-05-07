@@ -62,7 +62,7 @@ contract AdapterHandler is Test {
 
     function deposit(uint256 _amount) public {
         if(multistrategy.totalAssets() >= multistrategy.depositLimit()) return;
-        uint256 maxDeposit = multistrategy.depositLimit() - multistrategy.totalAssets();
+        uint256 maxDeposit = multistrategy.maxDeposit(users.bob);
         if(maxDeposit == 0) return;
 
         _amount = bound(_amount, 1, maxDeposit);
@@ -77,11 +77,14 @@ contract AdapterHandler is Test {
         uint256 maxWithdraw = multistrategy.maxWithdraw(users.bob);
         if(maxWithdraw == 0) return;
 
-        _amount = bound(_amount, 1, maxWithdraw);
-        ghost_withdrawn += _amount;
-
-        vm.warp(block.timestamp + 10 minutes);
-        vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
+        if(_amount >= multistrategy.maxWithdraw(users.bob)) {
+            withdrawAll();
+        } else {
+            _amount = bound(_amount, 1, maxWithdraw);
+            vm.warp(block.timestamp + 10 minutes);
+            vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
+            ghost_withdrawn += _amount;
+        }
     }
 
     function withdrawAll() public {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+// External Libraries
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -8,23 +9,11 @@ import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
 import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
+import { ICurveStableNgSDAdapter } from "interfaces/infra/multistrategy/adapters/ICurveStableNgSDAdapter.sol";
+import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
 import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
-
-interface ICurveStableNgSDAdapter {
-    function getDepositSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive);
-    function getWithdrawSlippage(uint256 _amount) external view returns (uint256 slippage, bool positive);
-    function curveSlippageLimit() external view returns (uint256 slippageLimit);
-    function ppmSafetyFactor() external view returns (uint256);
-    function setCurveSlippageLimit(uint256 _slippageLimit) external;
-    function setBufferPPM(uint256 _ppm) external;
-}
-
-interface ICurveLP {
-    function calc_token_amount(uint256[] memory amounts, bool isDeposit) external view returns (uint256);
-    function calc_withdraw_one_coin(uint256 vaultShares, int128 index) external view returns (uint256);
-}
 
 contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
     using Math for uint256;
@@ -49,7 +38,6 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
     }
 
     function createCurveAdapter() public {
-        uint256 slippageLimit = 0.1 ether;
         CurveStableNgSDAdapter.CurveSNGSDData memory curveData = CurveStableNgSDAdapter.CurveSNGSDData({
             curveLiquidityPool: 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F,
             sdVault: 0xa8D278db4ca48e7333901b24A83505BB078ecF86,
@@ -66,11 +54,11 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         adapter.transferOwnership(users.keeper);
 
         vm.startPrank(users.keeper);
-        adapter.enableGuardian(users.guardian);
-        adapter.setSlippageLimit(1);
-        IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.CRV);
-        ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(slippageLimit);
-        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(2);
+            adapter.enableGuardian(users.guardian);
+            adapter.setSlippageLimit(1);
+            IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.CRV);
+            ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(0.1 ether);
+            ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(2);
         vm.stopPrank();
     }
 
@@ -146,14 +134,14 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         assertEq(adapter.totalAssets(), 0);
-        //assertEq(multistrategy.totalAssets(), IERC20(asset).balanceOf(address(multistrategy)));
+        assertGt(multistrategy.totalAssets(), 0);
     }
 
     // Observations:
     // The smaller the buffer, the higher minDebtDelta has to be.
     // A buffer of 2 PPM can handle 1 token minDebtDelta
     function testFuzz_sharesMatch(uint256 _amount) public view {
-        ICurveLP curveLiquidityPool = ICurveLP(0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F);
+        ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F);
         uint256 lpTokenBalance = IERC20(asset).balanceOf(address(curveLiquidityPool));
 
         uint256 ONE_PPM      = 1_000_000;   // 1 part-per-million = 0.0001 %

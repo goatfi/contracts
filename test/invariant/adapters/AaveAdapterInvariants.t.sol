@@ -12,20 +12,20 @@ import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
 
 contract AaveAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-    address asset = AssetsArbitrum.USDC;
 
-    function setUp() public {
+    function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-
-        createUsers();
+        asset = AssetsArbitrum.USDC;
+        super.setUp();
+        
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
+            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
             false
         );
 
-        makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));
+        makeInitialDeposit(10 * (10 ** decimals));
         targetContract(address(handler));
     }
 
@@ -47,7 +47,7 @@ contract AaveAdapterInvariants is AdapterInvariantBase {
         console.log("Yield Time:", handler.ghost_yieldTime());
 
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGe(multistrategy.pricePerShare(), 1 * (10 ** IERC20Metadata(asset).decimals()));
+            assertGe(multistrategy.pricePerShare(), 1 * (10 ** decimals));
         }
     }
 }
