@@ -6,7 +6,7 @@ import { Script} from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { AdapterDebtRatioThresholdRegistry } from "src/infra/utilities/AdapterDebtRatioThresholdRegistry.sol";
 
-contract DeployScript is Script {
+contract DeployAdapterDebtRatioThresholdRegistry is Script {
     address initialOwner = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     function run() external {
         vm.startBroadcast();
