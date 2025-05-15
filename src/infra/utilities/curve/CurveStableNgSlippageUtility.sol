@@ -12,12 +12,12 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     using Math for uint256;
 
     /// @notice Calculates the slippage when adding liquidity to a Curve Liquidity Pool.
-    function getDepositSlippage(address _lp, int128 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
+    function getDepositSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
         uint256 nCoins = curveLiquidityPool.N_COINS();
 
         uint256[] memory amounts = new uint256[](nCoins);
-        amounts[_assetIndex.toUint256()] = _amount;
+        amounts[_assetIndex] = _amount;
         uint256[] memory prices = curveLiquidityPool.stored_rates();
         uint256[] memory balances = curveLiquidityPool.get_balances();
         uint256[] memory balancedAmounts = _getDepositBalancedAmounts(amounts, prices, balances, nCoins);
@@ -34,18 +34,18 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     }
 
     /// @notice Calculates the slippage when removing liquidity from a Curve Liquidity Pool with one coin.
-    function getWithdrawSlippage(address _lp, int128 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
+    function getWithdrawSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
         uint256 nCoins = curveLiquidityPool.N_COINS();
 
         uint256[] memory amounts = new uint256[](nCoins);
-        amounts[_assetIndex.toUint256()] = _amount;
+        amounts[_assetIndex] = _amount;
         uint256 lpShares = curveLiquidityPool.calc_token_amount(amounts, false);
         uint256[] memory prices = curveLiquidityPool.stored_rates();
         uint256[] memory balancedAmounts = _getWithdrawBalancedAmounts(_lp, lpShares, nCoins);
 
-        uint256 amount = curveLiquidityPool.calc_withdraw_one_coin(lpShares, _assetIndex);
-        uint256 value = amount * prices[_assetIndex.toUint256()];
+        uint256 amount = curveLiquidityPool.calc_withdraw_one_coin(lpShares, int128(uint128(_assetIndex)));
+        uint256 value = amount * prices[_assetIndex];
         uint256 balancedValue = 0;
 
         for (uint256 i = 0; i < nCoins; i++) {

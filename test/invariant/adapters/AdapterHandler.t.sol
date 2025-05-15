@@ -21,7 +21,7 @@ contract AdapterHandler is Test {
     uint256 public ghost_withdrawn;
     uint256 public ghost_yieldTime;
 
-    uint256 timeBetweenActions = 6 hours;
+    uint256 public lastTimeSinceAction;
 
     constructor(Multistrategy _multistrategy, StrategyAdapter _adapter, Users memory _users, bool _harvest) {
         multistrategy = _multistrategy;
@@ -41,19 +41,27 @@ contract AdapterHandler is Test {
         _; 
     }
 
+    modifier recordTimestamp() {
+        _;
+        lastTimeSinceAction = block.timestamp;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                                      ACTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function setDebtRatio(uint256 _debtRatio) public {
+    function setDebtRatio(uint256 _debtRatio) recordTimestamp public {
         _debtRatio = bound(_debtRatio, 0, 10_000);
+
+        // Avoid false positives when retiring the adapter when not enough time passed since last request credit
+        if(_debtRatio == 0 && block.timestamp - lastTimeSinceAction < 6 hours) return;
 
         vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(adapter), _debtRatio);
         vm.prank(users.keeper); adapter.requestCredit();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
     }
 
-    function requestCredit() public {
+    function requestCredit() recordTimestamp public {
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
             vm.prank(users.keeper); adapter.requestCredit();
@@ -73,7 +81,7 @@ contract AdapterHandler is Test {
         vm.prank(users.bob); multistrategy.deposit(_amount, users.bob);
     }
 
-    function withdraw(uint256 _amount) public {
+    function withdraw(uint256 _amount) recordTimestamp public {
         uint256 maxWithdraw = multistrategy.maxWithdraw(users.bob);
         if(maxWithdraw == 0) return;
 
@@ -86,14 +94,14 @@ contract AdapterHandler is Test {
         }
     }
 
-    function withdrawAll() public {
+    function withdrawAll() recordTimestamp public {
         uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
             vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);
         }
     }
 
-    function earnYield(uint256 _time) public {
+    function earnYield(uint256 _time) recordTimestamp public {
         _time = bound(_time, 1 days, 30 days);
 
         ghost_yieldTime += _time;

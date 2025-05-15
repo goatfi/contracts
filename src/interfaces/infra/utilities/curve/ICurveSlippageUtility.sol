@@ -15,7 +15,7 @@ interface ICurveSlippageUtility {
      */
     function getDepositSlippage(
         address _lp,
-        int128 _assetIndex,
+        uint256 _assetIndex,
         uint256 _amount
     ) external view returns (uint256 slippage, bool positive);
 
@@ -29,7 +29,7 @@ interface ICurveSlippageUtility {
      */
     function getWithdrawSlippage(
         address _lp,
-        int128 _assetIndex,
+        uint256 _assetIndex,
         uint256 _amount
     ) external view returns (uint256 slippage, bool positive);
 }

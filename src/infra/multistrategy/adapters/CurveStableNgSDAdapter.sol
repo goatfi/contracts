@@ -5,7 +5,6 @@ pragma solidity 0.8.27;
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ICurveVaultXChain } from "interfaces/stakedao/ICurveVaultXChain.sol";
 import { IClaimRewardsXChain } from "interfaces/stakedao/IClaimRewardsXChain.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
@@ -16,7 +15,6 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     using SafeERC20 for IERC20;
-    using SafeCast for int128;
     using Math for uint256;
 
     struct CurveSNGSDData {
@@ -24,7 +22,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         address sdVault;
         address sdRewards;
         address curveSlippageUtility;
-        int128 assetIndex;
+        uint256 assetIndex;
     }
 
     /// @notice Parts-per-million base; 1 000 000 ppm = 100 %.
@@ -46,7 +44,10 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
     address public immutable gauge;
 
     /// @notice Index of the asset in the coins array.
-    int128 public immutable assetIndex;
+    uint256 public immutable assetIndex;
+
+    /// @notice Index of the asset in the coins array casted to int128.
+    int128 public immutable assetIndex128;
 
     /// @notice Number of different coins in coins array.
     uint256 public immutable nCoins;
@@ -90,6 +91,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         stakeDAORewards = IClaimRewardsXChain(_curveLPSDData.sdRewards);
         curveSlippageUtility = ICurveSlippageUtility(_curveLPSDData.curveSlippageUtility);
         assetIndex = _curveLPSDData.assetIndex;
+        assetIndex128 = int128(uint128(assetIndex));
         nCoins = curveLiquidityPool.N_COINS();
         gauge = stakeDAOVault.sdGauge();
         ppmSafetyFactor = PPM_DENOMINATOR + 1;
@@ -128,7 +130,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
 
         if(vaultShares == 0) return assetBalance;
 
-        uint256 assetsWithdrawable = curveLiquidityPool.calc_withdraw_one_coin(vaultShares, assetIndex);
+        uint256 assetsWithdrawable = curveLiquidityPool.calc_withdraw_one_coin(vaultShares, assetIndex128);
         return assetsWithdrawable + assetBalance;
     }
 
@@ -172,7 +174,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
 
         uint256[] memory amounts = new uint256[](nCoins);
-        amounts[assetIndex.toUint256()] = balance;
+        amounts[assetIndex] = balance;
         uint256 lpSharesAmount = curveLiquidityPool.add_liquidity(amounts, 0);
         stakeDAOVault.deposit(address(this), lpSharesAmount);
     }
@@ -184,7 +186,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
 
         uint256[] memory amounts = new uint256[](nCoins);
-        amounts[assetIndex.toUint256()] = _amount;
+        amounts[assetIndex] = _amount;
         uint256 lpSharesNeeded = curveLiquidityPool.calc_token_amount(amounts, false);
         uint256 lpSharesBalance = IERC20(gauge).balanceOf(address(this));
 
@@ -193,9 +195,9 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable {
         uint256 lpShares = Math.min(lpSharesNeeded, lpSharesBalance);
         stakeDAOVault.withdraw(lpShares);
         if(lpSharesNeeded > lpSharesBalance) {
-            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, 0);
+            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex128, 0);
         } else {
-            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex, _amount);
+            curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex128, _amount);
         }
     }
 
