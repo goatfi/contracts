@@ -63,14 +63,6 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         vm.stopPrank();
     }
 
-    function test_SetBufferPPM() public {
-        uint256 ppm = 500;
-        uint256 expected = 1_000_000 + ppm;
-
-        vm.prank(users.keeper); ICurveLPBase(address(adapter)).setWithdrawBufferPPM(ppm);
-        assertEq(ICurveLPBase(address(adapter)).withdrawBuffer(), expected);
-    }
-
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 

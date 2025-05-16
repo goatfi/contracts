@@ -15,7 +15,7 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     /// @param _lp Address of the Curve Liquidity Pool.
     /// @param _assetIndex Index of the asset in the coins array.
     /// @param _amount The amount of tokens that will be deposited.
-    /// @return slippage The calculated deposit slippage where 1e18 = 1%.
+    /// @return slippage The calculated deposit slippage where 1e18 = 100%.
     /// @return positive Indicates whether the slippage is positive (true) or negative (false).
     function getDepositSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
@@ -42,7 +42,7 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     /// @param _lp Address of the Curve Liquidity Pool.
     /// @param _assetIndex Index of the asset in the coins array.
     /// @param _amount The amount of tokens that will be withdrawn.
-    /// @return slippage The calculated withdraw slippage where 1e18 = 1%.
+    /// @return slippage The calculated withdraw slippage where 1e18 = 100%.
     /// @return positive Indicates whether the slippage is positive (true) or negative (false).
     function getWithdrawSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
