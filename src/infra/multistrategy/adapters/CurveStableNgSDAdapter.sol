@@ -16,6 +16,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
+    /// @notice Struct containing the needed addresses for this adapter.
     struct CurveSNGSDData {
         address curveLiquidityPool;
         address sdVault;
@@ -72,6 +73,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the total amount of assets held in this adapter.
+    /// @return The total amount of assets held by this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
         uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
@@ -173,7 +175,8 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
         stakeDAORewards.claimRewards(gauges);
     }
 
-    /// @notice Returns this adapter's minimum debt delta.
+    /// @notice Gets the minimum debt delta of this adapter.
+    /// @return minDebtDelta This adapter's minimum debt delta.
     function _getMinDebtDelta() internal view returns (uint256 minDebtDelta) {
         MStrat.StrategyParams memory params = IMultistrategy(multistrategy).getStrategyParameters(address(this));
         minDebtDelta = params.minDebtDelta;

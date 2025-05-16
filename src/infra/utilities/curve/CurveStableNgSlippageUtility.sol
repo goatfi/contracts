@@ -12,6 +12,11 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     using Math for uint256;
 
     /// @notice Calculates the slippage when adding liquidity to a Curve Liquidity Pool.
+    /// @param _lp Address of the Curve Liquidity Pool.
+    /// @param _assetIndex Index of the asset in the coins array.
+    /// @param _amount The amount of tokens that will be deposited.
+    /// @return slippage The calculated deposit slippage where 1e18 = 1%.
+    /// @return positive Indicates whether the slippage is positive (true) or negative (false).
     function getDepositSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
         uint256 nCoins = curveLiquidityPool.N_COINS();
@@ -34,6 +39,11 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
     }
 
     /// @notice Calculates the slippage when removing liquidity from a Curve Liquidity Pool with one coin.
+    /// @param _lp Address of the Curve Liquidity Pool.
+    /// @param _assetIndex Index of the asset in the coins array.
+    /// @param _amount The amount of tokens that will be withdrawn.
+    /// @return slippage The calculated withdraw slippage where 1e18 = 1%.
+    /// @return positive Indicates whether the slippage is positive (true) or negative (false).
     function getWithdrawSlippage(address _lp, uint256 _assetIndex, uint256 _amount) external view returns (uint256 slippage, bool positive) {
         ICurveLiquidityPool curveLiquidityPool = ICurveLiquidityPool(_lp);
         uint256 nCoins = curveLiquidityPool.N_COINS();
@@ -65,7 +75,12 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
         }
     }
 
-    /// @notice Calculates the balanced amounts to not get any slippage when adding liquidity on a Curve Liquidity Pool
+    /// @notice Calculates the balanced amounts to avoid slippage when adding liquidity to a Curve StableSwapNG pool.
+    /// @param _amounts The amounts of each token the user intends to deposit.
+    /// @param _prices The current price of each token.
+    /// @param _balances The current balance of each token in the pool.
+    /// @param _nCoins The total number of different tokens in the pool.
+    /// @return balancedAmounts An array of token amounts adjusted to the pool's balance.
     function _getDepositBalancedAmounts(
         uint256[] memory _amounts, 
         uint256[] memory _prices, 
@@ -94,7 +109,12 @@ contract CurveStableNgSlippageUtility is ICurveSlippageUtility {
         return balancedAmounts;
     }
 
-    /// @notice Calculates the balanced amounts to not get any slippage when removing liquidity from a Curve Liquidity Pool.
+    /// @notice Calculates the proportional amounts of each token to withdraw from a Curve StableSwapNG pool based on a specified amount of LP tokens.
+    /// @dev This function computes the user's share of each underlying token in the pool, proportional to their LP token holdings.
+    /// @param _lp The address of the Curve StableSwapNG liquidity pool contract.
+    /// @param _lpTokenAmount The amount of LP tokens the user intends to redeem.
+    /// @param _nCoins The total number of different tokens in the pool.
+    /// @return balancedAmounts An array containing the amounts of each token to withdraw.
     function _getWithdrawBalancedAmounts(
         address _lp,
         uint256 _lpTokenAmount,
