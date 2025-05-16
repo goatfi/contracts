@@ -58,7 +58,7 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
             adapter.enableGuardian(users.guardian);
             adapter.setSlippageLimit(1);
             IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.CRV);
-            ICurveLPBase(address(adapter)).setCurveSlippageLimit(0.1 ether);
+            ICurveLPBase(address(adapter)).setCurveSlippageLimit(0.001 ether);
             ICurveLPBase(address(adapter)).setWithdrawBufferPPM(2);
         vm.stopPrank();
     }
