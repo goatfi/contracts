@@ -14,20 +14,20 @@ import { CurveLendSDAdapter } from "src/infra/multistrategy/adapters/CurveLendSD
 contract CurveLendSDAdapterInvariants is AdapterInvariantBase {
     address[] rewards = [AssetsArbitrum.CRV];
     AdapterHandler handler;
-    address asset = AssetsArbitrum.CRVUSD;
 
-    function setUp() public {
+    function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
+        asset = AssetsArbitrum.CRVUSD;
+        super.setUp();
 
-        createUsers();
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
+            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
             true
         );
 
-        makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));
+        makeInitialDeposit(10 * (10 ** decimals));
         targetContract(address(handler));
     }
 
@@ -59,7 +59,7 @@ contract CurveLendSDAdapterInvariants is AdapterInvariantBase {
         console.log("Yield Time:", handler.ghost_yieldTime());
 
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGt(multistrategy.pricePerShare(), 1 * (10 ** IERC20Metadata(asset).decimals()));
+            assertGt(multistrategy.pricePerShare(), 1 * (10 ** decimals));
         }
     }
 }

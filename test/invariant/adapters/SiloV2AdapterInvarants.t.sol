@@ -14,21 +14,21 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 
 contract SiloV2AdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-    address asset = AssetsSonic.USDCe;
     bool harvest = false;
 
-    function setUp() public {
+    function setUp() public override {
         vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
-
-        createUsers();
+        asset = AssetsSonic.USDCe;
+        super.setUp();
+        
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** IERC20Metadata(asset).decimals())), 
+            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
             harvest
         );
 
-        makeInitialDeposit(10 * (10 ** IERC20Metadata(asset).decimals()));
+        makeInitialDeposit(10 * (10 ** decimals));
         targetContract(address(handler));
     }
 
@@ -60,7 +60,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
         console.log("PPS:", multistrategy.pricePerShare());
 
         if (handler.ghost_yieldTime() > 0) {
-            assertGe(multistrategy.pricePerShare(), (10 ** IERC20Metadata(asset).decimals()));
+            assertGe(multistrategy.pricePerShare(), (10 ** decimals));
         }
     }
 }

@@ -30,16 +30,13 @@ abstract contract Base_Test is Test, Events {
     ERC20MissingReturn internal usdt;
 
     function setUp() public virtual {
-        // Deploy the base test contracts.
         dai = new ERC20Mock("Dai Stablecoin", "DAI");
         weth = new ERC20Mock("Wrapped Ether", "WETH");
         usdt = new ERC20MissingReturn("Tether USD", "USDT", 6);
 
-        // Label the base test contracts.
         vm.label({ account: address(dai), newLabel: "DAI" });
         vm.label({ account: address(usdt), newLabel: "USDT" });
 
-        // Create users for testing.
         users = Users({
             owner: createUser("Owner"),
             keeper: createUser("Keeper"),
@@ -67,11 +64,8 @@ abstract contract Base_Test is Test, Events {
             _symbol: "GDAI"
         });
 
-        // Enable Guardian
         multistrategy.enableGuardian(users.guardian);
-        // Set deposit limit to 100K tokens
         multistrategy.setDepositLimit(100_000 * 10 ** usdt.decimals());
-        // Set performance fee to 5%
         multistrategy.setPerformanceFee(500);
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
@@ -86,11 +80,8 @@ abstract contract Base_Test is Test, Events {
             _symbol: "GDAI"
         });
 
-        // Enable Guardian
         multistrategyHarness.enableGuardian(users.guardian);
-        // Set deposit limit to 100K tokens
         multistrategyHarness.setDepositLimit(100_000 ether);
-        // Set performance fee to 5%
         multistrategyHarness.setPerformanceFee(500);
 
         vm.label({ account: address(multistrategyHarness), newLabel: "Multistrategy Harness" });
@@ -101,7 +92,6 @@ abstract contract Base_Test is Test, Events {
     }
 
     function transferMultistrategyOwnershipToOwner() internal {
-        // Check if the deployed Multistrategy is the MultistrategyHarness
         if(address(multistrategyHarness) == address(0)){
             IOwnable(address(multistrategy)).transferOwnership({ newOwner: users.owner });
         } else {

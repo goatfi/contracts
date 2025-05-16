@@ -27,7 +27,7 @@ contract SiloV2AdapterIntegration is AdapterIntegration {
         minDeposit = (10 ** IERC20Metadata(asset).decimals() - 2);
         harvest = false;
 
-        createMultistrategy(asset, depositLimit);
+        createMultistrategy();
         createSiloAdapter();
     }
 
@@ -45,11 +45,6 @@ contract SiloV2AdapterIntegration is AdapterIntegration {
     }
 
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
-        _depositAmount = bound(_depositAmount, minDeposit, multistrategy.depositLimit());
-        _withdrawAmount = bound(_withdrawAmount, 1, _depositAmount);
-        _yieldTime = bound(_yieldTime, 1 hours, 1 * 365 days);
-        _debtRatio = bound(_debtRatio, 1, 10_000);
-
         super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
         assertEq(adapter.totalAssets(), 0);

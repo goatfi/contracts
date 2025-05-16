@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Multistrategy } from "src/infra/multistrategy/Multistrategy.sol";
 import { StrategyAdapter } from "src/abstracts/StrategyAdapter.sol";
 import { Test } from "forge-std/Test.sol";
@@ -14,8 +15,10 @@ abstract contract AdapterIntegration is Test {
     StrategyAdapter adapter;
 
     address public asset;
+    uint256 decimals;
     uint256 public depositLimit;
     uint256 public minDeposit;
+    uint256 public minDebtDelta;
     bool public harvest;
 
     function setUp() public virtual {
@@ -27,6 +30,8 @@ abstract contract AdapterIntegration is Test {
             alice: createUser("Alice"),
             bob: createUser("Bob")
         });
+
+        decimals = IERC20Metadata(asset).decimals();
     }
 
     function createUser(string memory name) internal returns (address payable) {
@@ -36,18 +41,26 @@ abstract contract AdapterIntegration is Test {
         return user;
     }
 
-    function createMultistrategy(address _asset, uint256 _depositLimit) public {
+    function createMultistrategy() public {
         vm.prank(users.owner); multistrategy = new Multistrategy({
-            _asset: _asset,
+            _asset: asset,
             _manager: users.keeper,
             _protocolFeeRecipient: users.feeRecipient,
             _name: "",
             _symbol: ""
         });
 
-        vm.prank(users.owner); multistrategy.enableGuardian(users.guardian);
-        vm.prank(users.owner); multistrategy.setDepositLimit(_depositLimit);
-        vm.prank(users.owner); multistrategy.setPerformanceFee(1000);
+        vm.startPrank(users.owner);
+        multistrategy.enableGuardian(users.guardian);
+        multistrategy.setDepositLimit(depositLimit);
+        multistrategy.setPerformanceFee(1000);
+        vm.stopPrank();
+
+        deal(asset, users.alice, minDeposit);
+        vm.startPrank(users.alice);
+        IERC20(asset).approve(address(multistrategy), minDeposit);
+        multistrategy.deposit(minDeposit, users.alice);
+        vm.stopPrank();
 
         vm.label({ account: address(multistrategy), newLabel: "Multistrategy" });
     }
@@ -57,11 +70,12 @@ abstract contract AdapterIntegration is Test {
     //////////////////////////////////////////////////////////////////////////*/
 
     function addAdapter(StrategyAdapter _adapter) public {
-        vm.prank(users.owner); multistrategy.addStrategy(address(_adapter), 10_000, 0, type(uint256).max);
+        vm.prank(users.owner); multistrategy.addStrategy(address(_adapter), 10_000, minDebtDelta, type(uint256).max);
     }
 
     function setDebtRatio(StrategyAdapter _adapter, uint256 _debtRatio) public {
-        vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(_adapter), _debtRatio);
+        uint256 debtRatio = bound(_debtRatio, 1, 10_000);
+        vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(_adapter), debtRatio);
         vm.prank(users.keeper); _adapter.requestCredit();
         vm.prank(users.keeper); _adapter.sendReport(type(uint256).max);
     }
@@ -71,13 +85,19 @@ abstract contract AdapterIntegration is Test {
     }
 
     function deposit(uint256 _amount) public {
-        deal(asset, users.bob, _amount);
-        vm.prank(users.bob); IERC20(asset).approve(address(multistrategy), _amount);
-        vm.prank(users.bob); multistrategy.deposit(_amount, users.bob);
+        uint256 amount = bound(_amount, minDeposit, multistrategy.maxDeposit(users.bob));
+        deal(asset, users.bob, amount);
+        vm.prank(users.bob); IERC20(asset).approve(address(multistrategy), amount);
+        vm.prank(users.bob); multistrategy.deposit(amount, users.bob);
     }
 
     function withdraw(uint256 _amount) public {
-        vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
+        if(_amount >= multistrategy.maxWithdraw(users.bob)) {
+            withdrawAll();
+        } else {
+            uint256 amount = bound(_amount, 1, multistrategy.maxWithdraw(users.bob));
+            vm.prank(users.bob); multistrategy.withdraw(amount, users.bob, users.bob);
+        }
     }
 
     function withdrawAll() public {
@@ -88,11 +108,12 @@ abstract contract AdapterIntegration is Test {
     }
 
     function earnYield(uint256 _time) public {
+        uint256 time = bound(_time, 1 hours, 1 * 365 days);
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
             vm.prank(users.keeper); adapter.requestCredit();
         }
-        vm.warp(block.timestamp + _time);
+        vm.warp(block.timestamp + time);
 
         if(harvest) IStrategyAdapterHarvestable(address(adapter)).harvest();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);

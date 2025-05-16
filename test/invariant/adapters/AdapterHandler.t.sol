@@ -21,6 +21,8 @@ contract AdapterHandler is Test {
     uint256 public ghost_withdrawn;
     uint256 public ghost_yieldTime;
 
+    uint256 public lastTimeSinceAction;
+
     constructor(Multistrategy _multistrategy, StrategyAdapter _adapter, Users memory _users, bool _harvest) {
         multistrategy = _multistrategy;
         adapter = _adapter;
@@ -39,21 +41,27 @@ contract AdapterHandler is Test {
         _; 
     }
 
+    modifier recordTimestamp() {
+        _;
+        lastTimeSinceAction = block.timestamp;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                                      ACTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function setDebtRatio(uint256 _debtRatio) public {
+    function setDebtRatio(uint256 _debtRatio) recordTimestamp public {
         _debtRatio = bound(_debtRatio, 0, 10_000);
 
-        vm.warp(block.timestamp + 1 minutes);
+        // Avoid false positives when retiring the adapter when not enough time passed since last request credit
+        if(_debtRatio == 0 && block.timestamp - lastTimeSinceAction < 6 hours) return;
 
         vm.prank(users.keeper); multistrategy.setStrategyDebtRatio(address(adapter), _debtRatio);
         vm.prank(users.keeper); adapter.requestCredit();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
     }
 
-    function requestCredit() public {
+    function requestCredit() recordTimestamp public {
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
             vm.prank(users.keeper); adapter.requestCredit();
@@ -62,7 +70,7 @@ contract AdapterHandler is Test {
 
     function deposit(uint256 _amount) public {
         if(multistrategy.totalAssets() >= multistrategy.depositLimit()) return;
-        uint256 maxDeposit = multistrategy.depositLimit() - multistrategy.totalAssets();
+        uint256 maxDeposit = multistrategy.maxDeposit(users.bob);
         if(maxDeposit == 0) return;
 
         _amount = bound(_amount, 1, maxDeposit);
@@ -73,26 +81,27 @@ contract AdapterHandler is Test {
         vm.prank(users.bob); multistrategy.deposit(_amount, users.bob);
     }
 
-    function withdraw(uint256 _amount) public {
+    function withdraw(uint256 _amount) recordTimestamp public {
         uint256 maxWithdraw = multistrategy.maxWithdraw(users.bob);
         if(maxWithdraw == 0) return;
 
-        _amount = bound(_amount, 1, maxWithdraw);
-        ghost_withdrawn += _amount;
-
-        vm.warp(block.timestamp + 1 minutes);
-        vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
+        if(_amount >= multistrategy.maxWithdraw(users.bob)) {
+            withdrawAll();
+        } else {
+            _amount = bound(_amount, 1, maxWithdraw);
+            vm.prank(users.bob); multistrategy.withdraw(_amount, users.bob, users.bob);
+            ghost_withdrawn += _amount;
+        }
     }
 
-    function withdrawAll() public {
+    function withdrawAll() recordTimestamp public {
         uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
-            vm.warp(block.timestamp + 1 minutes);
             vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);
         }
     }
 
-    function earnYield(uint256 _time) public {
+    function earnYield(uint256 _time) recordTimestamp public {
         _time = bound(_time, 1 days, 30 days);
 
         ghost_yieldTime += _time;
@@ -104,6 +113,5 @@ contract AdapterHandler is Test {
 
         if(harvest) IStrategyAdapterHarvestable(address(adapter)).harvest();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
-        vm.warp(block.timestamp + 7 days);
     }
 }

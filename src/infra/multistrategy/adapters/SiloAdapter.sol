@@ -83,8 +83,7 @@ contract SiloAdapter is StrategyAdapterHarvestable {
 
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 totalSiloDeposits = siloLens.totalDepositsWithInterest(silo, asset);
-        uint256 assetsSupplied = siloLens.balanceOfUnderlying(totalSiloDeposits, collateral, address(this));
+        uint256 assetsSupplied = siloLens.getDepositAmount(silo, asset, address(this), block.timestamp);
         uint256 assetBalance = IERC20(asset).balanceOf(address(this));
         
         return assetsSupplied + assetBalance;
