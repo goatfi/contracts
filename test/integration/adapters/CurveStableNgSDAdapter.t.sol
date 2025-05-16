@@ -8,8 +8,9 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { AdapterIntegration } from "./shared/AdapterIntegration.t.sol";
 import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
+import { CurveLPBase} from "src/abstracts/CurveLPBase.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
-import { ICurveStableNgSDAdapter } from "interfaces/infra/multistrategy/adapters/ICurveStableNgSDAdapter.sol";
+import { ICurveLPBase } from "interfaces/infra/multistrategy/adapters/ICurveLPBase.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
 import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
@@ -57,68 +58,8 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
             adapter.enableGuardian(users.guardian);
             adapter.setSlippageLimit(1);
             IStrategyAdapterHarvestable(address(adapter)).addReward(AssetsArbitrum.CRV);
-            ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(0.1 ether);
-            ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(2);
-        vm.stopPrank();
-    }
-
-    function test_SetCurveSlippageLimit_RevertWhen_callerNotOwner() public {
-        uint256 newLimit = 50 ether;
-        vm.startPrank(users.alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, 
-                users.alice
-            )
-        );
-        ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(newLimit);
-        vm.stopPrank();
-    }
-
-    function test_SetCurveSlippageLimit_RevertWhen_SlippageAboveLimit() public {
-        uint256 excessiveLimit = 101 ether;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.SlippageLimitExceeded.selector, 
-                excessiveLimit
-            )
-        );
-        vm.prank(users.keeper); ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(excessiveLimit);
-    }
-
-    function test_SetCurveSlippageLimit() public {
-        uint256 newLimit = 50 ether;
-
-        vm.prank(users.keeper); ICurveStableNgSDAdapter(address(adapter)).setCurveSlippageLimit(newLimit);
-
-        assertEq(ICurveStableNgSDAdapter(address(adapter)).curveSlippageLimit(), newLimit);
-    }
-
-    function test_SetBufferPPM_RevertWhen_callerNotOwner() public {
-        uint256 ppm = 500;
-        vm.startPrank(users.alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, 
-                users.alice
-            )
-        );
-        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(ppm);
-        vm.stopPrank();
-    }
-
-    function test_SetBufferPPM_RevertWhen_zeroPPM() public {
-        vm.startPrank(users.keeper);
-        vm.expectRevert(abi.encodeWithSelector(CurveStableNgSDAdapter.InvalidPPM.selector, 0));
-        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(0);
-        vm.stopPrank();
-    }
-
-    function test_SetBufferPPM_RevertWhen_PPMTooHigh() public {
-        vm.startPrank(users.keeper);
-        vm.expectRevert(abi.encodeWithSelector(CurveStableNgSDAdapter.InvalidPPM.selector, 10_001));
-        ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(10_001);
+            ICurveLPBase(address(adapter)).setCurveSlippageLimit(0.1 ether);
+            ICurveLPBase(address(adapter)).setWithdrawBufferPPM(2);
         vm.stopPrank();
     }
 
@@ -126,8 +67,8 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
         uint256 ppm = 500;
         uint256 expected = 1_000_000 + ppm;
 
-        vm.prank(users.keeper); ICurveStableNgSDAdapter(address(adapter)).setBufferPPM(ppm);
-        assertEq(ICurveStableNgSDAdapter(address(adapter)).ppmSafetyFactor(), expected);
+        vm.prank(users.keeper); ICurveLPBase(address(adapter)).setWithdrawBufferPPM(ppm);
+        assertEq(ICurveLPBase(address(adapter)).withdrawBuffer(), expected);
     }
 
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {

@@ -9,7 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadat
 import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { AdapterHandler } from "./AdapterHandler.t.sol";
 import { AdapterInvariantBase } from "./AdapterInvariantBase.t.sol";
-import { ICurveStableNgSDAdapter } from "interfaces/infra/multistrategy/adapters/ICurveStableNgSDAdapter.sol";
+import { ICurveLPBase } from "interfaces/infra/multistrategy/adapters/ICurveLPBase.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
@@ -59,8 +59,8 @@ contract CurveStableNgSDInvariants is AdapterInvariantBase {
             multistrategy.setStrategyMinDebtDelta(address(_adapter), 1 * (10 ** decimals));
             _adapter.enableGuardian(users.guardian);
             _adapter.setSlippageLimit(1);
-            ICurveStableNgSDAdapter(address(_adapter)).setCurveSlippageLimit(0.01 ether);
-            ICurveStableNgSDAdapter(address(_adapter)).setBufferPPM(2);
+            ICurveLPBase(address(_adapter)).setCurveSlippageLimit(0.01 ether);
+            ICurveLPBase(address(_adapter)).setWithdrawBufferPPM(2);
             for(uint i = 0; i < rewards.length; ++i) {
                 _adapter.addReward(rewards[i]);
             }
