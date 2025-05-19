@@ -18,7 +18,7 @@ contract SetCurveSlippageLimit_Unit_Concrete_Test is Test {
     }
 
     function test_RevertWhen_CallerNotOwner() public {
-        uint256 newLimit = 50 ether;
+        uint256 newLimit = 0.5 ether;
         vm.startPrank(notOwner);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -37,7 +37,7 @@ contract SetCurveSlippageLimit_Unit_Concrete_Test is Test {
     }
 
     function test_RevertWhen_SlippageAboveLimit() whenCallerIsOwner public {
-        uint256 excessiveLimit = 101 ether;
+        uint256 excessiveLimit = 1.01 ether;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -49,7 +49,7 @@ contract SetCurveSlippageLimit_Unit_Concrete_Test is Test {
     }
 
     function test_SetCurveSlippageLimit() whenCallerIsOwner public {
-        uint256 newLimit = 50 ether;
+        uint256 newLimit = 0.5 ether;
 
         adapter.setCurveSlippageLimit(newLimit);
 
