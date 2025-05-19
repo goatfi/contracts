@@ -51,7 +51,7 @@ abstract contract CurveLPBase is Ownable {
     /// @notice Estimates the slippage for depositing a given amount into the Curve liquidity pool
     /// @dev Delegates to the `curveSlippageUtility` to compute slippage based on the current pool state
     /// @param _amount The amount of the asset to simulate depositing, in asset decimals
-    /// @return slippage The estimated slippage. (100 ether = 100%)
+    /// @return slippage The estimated slippage where 1e18 = 100%.
     /// @return positive Indicates whether the slippage is positive (true) or negative (false)
     function getDepositSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
         return curveSlippageUtility.getDepositSlippage(address(curveLiquidityPool), assetIndex, _amount);
@@ -60,7 +60,7 @@ abstract contract CurveLPBase is Ownable {
     /// @notice Estimates the slippage for withdrawing a given amount from the Curve liquidity pool
     /// @dev Delegates to the `curveSlippageUtility` to compute slippage based on the current pool state
     /// @param _amount The amount of the asset to simulate withdrawing, in asset decimals
-    /// @return slippage The estimated slippage. (100 ether = 100%)
+    /// @return slippage The estimated slippage where 1e18 = 100%.
     /// @return positive Indicates whether the slippage is positive (true) or negative (false)
     function getWithdrawSlippage(uint256 _amount) public view returns (uint256 slippage, bool positive) {
         return curveSlippageUtility.getWithdrawSlippage(address(curveLiquidityPool), assetIndex, _amount);
@@ -71,9 +71,9 @@ abstract contract CurveLPBase is Ownable {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Sets the maximum allowed slippage limit for Curve operations
-    /// @param _slippageLimit The new slippage limit, expressed in ether (100 ether = 100%)
+    /// @param _slippageLimit The new slippage limit, expressed in ether where 1e18 = 100%.
     function setCurveSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-        require(_slippageLimit <= 100 ether, Errors.SlippageLimitExceeded(_slippageLimit));
+        require(_slippageLimit <= 1 ether, Errors.SlippageLimitExceeded(_slippageLimit));
         curveSlippageLimit = _slippageLimit;
     }
 
