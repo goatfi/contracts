@@ -95,6 +95,8 @@ contract AdapterHandler is Test {
     }
 
     function withdrawAll() recordTimestamp public {
+        if(block.timestamp - lastTimeSinceAction < 6 hours) return;
+        
         uint256 balance = multistrategy.balanceOf(users.bob);
         if(balance > 0) {
             vm.prank(users.bob); multistrategy.redeem(balance, users.bob, users.bob);

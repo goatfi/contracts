@@ -5,7 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { CurveLendSDAdapter } from "src/infra/multistrategy/adapters/CurveLendSDAdapter.sol";
-import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
+import { AssetsArbitrum, ProtocolArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 
 contract DeployCurveLendSDAdapter is Script {
@@ -18,7 +18,7 @@ contract DeployCurveLendSDAdapter is Script {
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
     /////////////////////////////////////////////////////////
-    address constant MULTISTRATEGY = 0xA7781F1D982Eb9000BC1733E29Ff5ba2824cDBE5;
+    address constant MULTISTRATEGY = VaultsArbitrum.ycCRVUSD;
     address constant ASSET = AssetsArbitrum.CRVUSD;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     string constant NAME = "Stake DAO Curve Lend WETH Lev";                            //FIXME:

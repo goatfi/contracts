@@ -5,13 +5,13 @@ import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { ITimelock} from "interfaces/infra/ITimelock.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
-import { ProtocolArbitrum } from "@addressbook/AddressBook.sol";
+import { ProtocolArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 
 contract AddAdapterViaTimelock is Test {
-    address multi = 0x3782bA74E32021dD2e2A7ADE5118E83440EE24E4;
-    address adapter = 0xD165D90D4339DC5B2Cf182F46479C702453d5466;
-    uint256 minDebtDelta = 10e6;
+    address multi = VaultsArbitrum.ycETH;
+    address adapter = 0xd937b82848149982AFCd8b0995Bc2c84DBCfBC22;
+    uint256 minDebtDelta = 0;
     uint256 maxDebtDelta = type(uint256).max;
     uint256 time = 43200;
     function setUp() public {

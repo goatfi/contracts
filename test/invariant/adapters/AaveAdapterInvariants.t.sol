@@ -15,23 +15,23 @@ contract AaveAdapterInvariants is AdapterInvariantBase {
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-        asset = AssetsArbitrum.USDC;
+        asset = AssetsArbitrum.WETH;
         super.setUp();
         
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
+            createMultistrategy(asset, 1_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
             false
         );
 
-        makeInitialDeposit(10 * (10 ** decimals));
+        makeInitialDeposit(1 * (10 ** decimals));
         targetContract(address(handler));
     }
 
     function createAdapter() public returns (AaveAdapter) {
         address aave_pool = 0x794a61358D6845594F94dc1DB02A252b5b4814aD;
-        address a_token = 0x724dc807b04555b71ed48a6896b6F41593b8C637;
+        address a_token = 0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8;
 
         AaveAdapter adapter = new AaveAdapter(address(multistrategy), multistrategy.asset(), aave_pool, a_token,"", "");
         adapter.transferOwnership(users.keeper);

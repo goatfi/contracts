@@ -8,16 +8,16 @@ import { ICurveLPBase } from "interfaces/infra/multistrategy/adapters/ICurveLPBa
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
-import { AssetsArbitrum, ProtocolArbitrum, UtilitiesArbitrum } from "@addressbook/AddressBook.sol";
+import { AssetsArbitrum, ProtocolArbitrum, UtilitiesArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployCurveStableNgSDAdapter is Script {
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
     /////////////////////////////////////////////////////////
-    address constant MULTISTRATEGY = 0x3782bA74E32021dD2e2A7ADE5118E83440EE24E4; //FIXME:
+    address constant MULTISTRATEGY = VaultsArbitrum.ycUSDT;
     address constant ASSET = AssetsArbitrum.USDT;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    string constant NAME = "Stake DAO Curve USDC/USDT LP";                            //FIXME:
+    string constant NAME = "Stake DAO Curve USDC/USDT LP";
     string constant ID = "CRV-SD-LP";
 
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
