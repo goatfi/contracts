@@ -7,4 +7,6 @@ import {ProtocolSonic} from './sonic/Protocol.sol';
 import {AssetsArbitrum} from './arbitrum/Assets.sol';
 import {AssetsBase} from './base/Assets.sol';
 import {AssetsSonic} from './sonic/Assets.sol';
+import {VaultsArbitrum} from './arbitrum/Vaults.sol';
+import {VaultsSonic} from './sonic/Vaults.sol';
 import {UtilitiesArbitrum} from './arbitrum/Utilities.sol';
