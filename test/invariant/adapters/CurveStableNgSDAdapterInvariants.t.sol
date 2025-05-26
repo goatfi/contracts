@@ -58,8 +58,8 @@ contract CurveStableNgSDInvariants is AdapterInvariantBase {
         vm.startPrank(users.keeper);
             multistrategy.setStrategyMinDebtDelta(address(_adapter), 1 * (10 ** decimals));
             _adapter.enableGuardian(users.guardian);
-            _adapter.setSlippageLimit(1);
-            ICurveLPBase(address(_adapter)).setCurveSlippageLimit(0.001 ether);
+            _adapter.setSlippageLimit(5);
+            ICurveLPBase(address(_adapter)).setCurveSlippageLimit(0.0005 ether);
             ICurveLPBase(address(_adapter)).setWithdrawBufferPPM(2);
             for(uint i = 0; i < rewards.length; ++i) {
                 _adapter.addReward(rewards[i]);

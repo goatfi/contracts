@@ -30,7 +30,7 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
     }
 
     function createAdapter() public returns (ERC4626Adapter) {
-        address vault = 0x1A996cb54bb95462040408C06122D45D6Cdb6096; //Fluid USDC
+        address vault = 0x940098b108fB7D0a7E374f6eDED7760787464609; //Spark USDC
 
         ERC4626Adapter adapter = new ERC4626Adapter(address(multistrategy), multistrategy.asset(), vault, "", "");
         adapter.transferOwnership(users.keeper);
