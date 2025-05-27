@@ -46,11 +46,16 @@ contract AdapterHandler is Test {
         lastTimeSinceAction = block.timestamp;
     }
 
+    modifier increaseTime() {
+        _;
+        vm.warp(block.timestamp + 6 hours);
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                                      ACTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function setDebtRatio(uint256 _debtRatio) recordTimestamp public {
+    function setDebtRatio(uint256 _debtRatio) recordTimestamp increaseTime public {
         _debtRatio = bound(_debtRatio, 0, 10_000);
 
         // Avoid false positives when retiring the adapter when not enough time passed since last request credit
@@ -61,7 +66,7 @@ contract AdapterHandler is Test {
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);
     }
 
-    function requestCredit() recordTimestamp public {
+    function requestCredit() recordTimestamp increaseTime public {
         uint256 availableCredit = multistrategy.creditAvailable(address(adapter));
         if(availableCredit > 1) {
             vm.prank(users.keeper); adapter.requestCredit();
@@ -94,7 +99,7 @@ contract AdapterHandler is Test {
         }
     }
 
-    function withdrawAll() recordTimestamp public {
+    function withdrawAll() recordTimestamp increaseTime public {
         if(block.timestamp - lastTimeSinceAction < 6 hours) return;
         
         uint256 balance = multistrategy.balanceOf(users.bob);
@@ -103,7 +108,7 @@ contract AdapterHandler is Test {
         }
     }
 
-    function earnYield(uint256 _time) recordTimestamp public {
+    function earnYield(uint256 _time) recordTimestamp increaseTime public {
         _time = bound(_time, 1 days, 30 days);
 
         ghost_yieldTime += _time;
