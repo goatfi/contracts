@@ -39,10 +39,10 @@ number_underscore = "thousands"
 quote_style = "double"
 
 [etherscan]
-goerli = { key = "${ETHERSCAN_API_KEY}" }
-arbitrum = { key = "${ARBISCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
-base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
-sonic = { key = "${SONICSCAN_API_KEY}",  url = "https://api.sonicscan.org/api", chain = 146 }
+mainnet = { key = "${ETHERSCAN_API_KEY}"}
+arbitrum = { key = "${ETHERSCAN_API_KEY}"}
+base = { key = "${ETHERSCAN_API_KEY}"}
+sonic = { key = "${ETHERSCAN_API_KEY}"}
 
 [doc]
 out = "documentation"
