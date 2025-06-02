@@ -50,8 +50,8 @@ contract DeployCurveStableNgSDAdapter is Script {
 
         CurveStableNgSDAdapter adapter = new CurveStableNgSDAdapter(MULTISTRATEGY, ASSET, harvestAddresses, curveData, NAME, ID);
 
-        adapter.setSlippageLimit(1);                    // 0.01% Slippage permitted
-        adapter.setCurveSlippageLimit(0.0001 ether);    // 0.01% Slippage permitted
+        adapter.setSlippageLimit(5);                    // 0.01% Slippage permitted
+        adapter.setCurveSlippageLimit(0.0005 ether);    // 0.01% Slippage permitted
         adapter.setWithdrawBufferPPM(2);                // 2 parts per million buffer on withdraws
         for(uint i = 0; i < rewards.length; ++i) {
             adapter.addReward(rewards[i]);
