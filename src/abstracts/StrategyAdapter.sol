@@ -216,7 +216,6 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         uint256 toBeWithdrawn = _calculateAmountToBeWithdrawn(_repayAmount, gain);
 
         _tryWithdraw(toBeWithdrawn);
-        (gain, loss) = _calculateGainAndLoss(_totalAssets());
         uint256 availableForRepay = _liquidity() - gain;
         
         IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
