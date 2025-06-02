@@ -182,48 +182,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
         if(exceedingDebt > 0 && _repayAmount > 0) {
             if(slippageLimit == MAX_SLIPPAGE) return _repayAmount + _strategyGain;
-            
-            uint256 exceedingDebtWithSlippage = exceedingDebt.mulDiv(MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
-            return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
+            return Math.min(_repayAmount, exceedingDebt) + _strategyGain;
         } 
 
         return _strategyGain;
-    }
-
-    /// @notice Calculates the adjusted gain and loss after accounting for slippage.
-    /// 
-    /// This function performs the following actions:
-    /// - Calculates the slippage loss as the difference between the amount intended to be withdrawn and the actual amount withdrawn.
-    /// - If there is no slippage loss, returns the original gain and loss.
-    /// - If there is slippage loss:
-    ///   - Deducts the slippage loss from the gain.
-    ///   - If the slippage loss exceeds the gain, the remaining slippage loss is added to the loss.
-    /// - Returns the adjusted gain and loss after accounting for slippage.
-    /// 
-    /// @param _gain The initial gain before slippage.
-    /// @param _loss The initial loss before slippage.
-    /// @param _currentBalance The current balance of asset in this contract.
-    /// @param _toBeWithdrawn The amount intended to be withdrawn.
-    /// @return The adjusted gain and loss after slippage.
-    function _calculateGainAndLossAfterSlippage(
-        uint256 _gain, 
-        uint256 _loss, 
-        uint256 _currentBalance, 
-        uint256 _toBeWithdrawn
-        ) internal pure returns (uint256, uint256) {
-
-        uint256 slippageLoss = (_toBeWithdrawn > _currentBalance) ? _toBeWithdrawn - _currentBalance : 0;
-        if(slippageLoss == 0) return (_gain, _loss);
-        if(slippageLoss > _gain) {
-            slippageLoss -= _gain;
-            _gain = 0;
-        } else {
-            _gain -= slippageLoss;
-            slippageLoss = 0;
-        }
-
-        _loss += slippageLoss;
-        return (_gain, _loss);
     }
 
     /// @notice Returns the current balance of asset in this contract.
@@ -250,15 +212,17 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// 
     /// @param _repayAmount The amount to be repaid to the multi-strategy.
     function _sendReport(uint256 _repayAmount) internal {
-        uint256 currentAssets = _totalAssets();
-        (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
+        (uint256 gain, uint256 loss) = _calculateGainAndLoss(_totalAssets());
         uint256 toBeWithdrawn = _calculateAmountToBeWithdrawn(_repayAmount, gain);
 
         _tryWithdraw(toBeWithdrawn);
-        (gain, loss) = _calculateGainAndLossAfterSlippage(gain, loss, _liquidity(), toBeWithdrawn);
-        uint256 availableForRepay = _liquidity() - gain;
-        
-        IMultistrategy(multistrategy).strategyReport(availableForRepay, gain, loss);
+        (gain, loss) = _calculateGainAndLoss(_totalAssets());
+        uint256 currentBalance = _liquidity();
+        if(currentBalance > gain) {
+            IMultistrategy(multistrategy).strategyReport(currentBalance - gain, gain, loss);
+        } else {
+            IMultistrategy(multistrategy).strategyReport(0, currentBalance, loss);
+        }
     }
 
     /// @notice Sends a report on the strategy's performance after the strategy has been panicked.
