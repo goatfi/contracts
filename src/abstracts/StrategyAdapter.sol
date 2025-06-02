@@ -182,9 +182,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         uint256 exceedingDebt = IMultistrategy(multistrategy).debtExcess(address(this));
         if(exceedingDebt > 0 && _repayAmount > 0) {
             if(slippageLimit == MAX_SLIPPAGE) return _repayAmount + _strategyGain;
-            
-            uint256 exceedingDebtWithSlippage = exceedingDebt.mulDiv(MAX_SLIPPAGE, MAX_SLIPPAGE - slippageLimit);
-            return Math.min(_repayAmount, exceedingDebtWithSlippage) + _strategyGain;
+            return Math.min(_repayAmount, exceedingDebt) + _strategyGain;
         } 
 
         return _strategyGain;
