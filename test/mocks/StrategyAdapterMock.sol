@@ -42,15 +42,6 @@ contract StrategyAdapterMock is StrategyAdapter {
         return _calculateAmountToBeWithdrawn(_repayAmount, _strategyGain);
     }
 
-    function calculateGainAndLossAfterSlippage(
-        uint256 _gain, 
-        uint256 _loss, 
-        uint256 _withdrawn, 
-        uint256 _toBeWithdrawn
-        ) external pure returns (uint256, uint256) {
-        return _calculateGainAndLossAfterSlippage(_gain, _loss, _withdrawn, _toBeWithdrawn);
-    }
-
     function withdrawFromStaking(uint256 _amount) external {
         _withdraw(_amount);
     }
@@ -90,7 +81,9 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _totalAssets() internal override view returns(uint256) {
-        return IERC20(asset).balanceOf(address(staking));
+        uint256 s_balance = IERC20(asset).balanceOf(address(staking));
+        uint256 balance = IERC20(asset).balanceOf(address(this));
+        return s_balance + balance;
     }
 }
 
