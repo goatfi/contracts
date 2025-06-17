@@ -91,7 +91,7 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
         adapter.addReward(address(weth));
     }
 
-    function test_SuccessWhen_ValidRewardToken() whenCallerIsOwner public {
+    function test_ValidRewardToken() whenCallerIsOwner public {
         adapter.migrateCurveGauge(address(gauge));
 
         address reward = address(new MockERC20("Reward", "RWD", 18));

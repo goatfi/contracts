@@ -20,6 +20,8 @@ contract MigrateCurveGauge_Unit_Concrete_Test is Test {
     address owner = makeAddr('Owner');
     address notOwner = makeAddr('notOwner');
 
+    event GaugeMigrated(address indexed oldGauge, address indexed newGauge);
+
     function setUp() public {
         token = new MockERC20("", "", 18);
         vault = new MockERC4626(token, "","");
@@ -70,7 +72,7 @@ contract MigrateCurveGauge_Unit_Concrete_Test is Test {
         adapter.migrateCurveGauge(address(invalidGauge));
     }
 
-    function test_MigratesGauge_WhenOldGaugeNotSet() whenCallerIsOwner public {
+    function test_MigratesGauge_WhenOldGaugeNotSete_WithoutVaultShares() whenCallerIsOwner public {
         MockCurveGauge newGauge = new MockCurveGauge(address(vault));
 
         adapter.migrateCurveGauge(address(newGauge));
@@ -79,13 +81,15 @@ contract MigrateCurveGauge_Unit_Concrete_Test is Test {
         assertEq(address(adapter.curveGauge()), address(newGauge));
     }
 
-    function test_MigratesGauge_WithoutVaultShares() whenCallerIsOwner public {
-        MockCurveGauge newGauge = new MockCurveGauge(address(vault));
+    function test_MigratesGauge_WhenOldGaugeNotSet_WithVaultShares() public whenCallerIsOwner {
+        uint256 amount = 10 ether;
+        deal(address(vault), address(adapter), amount);
 
+        MockCurveGauge newGauge = new MockCurveGauge(address(vault));
         adapter.migrateCurveGauge(address(newGauge));
 
+        assertEq(newGauge.balanceOf(address(adapter)), amount);
         assertEq(vault.allowance(address(adapter), address(newGauge)), type(uint256).max);
-        assertEq(newGauge.balanceOf(address(adapter)), 0);
         assertEq(address(adapter.curveGauge()), address(newGauge));
     }
 
@@ -120,6 +124,8 @@ contract MigrateCurveGauge_Unit_Concrete_Test is Test {
         vault.approve(address(oldGauge), amount);
         oldGauge.deposit(amount, address(adapter));
 
+        vm.expectEmit(true, true, false, false);
+        emit GaugeMigrated(address(oldGauge), address(newGauge));
         adapter.migrateCurveGauge(address(newGauge));
 
         assertEq(address(adapter.curveGauge()), address(newGauge));
