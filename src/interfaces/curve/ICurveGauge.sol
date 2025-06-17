@@ -8,4 +8,5 @@ interface ICurveGauge is IERC20 {
     function deposit(uint256 _value) external;
     function withdraw(uint256 _value) external;
     function claim_rewards() external;
+    function lp_token() external returns (address);
 }

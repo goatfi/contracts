@@ -24,6 +24,9 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     /// @notice The Curve gauge.
     ICurveGauge public curveGauge;
 
+    /// @notice Emitted after a successful migration.
+    event GaugeMigrated(address indexed previousGauge, address indexed newGauge);
+
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -55,13 +58,25 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
                             EXTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Sets a new Curve gauge.
-    /// @dev Only callable by the contract owner. Once the gauge is set, it cannot be changed.
-    /// @param _curveGauge The address of the new incentives controller.
-    function setCurveGauge(address _curveGauge) external onlyOwner {
-        require(address(curveGauge) == address(0) && _curveGauge != address(0), Errors.InvalidGauge());
-        curveGauge = ICurveGauge(_curveGauge);
-        IERC20(curveLendVault).forceApprove(_curveGauge, type(uint).max);
+    /// @notice Migrates to a new Curve gauge.
+    /// @dev Only callable by the contract owner. If the adapter has any balance, it migrates it to the new gauge.
+    /// @param _newGauge The address of the new Curve Gauge.
+    function migrateCurveGauge(address _newGauge) external onlyOwner {
+        require(_newGauge != address(0) && ICurveGauge(_newGauge).lp_token() == address(curveLendVault), Errors.InvalidGauge());
+        address oldGauge = address(curveGauge);
+
+        if(address(oldGauge) != address(0)) {
+            uint256 gaugeBalance = ICurveGauge(oldGauge).balanceOf(address(this));
+            if(gaugeBalance > 0) ICurveGauge(oldGauge).withdraw(gaugeBalance);
+            IERC20(curveLendVault).forceApprove(address(oldGauge), 0);
+        }
+
+        IERC20(curveLendVault).forceApprove(_newGauge, type(uint).max);
+        uint256 curveLendVaultShares = curveLendVault.balanceOf(address(this));
+        if(curveLendVaultShares > 0) ICurveGauge(_newGauge).deposit(curveLendVaultShares);
+
+        curveGauge = ICurveGauge(_newGauge);
+        emit GaugeMigrated(oldGauge, _newGauge);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -130,6 +145,7 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
+        if (address(curveGauge) == address(0)) return;
         curveGauge.claim_rewards();
     }
 }
