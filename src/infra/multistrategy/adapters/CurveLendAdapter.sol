@@ -25,6 +25,8 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     ICurveGauge public curveGauge;
 
     /// @notice Emitted after a successful migration.
+    /// @param previousGauge Address of the previous Gauge.
+    /// @param newGauge Address of the new Gauge.
     event GaugeMigrated(address indexed previousGauge, address indexed newGauge);
 
     /*//////////////////////////////////////////////////////////////////////////
