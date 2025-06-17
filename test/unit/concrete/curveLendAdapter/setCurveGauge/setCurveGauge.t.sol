@@ -6,8 +6,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { CurveLendAdapter } from "src/infra/multistrategy/adapters/CurveLendAdapter.sol";
-import { MockERC4626 } from "solmate/test/utils/mocks/MockERC4626.sol";
-import { MockERC20 } from "solmate/test/utils/mocks/MockERC20.sol";
+import { MockERC4626 } from "@solady/test/utils/mocks/MockERC4626.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract SetCurveGauge_Unit_Concrete_Test is Test {
@@ -21,7 +21,7 @@ contract SetCurveGauge_Unit_Concrete_Test is Test {
     function setUp() public {
         MockERC20 token = new MockERC20("", "", 18);
         MockERC20 weth = new MockERC20("", "", 18);
-        vault = new MockERC4626(token, "","");
+        vault = new MockERC4626(address(token), "","", false, 0);
         
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
@@ -32,7 +32,7 @@ contract SetCurveGauge_Unit_Concrete_Test is Test {
             vault: address(vault),
             gauge: address(0)
         });
-        MockERC4626 multi = new MockERC4626(token, "","");
+        MockERC4626 multi = new MockERC4626(address(token), "","", false, 0);
         adapter = new CurveLendAdapter(address(multi), address(token), harvestAddresses, curveLendAddresses, "", "");
         adapter.transferOwnership(owner);
     }

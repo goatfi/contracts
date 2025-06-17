@@ -19,6 +19,7 @@ remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
     "@addressbook/=address-book/",
     "@properties/=lib/properties/",
+    "@solady/=lib/solady/"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
