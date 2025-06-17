@@ -7,6 +7,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 import { Errors } from "src/infra/libraries/Errors.sol";
 import { MockERC4626 } from "@solady/test/utils/mocks/MockERC4626.sol";
 import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
+import { MockCurveGauge } from "../../../../mocks/curve/MockCurveGauge.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -15,15 +16,16 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
     MockERC4626 vault;
     MockERC20 token;
     MockERC20 weth;
+    MockCurveGauge gauge;
     address owner = makeAddr("Owner");
     address notOwner = makeAddr("NotOwner");
-    address curveGauge = makeAddr("CurveGauge");
     address swapper = makeAddr("Swapper");
 
     function setUp() public {
         token = new MockERC20("Token", "TKN", 18);
         weth = new MockERC20("WETH", "WETH", 18);
         vault = new MockERC4626(address(token), "LendVault", "", false, 0);
+        gauge = new MockCurveGauge(address(vault));
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: swapper,
@@ -54,7 +56,7 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
     }
 
     function test_RevertWhen_TokenIsLendVault() whenCallerIsOwner public {
-        adapter.migrateCurveGauge(curveGauge);
+        adapter.migrateCurveGauge(address(gauge));
 
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRewardToken.selector, address(vault))
@@ -63,16 +65,16 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
     }
 
     function test_RevertWhen_TokenIsGauge() whenCallerIsOwner public {
-        adapter.migrateCurveGauge(curveGauge);
+        adapter.migrateCurveGauge(address(gauge));
 
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.InvalidRewardToken.selector, curveGauge)
+            abi.encodeWithSelector(Errors.InvalidRewardToken.selector, address(gauge))
         );
-        adapter.addReward(curveGauge);
+        adapter.addReward(address(gauge));
     }
 
     function test_RevertWhen_TokenIsAsset() whenCallerIsOwner public {
-        adapter.migrateCurveGauge(curveGauge);
+        adapter.migrateCurveGauge(address(gauge));
 
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRewardToken.selector, address(token))
@@ -81,7 +83,7 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
     }
 
     function test_RevertWhen_TokenIsWrappedGas() whenCallerIsOwner public {
-        adapter.migrateCurveGauge(curveGauge);
+        adapter.migrateCurveGauge(address(gauge));
 
         vm.expectRevert(
             abi.encodeWithSelector(Errors.InvalidRewardToken.selector, address(weth))
@@ -90,7 +92,7 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
     }
 
     function test_SuccessWhen_ValidRewardToken() whenCallerIsOwner public {
-        adapter.migrateCurveGauge(curveGauge);
+        adapter.migrateCurveGauge(address(gauge));
 
         address reward = address(new MockERC20("Reward", "RWD", 18));
 
