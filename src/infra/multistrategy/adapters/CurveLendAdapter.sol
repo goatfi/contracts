@@ -3,10 +3,10 @@
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ICurveGauge } from "interfaces/curve/ICurveGauge.sol";
+import { ICurveLendVault } from "interfaces/curve/ICurveLendVault.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
 contract CurveLendAdapter is StrategyAdapterHarvestable {
@@ -19,7 +19,7 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     }
 
     /// @notice The Curve Lending Vault.
-    IERC4626 public curveLendVault;
+    ICurveLendVault public curveLendVault;
 
     /// @notice The Curve gauge.
     ICurveGauge public curveGauge;
@@ -51,7 +51,7 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     ) 
         StrategyAdapterHarvestable(_multistrategy, _asset, _harvestAddresses,_name, _id)
     {   
-        curveLendVault = IERC4626(_curveAddresses.vault);
+        curveLendVault = ICurveLendVault(_curveAddresses.vault);
         curveGauge = ICurveGauge(_curveAddresses.gauge);
         _giveAllowances();
     }
@@ -92,6 +92,12 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
         uint256 assetsSupplied = curveLendVault.previewRedeem(curveLendVaultShares);
 
         return assetsSupplied + _balance();
+    }
+
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return The amount of tokens.
+    function _availableLiquidity() internal override view returns(uint256) {
+        return IERC20(asset).balanceOf(curveLendVault.controller());
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
