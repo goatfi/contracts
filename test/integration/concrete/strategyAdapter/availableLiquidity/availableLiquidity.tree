@@ -1,0 +1,2 @@
+balance.t.sol
+└── it should return the amount of liquidity currently available for withdrawals.

@@ -14,6 +14,9 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     using SafeERC20 for IERC20;
     using Math for uint256;
 
+    /// @notice Version of this smart contract following Semver 2.0 standard.
+    string public constant VERSION = '1.0.0';
+
     /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
     uint256 constant MAX_SLIPPAGE = 10_000;
 
@@ -69,6 +72,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// @inheritdoc IStrategyAdapter
     function currentPnL() external view returns (uint256, uint256) {
         return _calculateGainAndLoss(_totalAssets());
+    }
+
+    /// @inheritdoc IStrategyAdapter
+    function availableLiquidity() external view returns (uint256) {
+        return _availableLiquidity();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -197,6 +205,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// has swapped `asset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
     function _totalAssets() internal virtual view returns (uint256) {}
+
+    /// @notice Returns the available liquidity of this adapter.
+    /// @dev Child contract must implement the logic to calculate the available liquidity.
+    function _availableLiquidity() internal view virtual returns (uint256) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
