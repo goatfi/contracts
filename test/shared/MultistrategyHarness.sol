@@ -27,7 +27,7 @@ contract MultistrategyHarness is Multistrategy {
     }
 
     function liquidity() external view returns(uint256) {
-        return _liquidity();
+        return _balance();
     }
 
     function freeFunds() external view returns(uint256) {

@@ -100,7 +100,7 @@ contract SiloAdapter is StrategyAdapterHarvestable {
 
     /// @notice Deposits all the liquidity into the Silo.
     function _deposit() internal override {
-        ISilo(silo).deposit(asset, _liquidity(), false);
+        ISilo(silo).deposit(asset, _balance(), false);
     }
 
     /// @notice Withdraws a specified amount of assets from the Silo.
