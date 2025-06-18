@@ -1,2 +1,2 @@
-liquidity.t.sol
+balance.t.sol
 └── it should return the balance of asset in the multistrategy contract

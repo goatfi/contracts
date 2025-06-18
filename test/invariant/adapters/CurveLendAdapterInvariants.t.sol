@@ -56,5 +56,6 @@ contract CurveLendAdapterInvariants is AdapterInvariantBase {
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
             assertGt(multistrategy.pricePerShare(), 1 * (10 ** decimals));
         }
+        assertGt(handler.adapter().availableLiquidity(), 0);
     }
 }

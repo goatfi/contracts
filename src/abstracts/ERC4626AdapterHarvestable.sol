@@ -46,9 +46,8 @@ abstract contract ERC4626AdapterHarvestable is StrategyAdapterHarvestable {
     function _totalAssets() internal override view returns(uint256) {
         uint256 sharesBalance = vault.balanceOf(address(this));
         uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        uint256 total = assetsSupplied + assetBalance;
+        uint256 total = assetsSupplied + _balance();
         return total > 0 ? total - 1 : total;
     }
 
@@ -61,10 +60,9 @@ abstract contract ERC4626AdapterHarvestable is StrategyAdapterHarvestable {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposits all the liquidity into the ERC4626 vault.
+    /// @notice Deposits all the balance into the ERC4626 vault.
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        vault.deposit(balance, address(this));
+        vault.deposit(_balance(), address(this));
     }
 
     /// @notice Withdraws a specified amount of assets from the ERC4626 vault.

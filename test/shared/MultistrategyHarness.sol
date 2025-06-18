@@ -26,8 +26,8 @@ contract MultistrategyHarness is Multistrategy {
         return _calculateLockedProfit();
     }
 
-    function liquidity() external view returns(uint256) {
-        return _liquidity();
+    function balance() external view returns(uint256) {
+        return _balance();
     }
 
     function freeFunds() external view returns(uint256) {

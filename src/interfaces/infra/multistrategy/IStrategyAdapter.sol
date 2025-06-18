@@ -65,6 +65,10 @@ interface IStrategyAdapter {
     /// @dev The returned values will account for max slippage.
     function currentPnL() external view returns (uint256, uint256);
 
+    /// @notice Returns the amount of liquidity currently available for withdrawals.
+    /// @dev This represents the funds that can be withdrawn without affecting the adapter’s operations.
+    function availableLiquidity() external view returns (uint256);
+
     /// @notice Starts the panic process for this strategy.
     /// The panic process consists of:
     ///     - Withdraw as much funds as possible from the underlying strategy.

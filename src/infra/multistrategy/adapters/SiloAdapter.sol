@@ -84,9 +84,7 @@ contract SiloAdapter is StrategyAdapterHarvestable {
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 assetsSupplied = siloLens.getDepositAmount(silo, asset, address(this), block.timestamp);
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
-        
-        return assetsSupplied + assetBalance;
+        return assetsSupplied + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
@@ -98,9 +96,9 @@ contract SiloAdapter is StrategyAdapterHarvestable {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposits all the liquidity into the Silo.
+    /// @notice Deposits all the balance into the Silo.
     function _deposit() internal override {
-        ISilo(silo).deposit(asset, _liquidity(), false);
+        ISilo(silo).deposit(asset, _balance(), false);
     }
 
     /// @notice Withdraws a specified amount of assets from the Silo.

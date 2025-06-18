@@ -74,7 +74,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
     /// @inheritdoc IERC4626
     function totalAssets() public view override returns (uint256) {
-        return _liquidity() + totalDebt;
+        return _balance() + totalDebt;
     }
 
     /// @inheritdoc IERC4626
@@ -96,7 +96,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 _assets) public view override returns (uint256) {
         uint256 shares = _convertToShares(_assets, Math.Rounding.Ceil);
-        if(_assets <= _liquidity()) {
+        if(_assets <= _balance()) {
             return shares;
         } else {
             if(slippageLimit == MAX_BPS) return type(uint256).max;
@@ -108,7 +108,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 _shares) public view override returns (uint256) {
         uint256 assets = _convertToAssets(_shares, Math.Rounding.Floor);
-        if(assets <= _liquidity()) {
+        if(assets <= _balance()) {
             return assets;
         } else {
             // Return the number of assets redeemable at the maximum permitted slippage.
@@ -215,9 +215,9 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                             INTERNAL CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Internal view function to retrieve the current liquidity of the contract.
-    /// @return The current liquidity (balance of the asset) of the contract.
-    function _liquidity() internal view returns (uint256) {
+    /// @notice Internal view function to retrieve the current asset balance of the contract.
+    /// @return The current balance of the asset of the contract.
+    function _balance() internal view returns (uint256) {
         return IERC20(asset()).balanceOf(address(this));
     }
 
@@ -394,11 +394,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// This function performs the following actions:
     /// - If the caller is not the owner, it checks and spends the allowance for the withdrawal.
     /// - Ensures that the amount to be withdrawn is greater than zero.
-    /// - If the requested withdrawal amount exceeds the available liquidity, it withdraws the necessary amount from the strategies in the withdrawal order.
-    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the liquidity requirement is met or the queue is exhausted.
+    /// - If the requested withdrawal amount exceeds the available balance, it withdraws the necessary amount from the strategies in the withdrawal order.
+    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the balance requirement is met or the queue is exhausted.
     ///   - Updates the total debt of both the strategy and the contract as assets are withdrawn.
     ///   - Requests the strategy to report, accounting for potential gains or losses.
-    /// - Reverts if the withdrawal process does not result in sufficient liquidity.
+    /// - Reverts if the withdrawal process does not result in sufficient balance.
     /// - Burns the corresponding shares and transfers the requested assets to the receiver.
     /// - Emits a `Withdraw` event with the caller, receiver, owner, amount of assets withdrawn, and shares burned.
     /// 
@@ -425,15 +425,15 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
 
         uint256 assets = _consumeAllShares ? _convertToAssets(_shares, Math.Rounding.Floor) : _assets;
 
-        if(assets > _liquidity()) {
+        if(assets > _balance()) {
             for(uint8 i = 0; i <= withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
-                // We reached the end of the withdraw queue and assets are still higher than the liquidity
-                require(strategy != address(0), Errors.InsufficientLiquidity(assets, _liquidity()));
+                // We reached the end of the withdraw queue and assets are still higher than the balance
+                require(strategy != address(0), Errors.InsufficientBalance(assets, _balance()));
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
-                uint256 assetsToWithdraw = Math.min(assets - _liquidity(), strategies[strategy].totalDebt);
+                uint256 assetsToWithdraw = Math.min(assets - _balance(), strategies[strategy].totalDebt);
                 if(assetsToWithdraw == 0) continue;
 
                 uint256 withdrawn = IStrategyAdapter(strategy).withdraw(assetsToWithdraw);
@@ -445,7 +445,7 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
                 // Update assets, as a loss could have been reported and user should get less assets for
                 // the same amount of shares.
                 if(_consumeAllShares) assets = _convertToAssets(_shares, Math.Rounding.Floor);
-                if(assets <= _liquidity()) break;
+                if(assets <= _balance()) break;
             }
         }
 

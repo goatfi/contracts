@@ -21,6 +21,10 @@ contract StrategyAdapterMock is StrategyAdapter {
         IERC20(_asset).forceApprove(address(staking), type(uint256).max);
     }
 
+    function balance() external view returns (uint256) {
+        return _balance();
+    }
+
     function earn(uint256 _amount) external {
         IERC20Mock(asset).mint(address(staking), _amount);
     }
@@ -59,8 +63,7 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        staking.deposit(balance);
+        staking.deposit(_balance());
     }
 
     function _withdraw(uint256 _amount) internal override {
@@ -68,8 +71,8 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _emergencyWithdraw() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(staking));
-        staking.withdraw(balance);
+        uint256 s_balance = IERC20(asset).balanceOf(address(staking));
+        staking.withdraw(s_balance);
     }
 
     function _revokeAllowances() internal override {
@@ -82,8 +85,11 @@ contract StrategyAdapterMock is StrategyAdapter {
 
     function _totalAssets() internal override view returns(uint256) {
         uint256 s_balance = IERC20(asset).balanceOf(address(staking));
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        return s_balance + balance;
+        return s_balance + _balance();
+    }
+
+    function _availableLiquidity() internal override view returns(uint256) {
+        return IERC20(asset).balanceOf(address(staking));
     }
 }
 

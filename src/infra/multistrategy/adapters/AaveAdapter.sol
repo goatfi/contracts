@@ -55,9 +55,7 @@ contract AaveAdapter is StrategyAdapter {
     /// @return The total amount of assets managed by the contract.
     function _totalAssets() internal override view returns(uint256) {
         uint256 assetsSupplied = IERC20(aToken).balanceOf(address(this));
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
-
-        return assetsSupplied + assetBalance;
+        return assetsSupplied + _balance();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -70,8 +68,7 @@ contract AaveAdapter is StrategyAdapter {
     /// - Retrieves the current balance of the base asset held by the contract.
     /// - Deposits the entire base asset balance into Aave.
     function _deposit() internal override {
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
-        IPool(aave).deposit(asset, assetBalance, address(this), 0);
+        IPool(aave).deposit(asset, _balance(), address(this), 0);
     }
 
     /// @notice Withdraws a specified amount of assets from Aave.

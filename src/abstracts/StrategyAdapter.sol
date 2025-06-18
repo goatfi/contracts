@@ -14,6 +14,9 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     using SafeERC20 for IERC20;
     using Math for uint256;
 
+    /// @notice Version of this smart contract following Semver 2.0 standard.
+    string public constant VERSION = '1.0.0';
+
     /// @dev 100% in BPS, setting the slippage to 100% means no slippage protection.
     uint256 constant MAX_SLIPPAGE = 10_000;
 
@@ -71,6 +74,11 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
         return _calculateGainAndLoss(_totalAssets());
     }
 
+    /// @inheritdoc IStrategyAdapter
+    function availableLiquidity() external view returns (uint256) {
+        return _availableLiquidity();
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         USER FACING NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
@@ -112,7 +120,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// It will be eventually reported back as gain when sendReport is called.
     function withdraw(uint256 _amount) external onlyMultistrategy whenNotPaused returns (uint256) {
         _tryWithdraw(_amount);
-        uint256 withdrawn = Math.min(_amount, _liquidity());
+        uint256 withdrawn = Math.min(_amount, _balance());
         IERC20(asset).safeTransfer(multistrategy, withdrawn);
 
         return withdrawn;
@@ -189,7 +197,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     }
 
     /// @notice Returns the current balance of asset in this contract.
-    function _liquidity() internal view returns (uint256) {
+    function _balance() internal view returns (uint256) {
         return IERC20(asset).balanceOf(address(this));
     }
 
@@ -197,6 +205,10 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// has swapped `asset` for another asset, it should return the most approximate value.
     /// @dev Child contract must implement the logic to calculate the amount of assets.
     function _totalAssets() internal virtual view returns (uint256) {}
+
+    /// @notice Returns the available liquidity of this adapter.
+    /// @dev Child contract must implement the logic to calculate the available liquidity.
+    function _availableLiquidity() internal view virtual returns (uint256) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
@@ -217,7 +229,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
 
         _tryWithdraw(toBeWithdrawn);
         (gain, loss) = _calculateGainAndLoss(_totalAssets());
-        uint256 currentBalance = _liquidity();
+        uint256 currentBalance = _balance();
         if(currentBalance > gain) {
             IMultistrategy(multistrategy).strategyReport(currentBalance - gain, gain, loss);
         } else {
@@ -233,7 +245,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// - Ensures that the gain is not used to repay the debt.
     /// - Reports the available amount for repayment, the gain, and the loss to the multi-strategy.
     function _sendReportPanicked() internal {
-        uint256 currentAssets = _liquidity();
+        uint256 currentAssets = _balance();
         (uint256 gain, uint256 loss) = _calculateGainAndLoss(currentAssets);
 
         uint256 availableForRepay = currentAssets - gain;
@@ -250,13 +262,12 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     /// 
     /// @param _amount The amount to withdraw from the strategy.
     function _tryWithdraw(uint256 _amount) internal {
-        if(_amount == 0 || _amount <= _liquidity()) return;
+        if(_amount == 0 || _amount <= _balance()) return;
 
-        // Liquidity is considered as amount already withdrawn, this amount doesn't need
-        // to be withdrawn.
-        _withdraw(_amount - _liquidity());
+        // Balance is considered as amount already withdrawn, this amount doesn't need to be withdrawn.
+        _withdraw(_amount - _balance());
 
-        uint256 currentBalance = _liquidity();
+        uint256 currentBalance = _balance();
         uint256 desiredBalance = _amount.mulDiv(MAX_SLIPPAGE - slippageLimit, MAX_SLIPPAGE);
         
         require(currentBalance >= desiredBalance, Errors.SlippageCheckFailed(desiredBalance, currentBalance));

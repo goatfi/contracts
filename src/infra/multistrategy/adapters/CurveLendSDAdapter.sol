@@ -63,9 +63,8 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
     function _totalAssets() internal override view returns(uint256) {
         uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
         uint256 assetsSupplied = curveLendVault.convertToAssets(vaultShares);
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        uint256 total = assetsSupplied + assetBalance;
+        uint256 total = assetsSupplied + _balance();
         return total > 0 ? total - 1 : total;
     }
 
@@ -84,8 +83,7 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
 
     /// @notice Deposits all the available base asset balance.
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        curveLendVault.deposit(balance, address(this));
+        curveLendVault.deposit(_balance(), address(this));
         uint256 vaultTokenBalance = curveLendVault.balanceOf(address(this));
         stakeDAOVault.deposit(address(this), vaultTokenBalance);
     }
