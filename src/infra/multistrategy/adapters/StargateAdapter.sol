@@ -64,9 +64,7 @@ contract StargateAdapter is StrategyAdapterHarvestable {
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 assetsSupplied = stargateChef.balanceOf(stargateLPToken, address(this));
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
-
-        return assetsSupplied + assetBalance;
+        return assetsSupplied + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
@@ -78,10 +76,9 @@ contract StargateAdapter is StrategyAdapterHarvestable {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposits all the liquidity into Stargate.
+    /// @notice Deposits all the balance into Stargate.
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        stargateRouter.deposit(address(this), balance);
+        stargateRouter.deposit(address(this), _balance());
         uint256 balanceOfLP = IERC20(stargateLPToken).balanceOf(address(this));
         stargateChef.deposit(stargateLPToken, balanceOfLP);
     }

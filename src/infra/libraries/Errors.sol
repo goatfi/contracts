@@ -115,13 +115,6 @@ library Errors {
     error StrategyNotRetired();
 
     /**
-     * @notice Thrown when there isn't enough liquidity to fulfill a withdrawal request.
-     * @param assets The amount of assets requested for withdrawal.
-     * @param liquidity The currently available liquidity in the contract.
-     */
-    error InsufficientLiquidity(uint256 assets, uint256 liquidity);
-
-    /**
      * @notice Thrown when attempting to deposit or mint on a retired multistrategy.
      */
     error Retired();

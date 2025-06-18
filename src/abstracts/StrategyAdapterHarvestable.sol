@@ -75,7 +75,7 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
         _swapRewardsToWrappedGas();
         if (IERC20(wrappedGas).balanceOf(address(this)) > minimumAmounts[wrappedGas]) {
             _swapWrappedGasToAsset();
-            uint256 assetsHarvested = IERC20(asset).balanceOf(address(this));
+            uint256 assetsHarvested = _balance();
             _deposit();
             lastHarvest = block.timestamp;
 

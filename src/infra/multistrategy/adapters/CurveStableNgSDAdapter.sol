@@ -75,13 +75,12 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     /// @notice Returns the total amount of assets held in this adapter.
     /// @return The total amount of assets held by this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
         uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
 
-        if(vaultShares == 0) return assetBalance;
+        if(vaultShares == 0) return _balance();
 
         uint256 assetsWithdrawable = curveLiquidityPool.calc_withdraw_one_coin(vaultShares, assetIndex128);
-        return assetsWithdrawable + assetBalance;
+        return assetsWithdrawable + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
@@ -100,7 +99,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
 
     /// @notice Deposits all the available base asset balance.
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
+        uint256 balance = _balance();
         (uint256 slippage, bool positiveSlippage) = getDepositSlippage(balance);
         require(positiveSlippage || slippage <= curveSlippageLimit, CurveSlippageTooHigh(slippage, curveSlippageLimit));
 

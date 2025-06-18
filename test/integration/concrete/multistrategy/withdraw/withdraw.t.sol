@@ -164,7 +164,7 @@ contract Withdraw_Integration_Concrete_Test is Multistrategy_Integration_Shared_
 
         swapCaller(users.bob);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientLiquidity.selector, amountToWithdraw, 900 * 10 ** decimals));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InsufficientBalance.selector, amountToWithdraw, 900 * 10 ** decimals));
         IERC4626(address(multistrategy)).withdraw(amountToWithdraw, users.bob, users.bob);
     }
 

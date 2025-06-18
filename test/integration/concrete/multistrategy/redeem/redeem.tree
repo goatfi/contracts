@@ -11,23 +11,23 @@ redeem.t.sol
             ├── when a strategy withdraw has a greater slippage than the slippage limit
             │   └── it should revert with a SlippageCheckFailed error
             └── when a strategy withdraw has less slippage than the slippage limit
-                ├── when the liquidity of the multistrategy is lower than the amount to be withdrawn
+                ├── when the balance of the multistrategy is lower than the amount to be withdrawn
                 │   ├── when the checked strategy is the zero address
                 │   │   ├── it should burn the amount of shares
                 │   │   ├── it should transfer the assets to the receiver
                 │   │   ├── it should emit a Withdraw event
                 │   │   └── it should reutrn the assets that were redeemed for the shares
                 │   └── when the checked strategy is not the zero address
-                │       ├── when the balance to withdraw is lower or equal than the liquidity of the Multistrategy
+                │       ├── when the balance to withdraw is lower or equal than the balance of the Multistrategy
                 │       │   ├── it should burn the amount of shares
                 │       │   ├── it should transfer the assets to the receiver
                 │       │   ├── it should emit a Withdraw event
                 │       │   └── it should reutrn the assets that were redeemed for the shares
-                │       └── when the balance to withdraw is greater than the liquidity of the Multistrategy
+                │       └── when the balance to withdraw is greater than the balance of the Multistrategy
                 │           ├── it should withraw from the strategy up to the amount needed
                 │           ├── it should reduce the debt of the strategy by the amount withdrawn
                 │           └── it should reduce the debt of the multistrategy by the amount withdrawn
-                └── when the liquidity of the multistrategy is greater than the amount to be withdrawn
+                └── when the balance of the multistrategy is greater than the amount to be withdrawn
                     ├── it should burn the amount of shares
                     ├── it should transfer the assets to the receiver
                     ├── it should emit a Withdraw event

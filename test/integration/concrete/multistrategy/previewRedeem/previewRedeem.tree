@@ -2,9 +2,9 @@ previewRedeem.t.sol
 ├── when shares is zero
 │   └── it should return zero assets
 └── when shares is not zero
-    ├── when the assets needed to cover the withdraw are lower or equal than the liquidity
+    ├── when the assets needed to cover the withdraw are lower or equal than the balance
     │   └── it should return the shares converted to assets
-    └── when the assets needed to cover the withdraw are higher than the liquidity
+    └── when the assets needed to cover the withdraw are higher than the balance
         ├── when the slippage limit is zero
         │   └── it should return the shares converted to assets
         └── when the slippage limit is not zero

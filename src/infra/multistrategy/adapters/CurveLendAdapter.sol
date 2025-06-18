@@ -90,9 +90,8 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     function _totalAssets() internal override view returns(uint256) {
         uint256 curveLendVaultShares = address(curveGauge) == address(0) ? curveLendVault.balanceOf(address(this)) : curveGauge.balanceOf(address(this));
         uint256 assetsSupplied = curveLendVault.previewRedeem(curveLendVaultShares);
-        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
-        return assetsSupplied + assetBalance;
+        return assetsSupplied + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
@@ -105,10 +104,9 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposits all the liquidity into the Curve Lend Vault and deposit into the gau.
+    /// @notice Deposits all the balance into the Curve Lend Vault and deposit into the gau.
     function _deposit() internal override {
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        curveLendVault.deposit(balance, address(this));
+        curveLendVault.deposit(_balance(), address(this));
         if(address(curveGauge) != address(0)) {
             uint256 curveLendVaultShares = curveLendVault.balanceOf(address(this));
             curveGauge.deposit(curveLendVaultShares);

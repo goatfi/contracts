@@ -252,8 +252,7 @@ abstract contract StrategyAdapter is IStrategyAdapter, StrategyAdapterAdminable 
     function _tryWithdraw(uint256 _amount) internal {
         if(_amount == 0 || _amount <= _balance()) return;
 
-        // Liquidity is considered as amount already withdrawn, this amount doesn't need
-        // to be withdrawn.
+        // Balance is considered as amount already withdrawn, this amount doesn't need to be withdrawn.
         _withdraw(_amount - _balance());
 
         uint256 currentBalance = _balance();

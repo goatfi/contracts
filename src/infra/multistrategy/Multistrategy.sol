@@ -394,11 +394,11 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
     /// This function performs the following actions:
     /// - If the caller is not the owner, it checks and spends the allowance for the withdrawal.
     /// - Ensures that the amount to be withdrawn is greater than zero.
-    /// - If the requested withdrawal amount exceeds the available liquidity, it withdraws the necessary amount from the strategies in the withdrawal order.
-    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the liquidity requirement is met or the queue is exhausted.
+    /// - If the requested withdrawal amount exceeds the available balance, it withdraws the necessary amount from the strategies in the withdrawal order.
+    ///   - Iterates through the withdrawal queue, withdrawing from each strategy until the balance requirement is met or the queue is exhausted.
     ///   - Updates the total debt of both the strategy and the contract as assets are withdrawn.
     ///   - Requests the strategy to report, accounting for potential gains or losses.
-    /// - Reverts if the withdrawal process does not result in sufficient liquidity.
+    /// - Reverts if the withdrawal process does not result in sufficient balance.
     /// - Burns the corresponding shares and transfers the requested assets to the receiver.
     /// - Emits a `Withdraw` event with the caller, receiver, owner, amount of assets withdrawn, and shares burned.
     /// 
@@ -429,8 +429,8 @@ contract Multistrategy is IMultistrategy, MultistrategyManageable, ERC4626, Reen
             for(uint8 i = 0; i <= withdrawOrder.length; ++i){
                 address strategy = withdrawOrder[i];
 
-                // We reached the end of the withdraw queue and assets are still higher than the liquidity
-                require(strategy != address(0), Errors.InsufficientLiquidity(assets, _balance()));
+                // We reached the end of the withdraw queue and assets are still higher than the balance
+                require(strategy != address(0), Errors.InsufficientBalance(assets, _balance()));
 
                 // We can't withdraw from a strategy more than what it has asked as credit.
                 uint256 assetsToWithdraw = Math.min(assets - _balance(), strategies[strategy].totalDebt);
