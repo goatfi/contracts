@@ -71,7 +71,8 @@ contract StrategyAdapterMock is StrategyAdapter {
     }
 
     function _emergencyWithdraw() internal override {
-        staking.withdraw(_balance());
+        uint256 s_balance = IERC20(asset).balanceOf(address(staking));
+        staking.withdraw(s_balance);
     }
 
     function _revokeAllowances() internal override {
