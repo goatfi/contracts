@@ -8,13 +8,13 @@ import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadat
 import { AdapterHandler } from "./AdapterHandler.t.sol";
 import { AssetsSonic, ProtocolSonic } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
-import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
+import { SiloV2VaultAdapter } from "src/infra/multistrategy/adapters/SiloV2VaultAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 
 
-contract SiloV2AdapterInvariants is AdapterInvariantBase {
+contract SiloV2VaultAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-    bool harvest = true;
+    bool harvest = false;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
@@ -22,7 +22,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
         super.setUp();
         
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
+            createMultistrategy(asset, 100_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
             harvest
@@ -32,8 +32,8 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
         targetContract(address(handler));
     }
 
-    function createAdapter() public returns (SiloV2Adapter) {
-        address vault = 0x4E216C15697C1392fE59e1014B009505E05810Df;
+    function createAdapter() public returns (SiloV2VaultAdapter) {
+        address vault = 0xcca902f2d3d265151f123d8ce8FdAc38ba9745ed;
         address incentivesController = address(0);
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
@@ -41,7 +41,7 @@ contract SiloV2AdapterInvariants is AdapterInvariantBase {
             wrappedGas: AssetsSonic.WS
         });
 
-        SiloV2Adapter adapter = new SiloV2Adapter(address(multistrategy), multistrategy.asset(), vault, incentivesController, harvestAddresses, "", "");
+        SiloV2VaultAdapter adapter = new SiloV2VaultAdapter(address(multistrategy), multistrategy.asset(), vault, incentivesController, harvestAddresses, "", "");
         adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
         vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);

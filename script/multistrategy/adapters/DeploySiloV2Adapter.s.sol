@@ -18,7 +18,7 @@ contract DeploySiloV2Adapter is Script {
     //                   ADAPTER CONFIG                    //
     /////////////////////////////////////////////////////////
     address constant MULTISTRATEGY = 0x901e3059Bf118AbC74d917440F0C08FC78eC0Aa6; //FIXME:
-    address constant ASSET = AssetsSonic.USDCe;
+    address constant ASSET = AssetsSonic.USDC;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     address constant TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
     string constant NAME = "Silo S/USDC.e ID-8";                            //FIXME:

@@ -22,7 +22,7 @@ contract SiloV2AdapterIntegration is AdapterIntegration {
         vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
         super.setUp();
 
-        asset = AssetsSonic.USDCe;
+        asset = AssetsSonic.USDC;
         depositLimit = 10_000_000 * (10 ** IERC20Metadata(asset).decimals());
         minDeposit = (10 ** IERC20Metadata(asset).decimals() - 2);
         harvest = false;

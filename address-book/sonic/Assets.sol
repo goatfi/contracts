@@ -6,7 +6,7 @@ library AssetsSonic {
     address internal constant WS = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
 
     // https://sonicscan.org/token/0x29219dd400f2Bf60E5a23d13Be72B486D4038894
-    address internal constant USDCe = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
+    address internal constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
 
     // https://sonicscan.org/token/0x53f753E4B17F4075D6fa2c6909033d224b81e698
     address internal constant SILO = 0x53f753E4B17F4075D6fa2c6909033d224b81e698;
