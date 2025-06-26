@@ -58,3 +58,7 @@ interface ISiloRewards {
 interface ISiloIncentivesController {
     function claimRewards(address to) external;
 }
+
+interface IxSilo {
+    function redeemSilo(uint256 _xSiloAmountToBurn, uint256 _duration) external;
+}

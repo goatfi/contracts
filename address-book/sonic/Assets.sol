@@ -11,6 +11,9 @@ library AssetsSonic {
     // https://sonicscan.org/token/0x53f753E4B17F4075D6fa2c6909033d224b81e698
     address internal constant SILO = 0x53f753E4B17F4075D6fa2c6909033d224b81e698;
 
+    // https://sonicscan.org/token/0x4451765739b2D7BCe5f8BC95Beaf966c45E1Dcc9
+    address internal constant xSILO = 0x4451765739b2D7BCe5f8BC95Beaf966c45E1Dcc9;
+
     // https://sonicscan.org/token/0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1
     address internal constant WOS = 0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1;
 }
