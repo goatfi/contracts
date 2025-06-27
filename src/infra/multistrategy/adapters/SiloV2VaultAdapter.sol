@@ -12,8 +12,17 @@ import { ISiloHookReceiver } from "interfaces/silo/ISiloHookReceiver.sol";
 import { IxSilo } from "interfaces/silo/ISilo.sol";
 
 contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
+    /// @notice Incentive controller and Idle Market Addresses
+    struct SiloV2VaultAddresses {
+        address incentivesController;
+        address idleMarket;
+    }
+
     /// @notice The Silo incentives controller of the Silo Vault.
     ISiloV2IncentivesController public vaultIncentivesController;
+
+    /// @notice Address of the vault's idle market.
+    address idleMarket;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONSTRUCTOR
@@ -23,14 +32,15 @@ contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
     /// @param _multistrategy The address of the multi-strategy contract.
     /// @param _asset The address of the asset.
     /// @param _vault The address of the ERC4626 vault.
-    /// @param _vaultIncentivesController The address of the Silo Vault Incentives Controller
+    /// @param _siloV2VaultAddresses Struct of SiloV2 addresses needed for this adapter.
+    /// @param _harvestAddresses Struct of addresses needed to harvest this adapter.
     /// @param _name The name of this Strategy Adapter.
     /// @param _id The type identifier of this Strategy Adapter.
     constructor(
         address _multistrategy,
         address _asset,
         address _vault,
-        address _vaultIncentivesController,
+        SiloV2VaultAddresses memory _siloV2VaultAddresses,
         HarvestAddresses memory _harvestAddresses,
         string memory _name,
         string memory _id
@@ -44,7 +54,8 @@ contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
             _id
         )
     {
-        vaultIncentivesController = ISiloV2IncentivesController(_vaultIncentivesController);
+        vaultIncentivesController = ISiloV2IncentivesController(_siloV2VaultAddresses.incentivesController);
+        idleMarket = _siloV2VaultAddresses.idleMarket;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -60,13 +71,15 @@ contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
         uint256 amountOfMarkets = ISiloV2Vault(address(vault)).withdrawQueueLength();
         for(uint256 i = 0; i < amountOfMarkets; ++i) {
             address market = ISiloV2Vault(address(vault)).withdrawQueue(i);
+            if(market == idleMarket) continue;
+            
             address config = ISiloV2Market(market).config();
             ConfigData memory configData = ISiloV2Config(config).getConfig(market);
             ISiloV2IncentivesController gauge = ISiloV2IncentivesController(ISiloHookReceiver(configData.hookReceiver).configuredGauges(market));
             string[] memory programNames = gauge.getAllProgramsNames();
             uint256 unclaimedRewards;
             for(uint256 j = 0; j < programNames.length; ++j) {
-                unclaimedRewards += gauge.getRewardsBalance(address(this), programNames[i]);
+                unclaimedRewards += gauge.getRewardsBalance(address(this), programNames[j]);
             }
             if(unclaimedRewards > 0) gauge.claimRewards(address(this));
         }

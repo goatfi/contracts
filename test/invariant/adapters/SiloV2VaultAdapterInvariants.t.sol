@@ -14,7 +14,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 
 contract SiloV2VaultAdapterInvariants is AdapterInvariantBase {
     AdapterHandler handler;
-    bool harvest = false;
+    bool harvest = true;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("SONIC_RPC_URL"));
@@ -34,14 +34,18 @@ contract SiloV2VaultAdapterInvariants is AdapterInvariantBase {
 
     function createAdapter() public returns (SiloV2VaultAdapter) {
         address vault = 0xcca902f2d3d265151f123d8ce8FdAc38ba9745ed;
-        address incentivesController = address(0);
+
+        SiloV2VaultAdapter.SiloV2VaultAddresses memory siloV2Addresses = SiloV2VaultAdapter.SiloV2VaultAddresses({
+            incentivesController: 0xfFd019f29b068BCec229Ad352bA8346814BCFf72,
+            idleMarket: 0x54EbD8DE6e3D325164046cdcDB5d4Cf4Fe6BaE2b
+        });
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolSonic.GOAT_SWAPPER,
             wrappedGas: AssetsSonic.WS
         });
 
-        SiloV2VaultAdapter adapter = new SiloV2VaultAdapter(address(multistrategy), multistrategy.asset(), vault, incentivesController, harvestAddresses, "", "");
+        SiloV2VaultAdapter adapter = new SiloV2VaultAdapter(address(multistrategy), multistrategy.asset(), vault, siloV2Addresses, harvestAddresses, "", "");
         adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
         vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);
