@@ -4,6 +4,7 @@ pragma solidity 0.8.27;
 import { ERC4626AdapterHarvestable } from "src/abstracts/ERC4626AdapterHarvestable.sol";
 import { AssetsSonic } from "@addressbook/AddressBook.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ISiloV2Vault } from "interfaces/silo/ISiloV2Vault.sol";
 import { ISiloV2Market } from "interfaces/silo/ISiloV2Market.sol";
 import { ISiloV2Config, ConfigData } from "interfaces/silo/ISiloV2Config.sol";
@@ -59,6 +60,21 @@ contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
     }
 
     /*//////////////////////////////////////////////////////////////////////////
+                            INTERNAL ONSTANT FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return liquidity The amount of tokens.
+    function _availableLiquidity() internal view override returns (uint256 liquidity) {
+        uint256 amountOfMarkets = ISiloV2Vault(address(vault)).withdrawQueueLength();
+        for(uint256 i = 0; i < amountOfMarkets; ++i) {
+            address market = ISiloV2Vault(address(vault)).withdrawQueue(i);
+            uint256 marketShares = IERC20(market).balanceOf(address(vault));
+            liquidity += IERC4626(market).previewRedeem(marketShares);
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
@@ -72,10 +88,11 @@ contract SiloV2VaultAdapter is ERC4626AdapterHarvestable {
         for(uint256 i = 0; i < amountOfMarkets; ++i) {
             address market = ISiloV2Vault(address(vault)).withdrawQueue(i);
             if(market == idleMarket) continue;
-            
+
             address config = ISiloV2Market(market).config();
             ConfigData memory configData = ISiloV2Config(config).getConfig(market);
             ISiloV2IncentivesController gauge = ISiloV2IncentivesController(ISiloHookReceiver(configData.hookReceiver).configuredGauges(market));
+            if(address(gauge) == address(0)) continue;
             string[] memory programNames = gauge.getAllProgramsNames();
             uint256 unclaimedRewards;
             for(uint256 j = 0; j < programNames.length; ++j) {
