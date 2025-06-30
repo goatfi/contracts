@@ -38,4 +38,8 @@ interface IStrategyAdapterHarvestable {
     /// @param swapper The address of the new swapper contract.
     /// @dev This function revokes approvals from the old swapper and grants them to the new swapper.
     function updateSwapper(address swapper) external;
+
+    /// @notice It will transfer all the reward token balance to the owner.
+    /// @param _rewardToken The reward token to rescue
+    function rescueRewards(address _rewardToken) external;
 }

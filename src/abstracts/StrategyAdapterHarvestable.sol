@@ -118,6 +118,11 @@ abstract contract StrategyAdapterHarvestable is IStrategyAdapterHarvestable, Str
         emit SwapperUpdated(_swapper);
     }
 
+    /// @inheritdoc IStrategyAdapterHarvestable
+    function rescueRewards(address _rewardToken) external onlyOwner {
+        IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL NON-CONSTANT FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
