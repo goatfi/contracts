@@ -23,7 +23,7 @@ contract CurveLendAdapterInvariants is AdapterInvariantBase {
             createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
-            false
+            true
         );
 
         makeInitialDeposit(10 * (10 ** decimals));
@@ -37,7 +37,8 @@ contract CurveLendAdapterInvariants is AdapterInvariantBase {
         });
         CurveLendAdapter.CurveLendAddresses memory curveLendAddresses = CurveLendAdapter.CurveLendAddresses({
             vault: 0xe07f1151887b8FDC6800f737252f6b91b46b5865,
-            gauge: address(0)
+            gauge: 0x46cC987dcd1D4D84ea5ecb2ce081ac4913b7C305,
+            gaugeFactory: 0xabC000d88f23Bb45525E447528DBF656A9D55bf5
         });
 
         CurveLendAdapter adapter = new CurveLendAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendAddresses,"", "");

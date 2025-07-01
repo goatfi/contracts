@@ -34,7 +34,8 @@ contract VerifyRewardToken_Unit_Concrete_Test is Test {
 
         CurveLendAdapter.CurveLendAddresses memory curveLendAddresses = CurveLendAdapter.CurveLendAddresses({
             vault: address(vault),
-            gauge: address(0)
+            gauge: address(0),
+            gaugeFactory: 0xabC000d88f23Bb45525E447528DBF656A9D55bf5
         });
 
         MockERC4626 multi = new MockERC4626(address(token), "Multi", "", false, 0);

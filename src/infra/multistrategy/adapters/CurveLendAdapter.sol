@@ -6,6 +6,7 @@ import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { ICurveGauge } from "interfaces/curve/ICurveGauge.sol";
+import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
 import { ICurveLendVault } from "interfaces/curve/ICurveLendVault.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
@@ -16,6 +17,7 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     struct CurveLendAddresses {
         address vault;
         address gauge;
+        address gaugeFactory;
     }
 
     /// @notice The Curve Lending Vault.
@@ -23,6 +25,9 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
 
     /// @notice The Curve gauge.
     ICurveGauge public curveGauge;
+
+    /// @notice The Curve gauge factory.
+    ICurveGaugeFactory public curveGaugeFactory;
 
     /// @notice Emitted after a successful migration.
     /// @param previousGauge Address of the previous Gauge.
@@ -53,6 +58,7 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
     {   
         curveLendVault = ICurveLendVault(_curveAddresses.vault);
         curveGauge = ICurveGauge(_curveAddresses.gauge);
+        curveGaugeFactory = ICurveGaugeFactory(_curveAddresses.gaugeFactory);
         _giveAllowances();
     }
 
@@ -151,7 +157,9 @@ contract CurveLendAdapter is StrategyAdapterHarvestable {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        if (address(curveGauge) == address(0)) return;
-        curveGauge.claim_rewards();
+        if (address(curveGauge) != address(0)) {
+            curveGaugeFactory.mint(address(curveGauge));
+            curveGauge.claim_rewards();
+        }
     }
 }
