@@ -13,6 +13,7 @@ contract DeployCurveLendAdapter is Script {
 
     address constant LEND_VAULT = 0x0E6Ad128D7E217439bEEa90695FE7ec859c7F98C;
     address constant GAUGE = address(0);
+    address constant GAUGE_FACTORY = 0xabC000d88f23Bb45525E447528DBF656A9D55bf5;
 
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
@@ -30,7 +31,8 @@ contract DeployCurveLendAdapter is Script {
 
     CurveLendAdapter.CurveLendAddresses crvLendSDAddresses = CurveLendAdapter.CurveLendAddresses({
         vault: LEND_VAULT,
-        gauge: GAUGE
+        gauge: GAUGE,
+        gaugeFactory: GAUGE_FACTORY
     });
 
     function run() public {

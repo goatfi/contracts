@@ -28,7 +28,8 @@ contract CurveLendAdapterIntegration is AdapterIntegration {
     function createCurveAdapter() public {
         CurveLendAdapter.CurveLendAddresses memory curveAddresses = CurveLendAdapter.CurveLendAddresses({
             vault: 0xe07f1151887b8FDC6800f737252f6b91b46b5865,
-            gauge: address(0)
+            gauge: address(0),
+            gaugeFactory: 0xabC000d88f23Bb45525E447528DBF656A9D55bf5
         });
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
