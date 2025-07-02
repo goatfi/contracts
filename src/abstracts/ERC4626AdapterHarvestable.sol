@@ -45,10 +45,9 @@ abstract contract ERC4626AdapterHarvestable is StrategyAdapterHarvestable {
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 sharesBalance = vault.balanceOf(address(this));
-        uint256 assetsSupplied = vault.convertToAssets(sharesBalance);
+        uint256 assetsSupplied = vault.previewRedeem(sharesBalance);
 
-        uint256 total = assetsSupplied + _balance();
-        return total > 0 ? total - 1 : total;
+        return assetsSupplied + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable

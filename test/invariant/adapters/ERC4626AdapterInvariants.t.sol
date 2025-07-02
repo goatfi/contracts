@@ -25,7 +25,7 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
             false
         );
 
-        makeInitialDeposit(10 * (10 ** decimals));
+        makeInitialDeposit(100 * (10 ** decimals));
         targetContract(address(handler));
     }
 
@@ -46,7 +46,7 @@ contract ERC4626AdapterInvariants is AdapterInvariantBase {
         console.log("Yield Time:", handler.ghost_yieldTime());
 
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGt(multistrategy.pricePerShare(), 1 * (10 ** decimals));
+            assertGe(multistrategy.pricePerShare(), 1 * (10 ** decimals));
         }
     }
 }

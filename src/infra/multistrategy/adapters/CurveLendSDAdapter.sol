@@ -62,10 +62,9 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
     /// @notice Returns the total amount of assets held in this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
-        uint256 assetsSupplied = curveLendVault.convertToAssets(vaultShares);
+        uint256 assetsSupplied = curveLendVault.previewRedeem(vaultShares);
 
-        uint256 total = assetsSupplied + _balance();
-        return total > 0 ? total - 1 : total;
+        return assetsSupplied + _balance();
     }
 
     /// @inheritdoc StrategyAdapterHarvestable
