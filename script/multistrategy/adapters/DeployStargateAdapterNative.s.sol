@@ -6,7 +6,7 @@ import {console} from "forge-std/console.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {StargateAdapterNative} from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
 import {StrategyAdapterHarvestable} from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
+import { AssetsArbitrum, ProtocolArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 
 contract DeployStargateAdapterNative is Script {
     /////////////////////////////////////////////////////////
@@ -25,11 +25,9 @@ contract DeployStargateAdapterNative is Script {
     address stargateRouter = 0xA45B5130f36CDcA45667738e2a258AB09f4A5f7F;
     address stargateChef = 0x3da4f8E456AC648c489c286B99Ca37B666be7C4C;
 
-    address constant MULTISTRATEGY = 0xe1c410eefAeBB052E17E0cB6F1c3197F35765Aab; //FIXME:
+    address constant MULTISTRATEGY = VaultsArbitrum.ycETH; //FIXME:
     address constant ASSET = AssetsArbitrum.WETH;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    address constant TESTING_CUSTODIAN =
-        0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
     string constant NAME = "Stargate WETH"; //FIXME:
     string constant ID = "STARGATE";
 
@@ -66,7 +64,7 @@ contract DeployStargateAdapterNative is Script {
         }
 
         adapter.enableGuardian(GUARDIAN);
-        adapter.transferOwnership(TESTING_CUSTODIAN);
+        adapter.transferOwnership(ProtocolArbitrum.MULTI_MANAGER);
 
         vm.stopBroadcast();
 

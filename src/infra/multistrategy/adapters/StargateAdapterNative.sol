@@ -73,6 +73,12 @@ contract StargateAdapterNative is StrategyAdapterHarvestable {
         return assetsSupplied + _balance();
     }
 
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return liquidity The amount of tokens.
+    function _availableLiquidity() internal override view returns(uint256 liquidity) {
+        return IERC20(stargateLPToken).balanceOf(address(stargateChef));
+    }
+
     /// @inheritdoc StrategyAdapterHarvestable
     function _verifyRewardToken(address _token) internal view override {
         require(_token != address(stargateRouter) && _token != address(stargateChef), Errors.InvalidRewardToken(_token));
