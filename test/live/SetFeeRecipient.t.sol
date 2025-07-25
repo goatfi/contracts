@@ -15,7 +15,7 @@ contract SetFeeRecipient is Test {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
     }
 
-    function test_addAdapter() public { 
+    function test_setFeeRecipient() public { 
         bytes memory data = abi.encodeWithSignature("setProtocolFeeRecipient(address)", ProtocolArbitrum.TREASURY);
         console.logBytes(data);
 
