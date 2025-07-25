@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity^0.8.20;
+pragma solidity ^0.8.20;
 
 interface ITimelock {
     function schedule(
@@ -35,4 +35,6 @@ interface ITimelock {
         bytes32 predecessor,
         bytes32 salt
     ) external;
+
+    function hasRole(bytes32 role, address account) external returns (bool);
 }
