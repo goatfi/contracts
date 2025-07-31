@@ -9,10 +9,10 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract CurveLendSDAdapter is StrategyAdapterHarvestable {
+contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     using SafeERC20 for IERC20;
 
-    struct CurveLendSDAddresses {
+    struct CurveLendSDV2Addresses {
         address lendVault;
         address sdVault;
         address sdAccountant;
@@ -41,7 +41,7 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
         address _multistrategy,
         address _asset,
         HarvestAddresses memory _harvestAddresses,
-        CurveLendSDAddresses memory _curveLendSDTAddresses,
+        CurveLendSDV2Addresses memory _curveLendSDTAddresses,
         string memory _name,
         string memory _id
     ) 
@@ -72,8 +72,11 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
             _token != address(curveLendVault) &&
             _token != address(sdVault) && 
             _token != address(sdAccountant) &&
-            _token != address(gauge) &&
-            sdVault.isRewardToken(_token),
+            _token != address(gauge),
+            Errors.InvalidRewardToken(_token));
+        require(
+            sdVault.isRewardToken(_token) || 
+            _token == sdAccountant.REWARD_TOKEN(), 
             Errors.InvalidRewardToken(_token));
     }
 
@@ -124,10 +127,12 @@ contract CurveLendSDAdapter is StrategyAdapterHarvestable {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        address[] memory gauges = new address[](1);
-        bytes[] memory harvestData = new bytes[](1);
-        gauges[0] = gauge;
-        sdAccountant.claim(gauges, harvestData);
+        if (sdAccountant.getPendingRewards(address(sdVault), address(this)) > 0) {
+            address[] memory gauges = new address[](1);
+            bytes[] memory harvestData = new bytes[](0);
+            gauges[0] = gauge;
+            sdAccountant.claim(gauges, harvestData);
+        }
 
         if (rewards.length > 1) {
             address[] memory otherRewards = new address[](rewards.length - 1);

@@ -9,9 +9,9 @@ import { AdapterHandler } from "./AdapterHandler.t.sol";
 import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
 import { Users } from "../../utils/Types.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { CurveLendSDAdapter } from "src/infra/multistrategy/adapters/CurveLendSDAdapter.sol";
+import { CurveLendSDV2Adapter } from "src/infra/multistrategy/adapters/CurveLendSDV2Adapter.sol";
 
-contract CurveLendSDAdapterInvariants is AdapterInvariantBase {
+contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
     address[] rewards = [AssetsArbitrum.CRV];
     AdapterHandler handler;
 
@@ -31,18 +31,18 @@ contract CurveLendSDAdapterInvariants is AdapterInvariantBase {
         targetContract(address(handler));
     }
 
-    function createAdapter() public returns (CurveLendSDAdapter) {
+    function createAdapter() public returns (CurveLendSDV2Adapter) {
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
             wrappedGas: AssetsArbitrum.WETH
         });
-        CurveLendSDAdapter.CurveLendSDAddresses memory curveLendSDAddresses = CurveLendSDAdapter.CurveLendSDAddresses({
+        CurveLendSDV2Adapter.CurveLendSDV2Addresses memory curveLendSDAddresses = CurveLendSDV2Adapter.CurveLendSDV2Addresses({
             lendVault: 0xd3cA9BEc3e681b0f578FD87f20eBCf2B7e0bb739,
             sdVault: 0x37E939aA581d01767249d4AaB9BE2b328bE2FD3C,
-            sdRewards: 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233
+            sdAccountant: 0x93b4B9bd266fFA8AF68e39EDFa8cFe2A62011Ce0
         });
 
-        CurveLendSDAdapter adapter = new CurveLendSDAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendSDAddresses,"", "");
+        CurveLendSDV2Adapter adapter = new CurveLendSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendSDAddresses,"", "");
         adapter.transferOwnership(users.keeper);
         vm.prank(users.keeper); adapter.enableGuardian(users.guardian);
         vm.prank(users.owner); multistrategy.addStrategy(address(adapter), 10_000, 0, type(uint256).max);

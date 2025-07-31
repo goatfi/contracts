@@ -16,7 +16,7 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
     using Math for uint256;
 
     /// @notice Struct containing the needed addresses for this adapter.
-    struct CurveSNGSDData {
+    struct CurveSNGSDV2Data {
         address curveLiquidityPool;
         address sdVault;
         address sdAccountant;
@@ -50,7 +50,7 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
         address _multistrategy,
         address _asset,
         HarvestAddresses memory _harvestAddresses,
-        CurveSNGSDData memory _curveLPSDData,
+        CurveSNGSDV2Data memory _curveLPSDData,
         string memory _name,
         string memory _id
     ) 
@@ -88,8 +88,11 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
             _token != address(curveLiquidityPool) &&
             _token != address(sdVault) && 
             _token != address(sdAccountant) &&
-            _token != address(gauge) &&
-            sdVault.isRewardToken(_token),
+            _token != address(gauge),
+            Errors.InvalidRewardToken(_token));
+        require(
+            sdVault.isRewardToken(_token) || 
+            _token == sdAccountant.REWARD_TOKEN(), 
             Errors.InvalidRewardToken(_token));
     }
 
@@ -170,10 +173,12 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        address[] memory gauges = new address[](1);
-        bytes[] memory harvestData = new bytes[](1);
-        gauges[0] = gauge;
-        sdAccountant.claim(gauges, harvestData);
+        if (sdAccountant.getPendingRewards(address(sdVault), address(this)) > 0) {
+            address[] memory gauges = new address[](1);
+            bytes[] memory harvestData = new bytes[](0);
+            gauges[0] = gauge;
+            sdAccountant.claim(gauges, harvestData);
+        }
 
         if (rewards.length > 1) {
             address[] memory otherRewards = new address[](rewards.length - 1);
