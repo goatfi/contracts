@@ -12,10 +12,10 @@ import { Errors } from "src/infra/libraries/Errors.sol";
 contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     using SafeERC20 for IERC20;
 
+    /// @notice Struct containing the needed addresses for this adapter.
     struct CurveLendSDV2Addresses {
         address lendVault;
         address sdVault;
-        address sdAccountant;
     }
 
     /// @notice The Curve Lend Vault where crvUSD will be deposited as supply-side liquidity.
@@ -49,7 +49,7 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     {   
         curveLendVault = IERC4626(_curveLendSDTAddresses.lendVault);
         sdVault = IRewardVault(_curveLendSDTAddresses.sdVault);
-        sdAccountant = IAccountant(_curveLendSDTAddresses.sdAccountant);
+        sdAccountant = IAccountant(IAccountant(sdVault.ACCOUNTANT()));
         gauge = sdVault.gauge();
         _giveAllowances();
     }
@@ -59,6 +59,7 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the total amount of assets held in this adapter.
+    /// @return The total amount of assets held by this adapter.
     function _totalAssets() internal override view returns(uint256) {
         uint256 vaultShares = IERC20(sdVault).balanceOf(address(this));
         uint256 assetsSupplied = curveLendVault.previewRedeem(vaultShares);
@@ -127,12 +128,9 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        if (sdAccountant.getPendingRewards(address(sdVault), address(this)) > 0) {
-            address[] memory gauges = new address[](1);
-            bytes[] memory harvestData = new bytes[](0);
-            gauges[0] = gauge;
-            sdAccountant.claim(gauges, harvestData);
-        }
+        address[] memory gauges = new address[](1);
+        gauges[0] = gauge;
+        sdAccountant.claim(gauges, new bytes[](1));
 
         if (rewards.length > 1) {
             address[] memory otherRewards = new address[](rewards.length - 1);

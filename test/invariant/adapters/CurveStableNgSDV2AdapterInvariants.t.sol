@@ -25,10 +25,10 @@ contract CurveStableNgSDV2Invariants is AdapterInvariantBase {
         super.setUp();
         
         handler = new AdapterHandler(
-            createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
+            createMultistrategy(asset, 100_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
-            true
+            false
         );
 
         makeInitialDeposit(10 * (10 ** decimals));
@@ -46,7 +46,6 @@ contract CurveStableNgSDV2Invariants is AdapterInvariantBase {
         CurveStableNgSDV2Adapter.CurveSNGSDV2Data memory curveData = CurveStableNgSDV2Adapter.CurveSNGSDV2Data({
             curveLiquidityPool: 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F,
             sdVault: 0x5E162b4AC251599a218B0C37b4854E33a54fFCa7,
-            sdAccountant: 0x93b4B9bd266fFA8AF68e39EDFa8cFe2A62011Ce0,
             curveSlippageUtility: address(new CurveStableNgSlippageUtility()),
             assetIndex: 0
         });

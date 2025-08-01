@@ -1,8 +1,9 @@
 [lintspec]
 paths = [
     "src/abstracts/CurveLPBase.sol",
-    "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol",
+    "src/infra/multistrategy/adapters/CurveStableNgSDV2Adapter.sol",
     "src/infra/multistrategy/adapters/CurveLendAdapter.sol",
+    "src/infra/multistrategy/adapters/CurveLendSDV2Adapter.sol",
     "src/infra/multistrategy/adapters/SiloV2VaultAdapter.sol",
     "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol",
     "src/infra/libraries/Errors.sol"

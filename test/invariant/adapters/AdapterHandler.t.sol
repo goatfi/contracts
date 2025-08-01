@@ -48,7 +48,7 @@ contract AdapterHandler is Test {
 
     modifier increaseTime() {
         _;
-        vm.warp(block.timestamp + 6 hours);
+        skip(6 hours);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ contract AdapterHandler is Test {
         if(availableCredit > 1) {
             vm.prank(users.keeper); adapter.requestCredit();
         }
-        vm.warp(block.timestamp + _time);
+        skip(_time);
 
         if(harvest) IStrategyAdapterHarvestable(address(adapter)).harvest();
         vm.prank(users.keeper); adapter.sendReport(type(uint256).max);

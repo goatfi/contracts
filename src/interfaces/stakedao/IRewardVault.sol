@@ -6,6 +6,7 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 /// @title IRewardVault
 /// @notice Interface for the RewardVault contract
 interface IRewardVault is IERC4626 {
+    function ACCOUNTANT() external view returns (address);
 
     function claim(address[] calldata tokens, address receiver) external returns (uint256[] memory amounts);
 

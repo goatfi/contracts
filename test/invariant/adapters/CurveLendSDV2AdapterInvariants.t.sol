@@ -38,8 +38,7 @@ contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
         });
         CurveLendSDV2Adapter.CurveLendSDV2Addresses memory curveLendSDAddresses = CurveLendSDV2Adapter.CurveLendSDV2Addresses({
             lendVault: 0xd3cA9BEc3e681b0f578FD87f20eBCf2B7e0bb739,
-            sdVault: 0x37E939aA581d01767249d4AaB9BE2b328bE2FD3C,
-            sdAccountant: 0x93b4B9bd266fFA8AF68e39EDFa8cFe2A62011Ce0
+            sdVault: 0x37E939aA581d01767249d4AaB9BE2b328bE2FD3C
         });
 
         CurveLendSDV2Adapter adapter = new CurveLendSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendSDAddresses,"", "");

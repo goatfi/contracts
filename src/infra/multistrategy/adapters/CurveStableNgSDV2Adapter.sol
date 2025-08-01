@@ -19,7 +19,6 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
     struct CurveSNGSDV2Data {
         address curveLiquidityPool;
         address sdVault;
-        address sdAccountant;
         address curveSlippageUtility;
         uint256 assetIndex;
     }
@@ -58,7 +57,7 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
         CurveLPBase(_curveLPSDData.curveLiquidityPool, _curveLPSDData.curveSlippageUtility)
     {   
         sdVault = IRewardVault(_curveLPSDData.sdVault);
-        sdAccountant = IAccountant(_curveLPSDData.sdAccountant);
+        sdAccountant = IAccountant(sdVault.ACCOUNTANT());
         assetIndex = _curveLPSDData.assetIndex;
         assetIndex128 = int128(uint128(assetIndex));
         nCoins = curveLiquidityPool.N_COINS();
@@ -173,12 +172,9 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
 
     /// @inheritdoc StrategyAdapterHarvestable
     function _claim() internal override {
-        if (sdAccountant.getPendingRewards(address(sdVault), address(this)) > 0) {
-            address[] memory gauges = new address[](1);
-            bytes[] memory harvestData = new bytes[](0);
-            gauges[0] = gauge;
-            sdAccountant.claim(gauges, harvestData);
-        }
+        address[] memory gauges = new address[](1);
+        gauges[0] = gauge;
+        sdAccountant.claim(gauges, new bytes[](1));
 
         if (rewards.length > 1) {
             address[] memory otherRewards = new address[](rewards.length - 1);
