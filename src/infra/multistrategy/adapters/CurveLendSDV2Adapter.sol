@@ -95,8 +95,8 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     /// @notice Withdraws a specified amount of assets.
     /// @param _amount The amount of assets to withdraw.
     function _withdraw(uint256 _amount) internal override {
-        uint256 vaultSharesNeeded = curveLendVault.convertToShares(_amount + 1);
-        uint256 vaultSharesBalance = IERC20(gauge).balanceOf(address(this));
+        uint256 vaultSharesNeeded = curveLendVault.previewWithdraw(_amount);
+        uint256 vaultSharesBalance = IERC20(sdVault).balanceOf(address(this));
         uint256 vaultShares = Math.min(vaultSharesNeeded, vaultSharesBalance);
         sdVault.withdraw(vaultShares, address(this), address(this));
         curveLendVault.withdraw(_amount, address(this), address(this));

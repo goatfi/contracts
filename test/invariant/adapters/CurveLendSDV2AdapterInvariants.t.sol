@@ -24,7 +24,7 @@ contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
             createMultistrategy(asset, 1_000_000 * (10 ** decimals)), 
             createAdapter(), 
             users,
-            true
+            false
         );
 
         makeInitialDeposit(10 * (10 ** decimals));
@@ -37,8 +37,8 @@ contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
             wrappedGas: AssetsArbitrum.WETH
         });
         CurveLendSDV2Adapter.CurveLendSDV2Addresses memory curveLendSDAddresses = CurveLendSDV2Adapter.CurveLendSDV2Addresses({
-            lendVault: 0xd3cA9BEc3e681b0f578FD87f20eBCf2B7e0bb739,
-            sdVault: 0x37E939aA581d01767249d4AaB9BE2b328bE2FD3C
+            lendVault: 0xe07f1151887b8FDC6800f737252f6b91b46b5865,
+            sdVault: 0x1544E663DD326a6d853a0cc4ceEf0860eb82B287
         });
 
         CurveLendSDV2Adapter adapter = new CurveLendSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendSDAddresses,"", "");

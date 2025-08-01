@@ -15,7 +15,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 import { CurveStableNgSDV2Adapter } from "src/infra/multistrategy/adapters/CurveStableNgSDV2Adapter.sol";
 import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
 
-contract CurveStableNgSDV2Invariants is AdapterInvariantBase {
+contract CurveStableNgSDV2AdapterInvariants is AdapterInvariantBase {
     address[] rewards = [AssetsArbitrum.CRV];
     AdapterHandler handler;
 
