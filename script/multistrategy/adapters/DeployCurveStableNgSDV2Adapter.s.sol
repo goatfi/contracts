@@ -18,7 +18,7 @@ contract DeployCurveStableNgSDV2Adapter is Script {
     address constant ASSET = AssetsArbitrum.USDT;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     string constant NAME = "Stake DAO Curve USDC/USDT LP";
-    string constant ID = "CRV-SD-LP";
+    string constant ID = "CRV-SDV2-LP";
 
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
     address sdVault = 0xa8D278db4ca48e7333901b24A83505BB078ecF86;

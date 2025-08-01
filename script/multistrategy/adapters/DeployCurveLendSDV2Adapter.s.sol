@@ -21,7 +21,7 @@ contract DeployCurveLendSDAV2dapter is Script {
     address constant ASSET = AssetsArbitrum.CRVUSD;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     string constant NAME = "Stake DAO Curve Lend WETH";                            //FIXME:
-    string constant ID = "CRVLEND-SD-V2";
+    string constant ID = "CRV-LEND-SDV2";
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
         swapper: ProtocolArbitrum.GOAT_SWAPPER,
