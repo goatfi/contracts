@@ -21,8 +21,7 @@ contract DeployCurveStableNgSDV2Adapter is Script {
     string constant ID = "CRV-SDV2-LP";
 
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
-    address sdVault = 0xa8D278db4ca48e7333901b24A83505BB078ecF86;
-    address sdRewards = 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233;
+    address sdVault = 0x5E162b4AC251599a218B0C37b4854E33a54fFCa7;
     address[] rewards = [AssetsArbitrum.CRV];
     uint256 assetIndex = 1;
 
@@ -49,8 +48,8 @@ contract DeployCurveStableNgSDV2Adapter is Script {
 
         CurveStableNgSDV2Adapter adapter = new CurveStableNgSDV2Adapter(MULTISTRATEGY, ASSET, harvestAddresses, curveData, NAME, ID);
 
-        adapter.setSlippageLimit(5);                    // 0.05% Slippage permitted
-        adapter.setCurveSlippageLimit(0.0005 ether);    // 0.05% Slippage permitted
+        adapter.setSlippageLimit(4);                    // 0.05% Slippage permitted
+        adapter.setCurveSlippageLimit(0.0004 ether);    // 0.05% Slippage permitted
         adapter.setWithdrawBufferPPM(2);                // 2 parts per million buffer on withdraws
         for(uint i = 0; i < rewards.length; ++i) {
             adapter.addReward(rewards[i]);

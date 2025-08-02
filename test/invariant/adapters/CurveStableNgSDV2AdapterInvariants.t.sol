@@ -21,7 +21,7 @@ contract CurveStableNgSDV2AdapterInvariants is AdapterInvariantBase {
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-        asset = AssetsArbitrum.USDC;
+        asset = AssetsArbitrum.USDT;
         super.setUp();
         
         handler = new AdapterHandler(
@@ -47,7 +47,7 @@ contract CurveStableNgSDV2AdapterInvariants is AdapterInvariantBase {
             curveLiquidityPool: 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F,
             sdVault: 0x5E162b4AC251599a218B0C37b4854E33a54fFCa7,
             curveSlippageUtility: address(new CurveStableNgSlippageUtility()),
-            assetIndex: 0
+            assetIndex: 1
         });
 
         CurveStableNgSDV2Adapter _adapter = new CurveStableNgSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveData, "", "");

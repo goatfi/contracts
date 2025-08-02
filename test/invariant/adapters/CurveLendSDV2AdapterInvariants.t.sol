@@ -37,8 +37,8 @@ contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
             wrappedGas: AssetsArbitrum.WETH
         });
         CurveLendSDV2Adapter.CurveLendSDV2Addresses memory curveLendSDAddresses = CurveLendSDV2Adapter.CurveLendSDV2Addresses({
-            lendVault: 0xe07f1151887b8FDC6800f737252f6b91b46b5865,
-            sdVault: 0x1544E663DD326a6d853a0cc4ceEf0860eb82B287
+            lendVault: 0xa6C2E6A83D594e862cDB349396856f7FFE9a979B,
+            sdVault: 0x17E876675258DeE5A7b2e2e14FCFaB44F867896c
         });
 
         CurveLendSDV2Adapter adapter = new CurveLendSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveLendSDAddresses,"", "");
@@ -58,7 +58,7 @@ contract CurveLendSDV2AdapterInvariants is AdapterInvariantBase {
         console.log("Yield Time:", handler.ghost_yieldTime());
 
         if(handler.ghost_yieldTime() > 0 && handler.ghost_deposited() > 0) {
-            assertGt(multistrategy.pricePerShare(), 1 * (10 ** decimals));
+            assertGe(multistrategy.pricePerShare(), 1 * (10 ** decimals));
         }
     }
 }

@@ -8,11 +8,11 @@ import { CurveLendSDV2Adapter } from "src/infra/multistrategy/adapters/CurveLend
 import { AssetsArbitrum, ProtocolArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 
-contract DeployCurveLendSDAV2dapter is Script {
+contract DeployCurveLendSDV2Adapter is Script {
     address[] rewards = [AssetsArbitrum.CRV];
 
-    address constant CRV_LEND_VAULT = 0xd3cA9BEc3e681b0f578FD87f20eBCf2B7e0bb739;
-    address constant SD_VAULT = 0x37E939aA581d01767249d4AaB9BE2b328bE2FD3C;
+    address constant CRV_LEND_VAULT = 0xa6C2E6A83D594e862cDB349396856f7FFE9a979B;
+    address constant SD_VAULT = 0x17E876675258DeE5A7b2e2e14FCFaB44F867896c;
 
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
@@ -20,7 +20,7 @@ contract DeployCurveLendSDAV2dapter is Script {
     address constant MULTISTRATEGY = VaultsArbitrum.ycCRVUSD;
     address constant ASSET = AssetsArbitrum.CRVUSD;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    string constant NAME = "Stake DAO Curve Lend WETH";                            //FIXME:
+    string constant NAME = "Stake DAO Curve Lend ARB";                            //FIXME:
     string constant ID = "CRV-LEND-SDV2";
 
     StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
