@@ -12,18 +12,19 @@ import { CurveLPBase} from "src/abstracts/CurveLPBase.sol";
 import { IStrategyAdapterHarvestable } from "interfaces/infra/multistrategy/IStrategyAdapterHarvestable.sol";
 import { ICurveLPBase } from "interfaces/infra/multistrategy/adapters/ICurveLPBase.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
-import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
+import { CurveStableNgSDV2Adapter } from "src/infra/multistrategy/adapters/CurveStableNgSDV2Adapter.sol";
 import { CurveStableNgSlippageUtility } from "src/infra/utilities/curve/CurveStableNgSlippageUtility.sol";
+import { IAccountant } from "interfaces/stakedao/IAccountant.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
+contract CurveStableNgSDV2AdapterIntegration is AdapterIntegration {
     using Math for uint256;
 
     CurveStableNgSlippageUtility curveUtility;
 
     function setUp() public override {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-        asset = AssetsArbitrum.USDT;
+        asset = AssetsArbitrum.USDC;
         super.setUp();
 
         depositLimit = 100_000 * (10 ** decimals);
@@ -39,19 +40,18 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
     }
 
     function createCurveAdapter() public {
-        CurveStableNgSDAdapter.CurveSNGSDData memory curveData = CurveStableNgSDAdapter.CurveSNGSDData({
+        CurveStableNgSDV2Adapter.CurveSNGSDV2Data memory curveData = CurveStableNgSDV2Adapter.CurveSNGSDV2Data({
             curveLiquidityPool: 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F,
-            sdVault: 0xa8D278db4ca48e7333901b24A83505BB078ecF86,
-            sdRewards: 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233,
-            curveSlippageUtility: address(curveUtility),
-            assetIndex: 1
+            sdVault: 0x5E162b4AC251599a218B0C37b4854E33a54fFCa7,
+            curveSlippageUtility: address(new CurveStableNgSlippageUtility()),
+            assetIndex: 0
         });
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: ProtocolArbitrum.GOAT_SWAPPER,
             wrappedGas: AssetsArbitrum.WETH
         });
 
-        adapter = new CurveStableNgSDAdapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveData, "", "");
+        adapter = new CurveStableNgSDV2Adapter(address(multistrategy), multistrategy.asset(), harvestAddresses, curveData, "", "");
         adapter.transferOwnership(users.keeper);
 
         vm.startPrank(users.keeper);
@@ -68,6 +68,11 @@ contract CurveStableNgSDAdapterIntegration is AdapterIntegration {
 
         assertEq(adapter.totalAssets(), 0);
         assertGt(multistrategy.totalAssets(), 0);
+    }
+
+    function test_availableLiquidity() public view {
+        uint256 availableLiquidity = adapter.availableLiquidity();
+        assertGt(availableLiquidity, 0);
     }
 
     // Observations:

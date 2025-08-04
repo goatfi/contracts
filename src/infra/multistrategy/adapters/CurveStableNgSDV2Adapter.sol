@@ -1,35 +1,33 @@
 // SPDX-License-Identifier: GNU AGPLv3
-
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { CurveLPBase } from "src/abstracts/CurveLPBase.sol";
-import { ICurveVaultXChain } from "interfaces/stakedao/ICurveVaultXChain.sol";
-import { IClaimRewardsXChain } from "interfaces/stakedao/IClaimRewardsXChain.sol";
+import { IRewardVault } from "interfaces/stakedao/IRewardVault.sol";
+import { IAccountant } from "interfaces/stakedao/IAccountant.sol";
 import { IMultistrategy } from "interfaces/infra/multistrategy/IMultistrategy.sol";
 import { MStrat } from "src/types/DataTypes.sol";
 import { Errors } from "src/infra/libraries/Errors.sol";
 
-contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
+contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
     /// @notice Struct containing the needed addresses for this adapter.
-    struct CurveSNGSDData {
+    struct CurveSNGSDV2Data {
         address curveLiquidityPool;
         address sdVault;
-        address sdRewards;
         address curveSlippageUtility;
         uint256 assetIndex;
     }
 
     /// @notice The StakeDAO Vault where Curve Liquidity Pool shares will be deposited to earn rewards.
-    ICurveVaultXChain public immutable stakeDAOVault;
+    IRewardVault public immutable sdVault;
 
-    /// @notice The StakeDAO Claim rewards contract.
-    IClaimRewardsXChain public immutable stakeDAORewards;
+    /// @notice The StakeDAO Accountant contract. Used to track and claim rewards.
+    IAccountant public immutable sdAccountant;
 
     /// @notice Address of the StakeDAO Vault Gauge
     address public immutable gauge;
@@ -51,19 +49,19 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
         address _multistrategy,
         address _asset,
         HarvestAddresses memory _harvestAddresses,
-        CurveSNGSDData memory _curveLPSDData,
+        CurveSNGSDV2Data memory _curveLPSDData,
         string memory _name,
         string memory _id
     ) 
         StrategyAdapterHarvestable(_multistrategy, _asset, _harvestAddresses,_name, _id)
         CurveLPBase(_curveLPSDData.curveLiquidityPool, _curveLPSDData.curveSlippageUtility)
     {   
-        stakeDAOVault = ICurveVaultXChain(_curveLPSDData.sdVault);
-        stakeDAORewards = IClaimRewardsXChain(_curveLPSDData.sdRewards);
+        sdVault = IRewardVault(_curveLPSDData.sdVault);
+        sdAccountant = IAccountant(sdVault.ACCOUNTANT());
         assetIndex = _curveLPSDData.assetIndex;
         assetIndex128 = int128(uint128(assetIndex));
         nCoins = curveLiquidityPool.N_COINS();
-        gauge = stakeDAOVault.sdGauge();
+        gauge = sdVault.gauge();
         withdrawBuffer = PPM_DENOMINATOR + 1;
         _giveAllowances();
     }
@@ -75,7 +73,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     /// @notice Returns the total amount of assets held in this adapter.
     /// @return The total amount of assets held by this adapter.
     function _totalAssets() internal override view returns(uint256) {
-        uint256 vaultShares = IERC20(gauge).balanceOf(address(this));
+        uint256 vaultShares = IERC20(sdVault).balanceOf(address(this));
 
         if(vaultShares == 0) return _balance();
 
@@ -83,13 +81,23 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
         return assetsWithdrawable + _balance();
     }
 
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return liquidity The amount of tokens.
+    function _availableLiquidity() internal override view returns(uint256 liquidity) {
+        return IERC20(asset).balanceOf(address(curveLiquidityPool));
+    }
+
     /// @inheritdoc StrategyAdapterHarvestable
     function _verifyRewardToken(address _token) internal view override {
         require(
             _token != address(curveLiquidityPool) &&
-            _token != address(stakeDAOVault) && 
-            _token != address(stakeDAORewards) &&
+            _token != address(sdVault) && 
+            _token != address(sdAccountant) &&
             _token != address(gauge),
+            Errors.InvalidRewardToken(_token));
+        require(
+            sdVault.isRewardToken(_token) || 
+            _token == sdAccountant.REWARD_TOKEN(), 
             Errors.InvalidRewardToken(_token));
     }
 
@@ -106,7 +114,7 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
         uint256[] memory amounts = new uint256[](nCoins);
         amounts[assetIndex] = balance;
         uint256 lpSharesAmount = curveLiquidityPool.add_liquidity(amounts, 0);
-        stakeDAOVault.deposit(address(this), lpSharesAmount);
+        sdVault.deposit(lpSharesAmount, address(this));
     }
 
     /// @notice Withdraws a specified amount of assets.
@@ -118,12 +126,12 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
         uint256[] memory amounts = new uint256[](nCoins);
         amounts[assetIndex] = _amount;
         uint256 lpSharesNeeded = curveLiquidityPool.calc_token_amount(amounts, false);
-        uint256 lpSharesBalance = IERC20(gauge).balanceOf(address(this));
+        uint256 lpSharesBalance = IERC20(sdVault).balanceOf(address(this));
 
         lpSharesNeeded = _amount >= _getMinDebtDelta() ? lpSharesNeeded.mulDiv(withdrawBuffer, PPM_DENOMINATOR) : lpSharesNeeded *= 2;
 
         uint256 lpShares = lpSharesNeeded.min(lpSharesBalance);
-        stakeDAOVault.withdraw(lpShares);
+        sdVault.withdraw(lpShares, address(this), address(this));
         if(lpSharesNeeded > lpSharesBalance) {
             curveLiquidityPool.remove_liquidity_one_coin(lpShares, assetIndex128, 0);
         } else {
@@ -135,7 +143,8 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     /// This function is intended for emergency situations where all assets need to be withdrawn immediately.
     /// @dev The other non-asset tokens will be sent to the owner of this contract.
     function _emergencyWithdraw() internal override {
-        stakeDAOVault.withdrawAll();
+        uint256 sharesBalance = sdVault.balanceOf(address(this));
+        sdVault.redeem(sharesBalance, address(this), address(this));
         uint256 lpShares = curveLiquidityPool.balanceOf(address(this));
 
         if(lpShares > 0) {
@@ -156,14 +165,14 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     /// and sets the maximum allowance of Curve Liquidity Pool shares for StakeDAO
     function _giveAllowances() internal override {
         IERC20(asset).forceApprove(address(curveLiquidityPool), type(uint).max);
-        IERC20(curveLiquidityPool).forceApprove(address(stakeDAOVault), type(uint).max);
+        IERC20(curveLiquidityPool).forceApprove(address(sdVault), type(uint).max);
         IERC20(wrappedGas).forceApprove(swapper, type(uint).max);
     }
 
     /// @notice Revokes all the allowances.
     function _revokeAllowances() internal override {
         IERC20(asset).forceApprove(address(curveLiquidityPool), 0);
-        IERC20(curveLiquidityPool).forceApprove(address(stakeDAOVault), 0);
+        IERC20(curveLiquidityPool).forceApprove(address(sdVault), 0);
         IERC20(wrappedGas).forceApprove(swapper, 0);
     }
 
@@ -171,7 +180,15 @@ contract CurveStableNgSDAdapter is StrategyAdapterHarvestable, CurveLPBase {
     function _claim() internal override {
         address[] memory gauges = new address[](1);
         gauges[0] = gauge;
-        stakeDAORewards.claimRewards(gauges);
+        sdAccountant.claim(gauges, new bytes[](1));
+
+        if (rewards.length > 1) {
+            address[] memory otherRewards = new address[](rewards.length - 1);
+            for (uint i = 1; i < rewards.length; ++i) {
+                otherRewards[i - 1] = rewards[i];
+            }
+            sdVault.claim(otherRewards, address(this));
+        }
     }
 
     /// @notice Gets the minimum debt delta of this adapter.

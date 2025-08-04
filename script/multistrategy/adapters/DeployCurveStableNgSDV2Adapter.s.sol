@@ -7,10 +7,10 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ICurveLPBase } from "interfaces/infra/multistrategy/adapters/ICurveLPBase.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { CurveStableNgSDAdapter } from "src/infra/multistrategy/adapters/CurveStableNgSDAdapter.sol";
+import { CurveStableNgSDV2Adapter } from "src/infra/multistrategy/adapters/CurveStableNgSDV2Adapter.sol";
 import { AssetsArbitrum, ProtocolArbitrum, UtilitiesArbitrum, VaultsArbitrum } from "@addressbook/AddressBook.sol";
 
-contract DeployCurveStableNgSDAdapter is Script {
+contract DeployCurveStableNgSDV2Adapter is Script {
     /////////////////////////////////////////////////////////
     //                   ADAPTER CONFIG                    //
     /////////////////////////////////////////////////////////
@@ -18,11 +18,10 @@ contract DeployCurveStableNgSDAdapter is Script {
     address constant ASSET = AssetsArbitrum.USDT;
     address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
     string constant NAME = "Stake DAO Curve USDC/USDT LP";
-    string constant ID = "CRV-SD-LP";
+    string constant ID = "CRV-SDV2-LP";
 
     address curveLP = 0x49b720F1Aab26260BEAec93A7BeB5BF2925b2A8F;
-    address sdVault = 0xa8D278db4ca48e7333901b24A83505BB078ecF86;
-    address sdRewards = 0xAbf4368d120190B4F111C30C92cc9f8f6a6BE233;
+    address sdVault = 0x5E162b4AC251599a218B0C37b4854E33a54fFCa7;
     address[] rewards = [AssetsArbitrum.CRV];
     uint256 assetIndex = 1;
 
@@ -34,10 +33,9 @@ contract DeployCurveStableNgSDAdapter is Script {
             wrappedGas: AssetsArbitrum.WETH
         });
 
-        CurveStableNgSDAdapter.CurveSNGSDData memory curveData = CurveStableNgSDAdapter.CurveSNGSDData({
+        CurveStableNgSDV2Adapter.CurveSNGSDV2Data memory curveData = CurveStableNgSDV2Adapter.CurveSNGSDV2Data({
             curveLiquidityPool: curveLP,
             sdVault: sdVault,
-            sdRewards: sdRewards,
             curveSlippageUtility: UtilitiesArbitrum.CURVE_STABLENG_SLIPPAGE_UTILITY,
             assetIndex: assetIndex
         });
@@ -48,10 +46,10 @@ contract DeployCurveStableNgSDAdapter is Script {
 
         vm.startBroadcast();
 
-        CurveStableNgSDAdapter adapter = new CurveStableNgSDAdapter(MULTISTRATEGY, ASSET, harvestAddresses, curveData, NAME, ID);
+        CurveStableNgSDV2Adapter adapter = new CurveStableNgSDV2Adapter(MULTISTRATEGY, ASSET, harvestAddresses, curveData, NAME, ID);
 
-        adapter.setSlippageLimit(5);                    // 0.05% Slippage permitted
-        adapter.setCurveSlippageLimit(0.0005 ether);    // 0.05% Slippage permitted
+        adapter.setSlippageLimit(4);                    // 0.05% Slippage permitted
+        adapter.setCurveSlippageLimit(0.0004 ether);    // 0.05% Slippage permitted
         adapter.setWithdrawBufferPPM(2);                // 2 parts per million buffer on withdraws
         for(uint i = 0; i < rewards.length; ++i) {
             adapter.addReward(rewards[i]);
