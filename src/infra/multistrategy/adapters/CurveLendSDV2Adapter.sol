@@ -49,7 +49,7 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     {   
         curveLendVault = ICurveLendVault(_curveLendSDTAddresses.lendVault);
         sdVault = IRewardVault(_curveLendSDTAddresses.sdVault);
-        sdAccountant = IAccountant(IAccountant(sdVault.ACCOUNTANT()));
+        sdAccountant = IAccountant(sdVault.ACCOUNTANT());
         gauge = sdVault.gauge();
         _giveAllowances();
     }
