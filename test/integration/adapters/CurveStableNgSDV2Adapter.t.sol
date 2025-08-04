@@ -70,6 +70,11 @@ contract CurveStableNgSDV2AdapterIntegration is AdapterIntegration {
         assertGt(multistrategy.totalAssets(), 0);
     }
 
+    function test_availableLiquidity() public view {
+        uint256 availableLiquidity = adapter.availableLiquidity();
+        assertGt(availableLiquidity, 0);
+    }
+
     // Observations:
     // The smaller the buffer, the higher minDebtDelta has to be.
     // A buffer of 2 PPM can handle 1 token minDebtDelta

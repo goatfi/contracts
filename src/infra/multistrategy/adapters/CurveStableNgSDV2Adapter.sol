@@ -81,6 +81,12 @@ contract CurveStableNgSDV2Adapter is StrategyAdapterHarvestable, CurveLPBase {
         return assetsWithdrawable + _balance();
     }
 
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return liquidity The amount of tokens.
+    function _availableLiquidity() internal override view returns(uint256 liquidity) {
+        return IERC20(asset).balanceOf(address(curveLiquidityPool));
+    }
+
     /// @inheritdoc StrategyAdapterHarvestable
     function _verifyRewardToken(address _token) internal view override {
         require(

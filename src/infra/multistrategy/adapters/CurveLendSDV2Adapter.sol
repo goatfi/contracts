@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { ICurveLendVault } from "interfaces/curve/ICurveLendVault.sol";
 import { IRewardVault } from "interfaces/stakedao/IRewardVault.sol";
 import { IAccountant } from "interfaces/stakedao/IAccountant.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -19,7 +19,7 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     }
 
     /// @notice The Curve Lend Vault where crvUSD will be deposited as supply-side liquidity.
-    IERC4626 public immutable curveLendVault;
+    ICurveLendVault public immutable curveLendVault;
 
     /// @notice The StakeDAO Vault where Curve Lend Vault shares will be deposited to earn rewards.
     IRewardVault public immutable sdVault;
@@ -47,7 +47,7 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
     ) 
         StrategyAdapterHarvestable(_multistrategy, _asset, _harvestAddresses,_name, _id)
     {   
-        curveLendVault = IERC4626(_curveLendSDTAddresses.lendVault);
+        curveLendVault = ICurveLendVault(_curveLendSDTAddresses.lendVault);
         sdVault = IRewardVault(_curveLendSDTAddresses.sdVault);
         sdAccountant = IAccountant(IAccountant(sdVault.ACCOUNTANT()));
         gauge = sdVault.gauge();
@@ -65,6 +65,12 @@ contract CurveLendSDV2Adapter is StrategyAdapterHarvestable {
         uint256 assetsSupplied = curveLendVault.previewRedeem(vaultShares);
 
         return assetsSupplied + _balance();
+    }
+
+    /// @notice Calculates and returns the current amount of liquidity available for user withdrawals.
+    /// @return liquidity The amount of tokens.
+    function _availableLiquidity() internal override view returns(uint256 liquidity) {
+        return IERC20(asset).balanceOf(curveLendVault.controller());
     }
 
     /// @inheritdoc StrategyAdapterHarvestable

@@ -43,6 +43,11 @@ contract CurveLendSDV2AdapterIntegration is AdapterIntegration {
         vm.stopPrank();
     }
 
+    function test_availableLiquidity() public view {
+        uint256 availableLiquidity = adapter.availableLiquidity();
+        assertGt(availableLiquidity, 0);
+    }
+
     function testFuzz_AdapterPanicProcedure(uint256 _depositAmount, uint256 _withdrawAmount, uint256 _yieldTime, uint256 _debtRatio) public {
         super.adapterPanicProcedure(_depositAmount, _withdrawAmount, _yieldTime, _debtRatio);
 
