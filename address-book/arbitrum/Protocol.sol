@@ -8,21 +8,6 @@ library ProtocolArbitrum {
   // https://arbiscan.io/address/0x2C568371E48744E65d5301Bba014c64Ca75d044E
   address internal constant TIMELOCK = 0x2C568371E48744E65d5301Bba014c64Ca75d044E;
 
-  // https://arbiscan.io/address/0x03dc58ebe79E05F6524126821A6E9906F5704e58
-  address internal constant FEE_CONFIG = 0x03dc58ebe79E05F6524126821A6E9906F5704e58;
-
-  // https://arbiscan.io/address/0x108e823a26C5FB096D1f7c493809ccE9015507a6
-  address internal constant MULTICALL = 0x108e823a26C5FB096D1f7c493809ccE9015507a6;
-
-  // https://arbiscan.io/address/0xE06f5E3039901C1C16C7044fd3238987db8e688a
-  address internal constant GOAT_APP_MULTICALL = 0xE06f5E3039901C1C16C7044fd3238987db8e688a;
-
-  // https://arbiscan.io/address/0x98B332784678a919489FC05B81Ef5B20BbDdD5BA
-  address internal constant GOAT_VAULT_FACTORY = 0x98B332784678a919489FC05B81Ef5B20BbDdD5BA;
-
-  // https://arbiscan.io/address/0x85d5930Cc9e5471A03F29ca5f64c2B83Cc70b497
-  address internal constant GOAT_BOOST_FACTORY = 0x85d5930Cc9e5471A03F29ca5f64c2B83Cc70b497;
-
   // https://arbiscan.io/address/0x667Fe8DD40969A5fB92b53e9C8503b454E569BDB
   address internal constant LAYERZERO_BRIDGE_ADAPTER = 0x667Fe8DD40969A5fB92b53e9C8503b454E569BDB;
 
@@ -37,4 +22,7 @@ library ProtocolArbitrum {
 
   // https://arbiscan.io/address/0x97c7808A1b47b1C60f7ab70C384979412D2A20B6
   address internal constant MULTI_MANAGER = 0x97c7808A1b47b1C60f7ab70C384979412D2A20B6;
+
+  // https://arbiscan.io/address/0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1
+  address internal constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
 }
