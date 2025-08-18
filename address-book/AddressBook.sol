@@ -43,4 +43,26 @@ contract Addressbook {
         
         revert AddressNotFound(_chainId);
     }
+
+    function getGoatSwapper(uint256 _chainId) external pure returns (address) {
+        if(_chainId == 42161) return ProtocolArbitrum.GOAT_SWAPPER;
+        if(_chainId == 146) return ProtocolSonic.GOAT_SWAPPER;
+
+        revert AddressNotFound(_chainId);
+    }
+
+    function getUtilities(uint256 _chainId, bytes32 _utilityName) external pure returns (address) {
+        if(_utilityName == keccak256("CURVE_STABLENG_SLIPPAGE_UTILITY")) {
+            if(_chainId == 42161) return UtilitiesArbitrum.CURVE_STABLENG_SLIPPAGE_UTILITY;
+        }
+
+        revert AddressNotFound(_chainId);
+    }
+
+    function getWrappedGas(uint256 _chainId) external pure returns (address) {
+        if(_chainId == 42161) return AssetsArbitrum.WETH;
+        if(_chainId == 146) return AssetsSonic.WS;
+
+        revert AddressNotFound(_chainId);
+    }
 }
