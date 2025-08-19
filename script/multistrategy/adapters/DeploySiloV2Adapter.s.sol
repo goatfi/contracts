@@ -4,50 +4,45 @@ pragma solidity^0.8.20;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { ISiloV2Market } from "interfaces/silo/ISiloV2Market.sol";
+import { ISiloHookReceiver } from "interfaces/silo/ISiloHookReceiver.sol";
 import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { AssetsSonic, ProtocolSonic } from "@addressbook/AddressBook.sol";
+import { Addressbook } from "@addressbook/AddressBook.sol";
 
+/// @title Deploys a SiloV2 Market Adapter
 contract DeploySiloV2Adapter is Script {
-    //address[] rewards = []; //FIXME: Add rewards if any
+    Addressbook addressbook = new Addressbook();
 
-    address vault = 0x4E216C15697C1392fE59e1014B009505E05810Df;
-    address incentivesController = 0x0dd368Cd6D8869F2b21BA3Cb4fd7bA107a2e3752;
+    function run(
+        address multistrategy,
+        string memory name,
+        address silo_market,
+        address[] memory rewards
+    ) public {
 
-    /////////////////////////////////////////////////////////
-    //                   ADAPTER CONFIG                    //
-    /////////////////////////////////////////////////////////
-    address constant MULTISTRATEGY = 0x901e3059Bf118AbC74d917440F0C08FC78eC0Aa6; //FIXME:
-    address constant ASSET = AssetsSonic.USDC;
-    address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    address constant TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
-    string constant NAME = "Silo S/USDC.e ID-8";                            //FIXME:
-    string constant ID = "SILO-V2";
+        address asset = IERC4626(multistrategy).asset();
+        address manager = addressbook.getManager(block.chainid);
+        address guardian = addressbook.getGuardian(block.chainid);
+        address incentivesController = ISiloHookReceiver(ISiloV2Market(silo_market).hookReceiver()).configuredGauges(silo_market);
 
-    StrategyAdapterHarvestable.HarvestAddresses harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
-        swapper: ProtocolSonic.GOAT_SWAPPER,
-        wrappedGas: AssetsSonic.WS
-    });
-
-    function run() public {
-
-        /////////////////////////////////////////////////////////
-        //                 ADAPTER DEPLOYMENT                  //
-        /////////////////////////////////////////////////////////
+        StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
+            swapper: addressbook.getGoatSwapper(block.chainid),
+            wrappedGas: addressbook.getWrappedGas(block.chainid)
+        });
 
         vm.startBroadcast();
 
-        SiloV2Adapter adapter = new SiloV2Adapter(MULTISTRATEGY, ASSET, vault, incentivesController, harvestAddresses, NAME, ID);
+        SiloV2Adapter adapter = new SiloV2Adapter(multistrategy, asset, silo_market, incentivesController, harvestAddresses, name, "SILO-V2");
 
-        /*for(uint i = 0; i < rewards.length; ++i) {
+        for(uint i = 0; i < rewards.length; ++i) {
             adapter.addReward(rewards[i]);
-        }*/
+        }
 
-        adapter.enableGuardian(GUARDIAN);
-        adapter.transferOwnership(TESTING_CUSTODIAN);
+        adapter.enableGuardian(guardian);
+        adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
-
-        console.log("Silo Adapter:", address(adapter));
     }
 }

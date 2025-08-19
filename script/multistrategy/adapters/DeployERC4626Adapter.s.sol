@@ -4,37 +4,32 @@ pragma solidity^0.8.20;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626Adapter } from "src/infra/multistrategy/adapters/ERC4626Adapter.sol";
-import { AssetsArbitrum, ProtocolArbitrum } from "@addressbook/AddressBook.sol";
+import { Addressbook } from "@addressbook/AddressBook.sol";
 
+/// @title Deploys an ERC4626 Adapter
 contract DeployERC4626Adapter is Script {
-    address constant VAULT = 0x74E6AFeF5705BEb126C6d3Bf46f8fad8F3e07825;
+    Addressbook addressbook = new Addressbook();
 
-    /////////////////////////////////////////////////////////
-    //                   ADAPTER CONFIG                    //
-    /////////////////////////////////////////////////////////
-    address constant MULTISTRATEGY = 0x0df2e3a0b5997AdC69f8768E495FD98A4D00F134; //FIXME:
-    address constant ASSET = AssetsArbitrum.USDC;
-    address constant GUARDIAN = 0xbd297B4f9991FD23f54e14111EE6190C4Fb9F7e1;
-    address constant TESTING_CUSTODIAN = 0x75cb5d555933fe86E0ac8975A623aCb5CEC13E28;
-    string constant NAME = "Revert USDC";                            //FIXME:
-    string constant ID = "REVERT";
+    function run(
+        address multistrategy,
+        string memory name,
+        string memory id,
+        address erc4626_vault
+    ) public {
 
-    function run() public {
-
-        /////////////////////////////////////////////////////////
-        //                 ADAPTER DEPLOYMENT                  //
-        /////////////////////////////////////////////////////////
+        address asset = IERC4626(multistrategy).asset();
+        address manager = addressbook.getManager(block.chainid);
+        address guardian = addressbook.getGuardian(block.chainid);
 
         vm.startBroadcast();
 
-        ERC4626Adapter adapter = new ERC4626Adapter(MULTISTRATEGY, ASSET, VAULT, NAME, ID);
+        ERC4626Adapter adapter = new ERC4626Adapter(multistrategy, asset, erc4626_vault, name, id);
 
-        adapter.enableGuardian(GUARDIAN);
-        adapter.transferOwnership(TESTING_CUSTODIAN);
+        adapter.enableGuardian(guardian);
+        adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
-
-        console.log("ERC4626 Adapter:", address(adapter));
     }
 }

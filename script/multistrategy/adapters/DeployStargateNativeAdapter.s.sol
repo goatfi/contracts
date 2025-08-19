@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity^0.8.20;
+pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { CurveLendAdapter } from "src/infra/multistrategy/adapters/CurveLendAdapter.sol";
+import { StargateAdapterNative } from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
-/// @title Deploys a Curve Lend Adapter
-contract DeployCurveLendAdapter is Script {
+/// @title Deploys an Stargate Adapter for ETH
+contract DeployStargateNativeAdapter is Script {
     Addressbook addressbook = new Addressbook();
 
     function run(
-        address multistrategy, 
-        string memory name, 
-        address curve_lend_vault, 
-        address gauge, 
-        address gauge_factory,
+        address multistrategy,
+        string memory name,
+        address stargate_router,
+        address stargate_chef,
         address[] memory rewards
     ) public {
 
@@ -31,25 +30,31 @@ contract DeployCurveLendAdapter is Script {
             wrappedGas: addressbook.getWrappedGas(block.chainid)
         });
 
-        CurveLendAdapter.CurveLendAddresses memory crvLendSDAddresses = CurveLendAdapter.CurveLendAddresses({
-            vault: curve_lend_vault,
-            gauge: gauge,
-            gaugeFactory: gauge_factory
+        StargateAdapterNative.StargateAddresses memory stargateAddresses = StargateAdapterNative.StargateAddresses({
+            router: stargate_router,
+            chef: stargate_chef
         });
 
         vm.startBroadcast();
 
-        CurveLendAdapter adapter = new CurveLendAdapter(multistrategy, asset, harvestAddresses, crvLendSDAddresses, name, "CRV-LEND");
+        StargateAdapterNative adapter = new StargateAdapterNative(
+            multistrategy,
+            asset,
+            harvestAddresses,
+            stargateAddresses,
+            name,
+            "STARGATE"
+        );
 
-        if(gauge != address(0)) {
-            for(uint i = 0; i < rewards.length; ++i) {
-                adapter.addReward(rewards[i]);
-            }
+        for (uint i = 0; i < rewards.length; ++i) {
+            adapter.addReward(rewards[i]);
         }
 
         adapter.enableGuardian(guardian);
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        console.log("Stargate Adapter:", address(adapter));
     }
 }
