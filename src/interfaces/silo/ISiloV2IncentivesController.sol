@@ -5,4 +5,6 @@ interface ISiloV2IncentivesController {
     function claimRewards(address to) external;
     function getAllProgramsNames() external view returns (string[] memory);
     function getRewardsBalance(address _user, string memory _programName) external view returns (uint256);
+    function SHARE_TOKEN() external view returns (address);
+    function NOTIFIER() external view returns (address);
 }

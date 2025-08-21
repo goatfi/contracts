@@ -19,9 +19,13 @@ contract DeployERC4626Adapter is Script {
         address erc4626_vault
     ) public {
 
+        require(multistrategy != address(0), "Multistrategy cannot be zero address");
+
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
+
+        require(asset == IERC4626(erc4626_vault).asset(), "ERC4626 Vault asset missmatch");
 
         vm.startBroadcast();
 

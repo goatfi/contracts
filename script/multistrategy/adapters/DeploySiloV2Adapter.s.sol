@@ -7,6 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ISiloV2Market } from "interfaces/silo/ISiloV2Market.sol";
 import { ISiloHookReceiver } from "interfaces/silo/ISiloHookReceiver.sol";
+import { ISiloV2IncentivesController } from "interfaces/silo/ISiloV2IncentivesController.sol";
 import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
@@ -22,10 +23,15 @@ contract DeploySiloV2Adapter is Script {
         address[] memory rewards
     ) public {
 
+        require(multistrategy != address(0), "Multistrategy cannot be zero address");
+
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
         address incentivesController = ISiloHookReceiver(ISiloV2Market(silo_market).hookReceiver()).configuredGauges(silo_market);
+
+        require(asset == IERC4626(silo_market).asset(), "Silo Market asset missmatch");
+        require(silo_market == ISiloV2IncentivesController(incentivesController).SHARE_TOKEN(), "Incentives Controller missmatch");
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: addressbook.getGoatSwapper(block.chainid),
