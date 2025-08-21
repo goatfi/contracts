@@ -5,6 +5,8 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
+import { IProtocolController} from "interfaces/stakedao/IProtocolController.sol";
 import { CurveLendSDV2Adapter } from "src/infra/multistrategy/adapters/CurveLendSDV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
@@ -16,14 +18,18 @@ contract DeployCurveLendSDV2Adapter is Script {
     function run(
         address multistrategy,
         string memory name, 
-        address curve_lend_vault, 
-        address stake_dao_vault,
+        address curve_lend_vault,
         address[] memory rewards
     ) public {
+
+        require(multistrategy != address(0), "Multistrategy cannot be zero address");
 
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
+        address stake_dao_vault = getStakeDaoVault(curve_lend_vault);
+
+        require(IERC4626(stake_dao_vault).asset() == curve_lend_vault, "Stake DAO Vault mismatch");
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: addressbook.getGoatSwapper(block.chainid),
@@ -47,7 +53,22 @@ contract DeployCurveLendSDV2Adapter is Script {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+    }
 
-        console.log("CRV Lend StakeDAO Adapter:", address(adapter));
+    function getGaugeFactory(uint256 chainId) public pure returns (address) {
+        if (chainId == 42161) return 0xabC000d88f23Bb45525E447528DBF656A9D55bf5; // Arbitrum
+        revert("Unsupported network");
+    }
+
+    function getStakeDAOProtocolController(uint256 chainId) public pure returns (address) {
+        if (chainId == 42161) return 0x2d8BcE1FaE00a959354aCD9eBf9174337A64d4fb; // Arbitrum
+        revert("Unsupported network");
+    }
+
+    function getStakeDaoVault(address _curveLendVault) public view returns (address) {
+        address gauge_factory = getGaugeFactory(block.chainid);
+        address gauge = ICurveGaugeFactory(gauge_factory).get_gauge_from_lp_token(_curveLendVault);
+        address stake_dao_protocol_controller = getStakeDAOProtocolController(block.chainid);
+        return IProtocolController(stake_dao_protocol_controller).gauge(gauge).vault;
     }
 }
