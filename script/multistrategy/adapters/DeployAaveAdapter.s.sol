@@ -5,6 +5,8 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { IPool } from "interfaces/aave/IPool.sol";
+import { IAToken } from "interfaces/aave/IAToken.sol";
 import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
@@ -14,14 +16,18 @@ contract DeployAaveAdapter is Script {
 
     function run(
         address multistrategy, 
-        string memory name, 
-        address aave_pool, 
-        address a_token
+        string memory name
     ) public {
+
+        require(multistrategy != address(0), "Multistrategy cannot be zero address");
 
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
+        address aave_pool = getAavePool(block.chainid);
+        address a_token = IPool(aave_pool).getReserveData(asset).aTokenAddress;
+
+        require(IAToken(a_token).UNDERLYING_ASSET_ADDRESS() == asset, "aToken underlying asset mismatch");
 
         vm.startBroadcast();
 
@@ -32,4 +38,10 @@ contract DeployAaveAdapter is Script {
 
         vm.stopBroadcast();
     }
+
+    function getAavePool(uint256 chainId) public pure returns (address) {
+        if (chainId == 42161) return 0x794a61358D6845594F94dc1DB02A252b5b4814aD; // Arbitrum
+        revert("Unsupported network");
+    }
+
 }

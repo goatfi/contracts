@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+library DataTypes {
+  struct ReserveData {
+    address aTokenAddress;
+  }
+}
+
 /**
  * @title IPool
  * @author Aave
@@ -33,4 +39,11 @@ interface IPool {
    *   0 if the action is executed directly by the user, without any middle-man
    */
   function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+
+  /**
+   * @notice Returns the state and configuration of the reserve
+   * @param asset The address of the underlying asset of the reserve
+   * @return The state and configuration data of the reserve
+   */
+  function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 }
