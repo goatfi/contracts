@@ -33,6 +33,8 @@ contract DeployAaveAdapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 
     function getAavePool(uint256 chainId) private pure returns (address) {

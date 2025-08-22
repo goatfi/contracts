@@ -5,6 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
 
 contract DeployAdapterBase is Script {
 
@@ -30,6 +31,14 @@ contract DeployAdapterBase is Script {
             require(_rewards[i] != _adapterAsset, "Reward cannot be the adapter asset");
             _isERC20(_rewards[i]);
         }
+        return true;
+    }
+
+    function _postDeploymentCheck(address _multistrategy, address _adapter) internal view returns (bool) {
+        require(IStrategyAdapter(_adapter).asset() == IERC4626(_multistrategy).asset(), "Asset Missmatch");
+        require(IStrategyAdapter(_adapter).availableLiquidity() > 0, "Zero Liquidity");
+        require(IStrategyAdapter(_adapter).totalAssets() == 0, "Total assets are greater than 0");
+
         return true;
     }
 

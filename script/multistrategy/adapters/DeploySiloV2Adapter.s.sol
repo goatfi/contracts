@@ -47,5 +47,7 @@ contract DeploySiloV2Adapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 }

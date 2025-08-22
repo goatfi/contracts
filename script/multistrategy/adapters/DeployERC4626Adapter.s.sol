@@ -31,5 +31,7 @@ contract DeployERC4626Adapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 }

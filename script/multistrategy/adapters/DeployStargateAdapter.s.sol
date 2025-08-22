@@ -57,6 +57,8 @@ contract DeployStargateAdapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 
     function getChef(uint256 chainId) public pure returns (address) {

@@ -54,6 +54,8 @@ contract DeploySiloV2VaultAdapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 
     function getIncentivesController(address siloVault) private view returns (address) {

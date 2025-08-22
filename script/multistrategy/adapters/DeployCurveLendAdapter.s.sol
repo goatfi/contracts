@@ -54,6 +54,8 @@ contract DeployCurveLendAdapter is DeployAdapterBase {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+
+        _postDeploymentCheck(multistrategy, address(adapter));
     }
 
     function getGaugeFactory(uint256 chainId) private pure returns (address) {
