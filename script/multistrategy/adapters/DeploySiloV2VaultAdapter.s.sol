@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ISiloV2Vault } from "interfaces/silo/ISiloV2Vault.sol";
 import { ISiloV2IncetivesModule } from "interfaces/silo/ISiloV2IncetivesModule.sol";
@@ -14,7 +12,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a SiloV2 Curated Vault Adapter
-contract DeploySiloV2VaultAdapter is Script {
+contract DeploySiloV2VaultAdapter is DeployAdapterBase {
     Addressbook addressbook = new Addressbook();
 
     function run(
@@ -24,15 +22,14 @@ contract DeploySiloV2VaultAdapter is Script {
         address[] memory rewards
     ) public {
 
-        require(multistrategy != address(0), "Multistrategy cannot be zero address");
-
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
         address incentivesController = getIncentivesController(silo_vault);
         address idleMarket = getIdleMarket(silo_vault);
 
-        require(asset == IERC4626(silo_vault).asset(), "Silo Market asset missmatch");
+        _isERC4626(silo_vault, asset);
+        _verifyRewards(rewards, asset);
         require(silo_vault == ISiloV2IncentivesController(incentivesController).NOTIFIER(), "Incentives Controller missmatch");
         require(silo_vault == ISiloV2IdleMarket(idleMarket).ONLY_DEPOSITOR(), "Idle Market Missmatch");
 

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ISiloV2Market } from "interfaces/silo/ISiloV2Market.sol";
 import { ISiloHookReceiver } from "interfaces/silo/ISiloHookReceiver.sol";
@@ -13,7 +11,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a SiloV2 Market Adapter
-contract DeploySiloV2Adapter is Script {
+contract DeploySiloV2Adapter is DeployAdapterBase {
     Addressbook addressbook = new Addressbook();
 
     function run(
@@ -23,14 +21,13 @@ contract DeploySiloV2Adapter is Script {
         address[] memory rewards
     ) public {
 
-        require(multistrategy != address(0), "Multistrategy cannot be zero address");
-
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
         address incentivesController = ISiloHookReceiver(ISiloV2Market(silo_market).hookReceiver()).configuredGauges(silo_market);
 
-        require(asset == IERC4626(silo_market).asset(), "Silo Market asset missmatch");
+        _isERC4626(silo_market, asset);
+        _verifyRewards(rewards, asset);
         require(silo_market == ISiloV2IncentivesController(incentivesController).SHARE_TOKEN(), "Incentives Controller missmatch");
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({

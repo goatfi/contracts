@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IPool } from "interfaces/aave/IPool.sol";
 import { IAToken } from "interfaces/aave/IAToken.sol";
@@ -11,15 +9,13 @@ import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys an AAVE Adapter
-contract DeployAaveAdapter is Script {
+contract DeployAaveAdapter is DeployAdapterBase {
     Addressbook addressbook = new Addressbook();
 
     function run(
         address multistrategy, 
         string memory name
     ) public {
-
-        require(multistrategy != address(0), "Multistrategy cannot be zero address");
 
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
@@ -39,7 +35,7 @@ contract DeployAaveAdapter is Script {
         vm.stopBroadcast();
     }
 
-    function getAavePool(uint256 chainId) public pure returns (address) {
+    function getAavePool(uint256 chainId) private pure returns (address) {
         if (chainId == 42161) return 0x794a61358D6845594F94dc1DB02A252b5b4814aD; // Arbitrum
         revert("Unsupported network");
     }

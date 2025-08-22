@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStargateV2Chef, IStargateV2Router } from "interfaces/stargate/IStargate.sol";
 import { StargateAdapterNative } from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
@@ -11,7 +9,7 @@ import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvest
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys an Stargate Adapter for ETH
-contract DeployStargateNativeAdapter is Script {
+contract DeployStargateNativeAdapter is DeployAdapterBase {
     Addressbook addressbook = new Addressbook();
 
     function run(
@@ -21,13 +19,12 @@ contract DeployStargateNativeAdapter is Script {
         address[] memory rewards
     ) public {
 
-        require(multistrategy != address(0), "Multistrategy cannot be zero address");
-
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
         address stargate_chef = getChef(block.chainid);
 
+        _verifyRewards(rewards, asset);
         require(asset == IStargateV2Router(stargate_router).token(), "Router underlying asset mismatch");
         require(assetIncludedInChef(stargate_router, stargate_chef), "Chef does not include the asset");
 

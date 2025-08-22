@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity^0.8.20;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ICurveLiquidityPool } from "interfaces/curve/ICurveLiquidityPool.sol";
 import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
@@ -13,7 +11,7 @@ import { CurveStableNgSDV2Adapter } from "src/infra/multistrategy/adapters/Curve
 import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a Curve StableNg Liquidity Pool Adapter staked on StakeDAO
-contract DeployCurveStableNgSDV2Adapter is Script {
+contract DeployCurveStableNgSDV2Adapter is DeployAdapterBase {
     Addressbook addressbook = new Addressbook();
     error AssetIndexNotFound();
 
@@ -25,7 +23,6 @@ contract DeployCurveStableNgSDV2Adapter is Script {
         address[] memory rewards
     ) public {
 
-        require(multistrategy != address(0), "Multistrategy cannot be zero address");
         require(slippage_limit_basis_points < 100, "Slippage limit too high");
 
         address asset = IERC4626(multistrategy).asset();
@@ -34,6 +31,7 @@ contract DeployCurveStableNgSDV2Adapter is Script {
         address stake_dao_vault = getStakeDaoVault(curve_liquidity_pool);
         uint256 assetIndex = findAssetIndex(curve_liquidity_pool, asset);
 
+        _verifyRewards(rewards, asset);
         require(IERC4626(stake_dao_vault).asset() == curve_liquidity_pool, "Stake DAO Vault mismatch");
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
@@ -65,17 +63,17 @@ contract DeployCurveStableNgSDV2Adapter is Script {
         vm.stopBroadcast();
     }
 
-    function getGaugeFactory(uint256 chainId) public pure returns (address) {
+    function getGaugeFactory(uint256 chainId) private pure returns (address) {
         if (chainId == 42161) return 0xabC000d88f23Bb45525E447528DBF656A9D55bf5; // Arbitrum
         revert("Unsupported network");
     }
 
-    function getStakeDAOProtocolController(uint256 chainId) public pure returns (address) {
+    function getStakeDAOProtocolController(uint256 chainId) private pure returns (address) {
         if (chainId == 42161) return 0x2d8BcE1FaE00a959354aCD9eBf9174337A64d4fb; // Arbitrum
         revert("Unsupported network");
     }
 
-    function getStakeDaoVault(address _curveLP) public view returns (address) {
+    function getStakeDaoVault(address _curveLP) private view returns (address) {
         address gauge_factory = getGaugeFactory(block.chainid);
         address gauge = ICurveGaugeFactory(gauge_factory).get_gauge_from_lp_token(_curveLP);
         address stake_dao_protocol_controller = getStakeDAOProtocolController(block.chainid);
