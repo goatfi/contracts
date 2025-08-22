@@ -5,6 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { IStargateV2Chef, IStargateV2Router } from "interfaces/stargate/IStargate.sol";
 import { StargateAdapterNative } from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { Addressbook } from "@addressbook/AddressBook.sol";
@@ -17,13 +18,18 @@ contract DeployStargateNativeAdapter is Script {
         address multistrategy,
         string memory name,
         address stargate_router,
-        address stargate_chef,
         address[] memory rewards
     ) public {
+
+        require(multistrategy != address(0), "Multistrategy cannot be zero address");
 
         address asset = IERC4626(multistrategy).asset();
         address manager = addressbook.getManager(block.chainid);
         address guardian = addressbook.getGuardian(block.chainid);
+        address stargate_chef = getChef(block.chainid);
+
+        require(asset == IStargateV2Router(stargate_router).token(), "Router underlying asset mismatch");
+        require(assetIncludedInChef(stargate_router, stargate_chef), "Chef does not include the asset");
 
         StrategyAdapterHarvestable.HarvestAddresses memory harvestAddresses = StrategyAdapterHarvestable.HarvestAddresses({
             swapper: addressbook.getGoatSwapper(block.chainid),
@@ -54,7 +60,19 @@ contract DeployStargateNativeAdapter is Script {
         adapter.transferOwnership(manager);
 
         vm.stopBroadcast();
+    }
 
-        console.log("Stargate Adapter:", address(adapter));
+    function getChef(uint256 chainId) public pure returns (address) {
+        if (chainId == 42161) return 0x3da4f8E456AC648c489c286B99Ca37B666be7C4C; // Arbitrum
+        revert("Unsupported network");
+    }
+
+    function assetIncludedInChef(address router, address chef) public view returns (bool) {
+        address lpToken = IStargateV2Router(router).lpToken();
+        address[] memory tokens = IStargateV2Chef(chef).tokens();
+        for(uint256 i = 0; i < tokens.length; ++i) {
+            if(tokens[i] == lpToken) return true;
+        }
+        return false;
     }
 }

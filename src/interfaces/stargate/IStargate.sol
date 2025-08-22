@@ -16,4 +16,5 @@ interface IStargateV2Chef {
     function emergencyWithdraw(address token) external;
     function balanceOf(address token, address user) external view returns (uint256);
     function claim(address[] calldata lpTokens) external;
+    function tokens() external view returns (address[] memory);
 }
