@@ -21,7 +21,7 @@ contract DeployAdapterBase is Script {
             require(vaultAsset == _adapterAsset, "Vault asset mismatch");
             return true;
         } catch {
-            revert("Vault does not implement IERC4626");
+            revert("Address does not implement IERC4626");
         }
     }
 
@@ -37,7 +37,7 @@ contract DeployAdapterBase is Script {
         try IERC20(_erc20Token).totalSupply() {
             return true;
         } catch {
-            revert("Vault does not implement IERC4626");
+            revert("Address does not implement IERC20");
         }
     }
 }
