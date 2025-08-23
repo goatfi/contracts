@@ -8,11 +8,9 @@ import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
 import { IProtocolController} from "interfaces/stakedao/IProtocolController.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
 import { CurveStableNgSDV2Adapter } from "src/infra/multistrategy/adapters/CurveStableNgSDV2Adapter.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a Curve StableNg Liquidity Pool Adapter staked on StakeDAO
 contract DeployCurveStableNgSDV2Adapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
     error AssetIndexNotFound();
 
     function run(

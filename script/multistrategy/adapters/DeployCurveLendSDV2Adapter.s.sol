@@ -7,12 +7,9 @@ import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
 import { IProtocolController} from "interfaces/stakedao/IProtocolController.sol";
 import { CurveLendSDV2Adapter } from "src/infra/multistrategy/adapters/CurveLendSDV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a Curve Lend Adapter staked on StakeDAO
 contract DeployCurveLendSDV2Adapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy,
         string memory name, 

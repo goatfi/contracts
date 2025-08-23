@@ -9,12 +9,9 @@ import { ISiloV2IncentivesController } from "interfaces/silo/ISiloV2IncentivesCo
 import { ISiloV2IdleMarket } from "interfaces/silo/ISiloV2IdleMarket.sol";
 import { SiloV2VaultAdapter } from "src/infra/multistrategy/adapters/SiloV2VaultAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a SiloV2 Curated Vault Adapter
 contract DeploySiloV2VaultAdapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy,
         string memory name,

@@ -6,12 +6,9 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStargateV2Chef, IStargateV2Router } from "interfaces/stargate/IStargate.sol";
 import { StargateAdapterNative } from "src/infra/multistrategy/adapters/StargateAdapterNative.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys an Stargate Adapter for ETH
 contract DeployStargateNativeAdapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy,
         string memory name,

@@ -7,12 +7,9 @@ import { ICurveGaugeFactory } from "interfaces/curve/ICurveGaugeFactory.sol";
 import { ICurveGauge } from "interfaces/curve/ICurveGauge.sol";
 import { CurveLendAdapter } from "src/infra/multistrategy/adapters/CurveLendAdapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a Curve Lend Adapter
 contract DeployCurveLendAdapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy, 
         string memory name, 

@@ -4,12 +4,9 @@ pragma solidity^0.8.20;
 import { DeployAdapterBase } from "../../DeployAdapterBase.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626Adapter } from "src/infra/multistrategy/adapters/ERC4626Adapter.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys an ERC4626 Adapter
 contract DeployERC4626Adapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy,
         string memory name,

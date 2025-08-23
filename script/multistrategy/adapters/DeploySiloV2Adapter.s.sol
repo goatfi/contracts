@@ -8,12 +8,9 @@ import { ISiloHookReceiver } from "interfaces/silo/ISiloHookReceiver.sol";
 import { ISiloV2IncentivesController } from "interfaces/silo/ISiloV2IncentivesController.sol";
 import { SiloV2Adapter } from "src/infra/multistrategy/adapters/SiloV2Adapter.sol";
 import { StrategyAdapterHarvestable } from "src/abstracts/StrategyAdapterHarvestable.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys a SiloV2 Market Adapter
 contract DeploySiloV2Adapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy,
         string memory name,

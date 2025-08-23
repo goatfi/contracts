@@ -6,12 +6,9 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IPool } from "interfaces/aave/IPool.sol";
 import { IAToken } from "interfaces/aave/IAToken.sol";
 import { AaveAdapter } from "src/infra/multistrategy/adapters/AaveAdapter.sol";
-import { Addressbook } from "@addressbook/AddressBook.sol";
 
 /// @title Deploys an AAVE Adapter
 contract DeployAaveAdapter is DeployAdapterBase {
-    Addressbook addressbook = new Addressbook();
-
     function run(
         address multistrategy, 
         string memory name

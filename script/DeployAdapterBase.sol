@@ -6,8 +6,10 @@ import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IStrategyAdapter } from "interfaces/infra/multistrategy/IStrategyAdapter.sol";
+import { Addressbook } from "@addressbook/AddressBook.sol";
 
 contract DeployAdapterBase is Script {
+    Addressbook addressbook = new Addressbook();
 
     function _isContract(address _addr) internal view returns (bool) {
         uint32 size;
